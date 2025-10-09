@@ -1,0 +1,40 @@
+{
+	"name": "sprint-it",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"dev": "vite --port 5180",
+		"build": "vue-tsc && vite build",
+		"preview": "vite preview",
+		"lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+		"typecheck": "vue-tsc --noEmit",
+		"migrate": "node migration.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"@mdi/font": "^7.4.47",
+		"@types/bcryptjs": "^2.4.6",
+		"@vitejs/plugin-vue": "^6.0.1",
+		"@vue/tsconfig": "^0.8.1",
+		"bcryptjs": "^3.0.2",
+		"firebase": "^12.3.0",
+		"firebase-admin": "^13.5.0",
+		"pinia": "^3.0.3",
+		"typescript": "^5.9.3",
+		"vite": "^7.1.9",
+		"vue": "^3.5.22",
+		"vue-draggable-next": "^2.3.0",
+		"vue-router": "^4.5.1",
+		"vuetify": "^3.10.5"
+	},
+	"devDependencies": {
+		"sass-embedded": "^1.93.2",
+		"unplugin-auto-import": "^20.2.0",
+		"unplugin-vue-components": "^29.1.0",
+		"vite-plugin-vuetify": "^2.1.2",
+		"vue-tsc": "^3.1.1"
+	}
+}

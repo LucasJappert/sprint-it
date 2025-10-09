@@ -1,0 +1,78 @@
+$bg-primary: #1e1e1e;
+$bg-transparent: #000000dd;
+$primary: #01a114;
+$primary1: #632a48;
+// Celeste (blue accent) for products section
+$blue: #33c7ff;
+$gray: #6a6a6a;
+$gray1: #b8b8b8;
+$info: #2196f3;
+$error: #f44336;
+$warning: #ff9800;
+$yellow: #ffeb3b;
+$text: #8fa8bb; /* celeste legible */
+$danger: #f44336;
+$green: #008035;
+$greenLight: #3a9962; // light green accent
+$yellowLight: #ffd54f; // light yellow accent
+$primary-transparent: rgba($bg-primary, 0.9);
+$height-app-bar: 64px;
+$mobile-resolution: 800px;
+$height-bottom-bar: 74px;
+$margins-from-screen: 5px;
+
+:root {
+    /* hex directo */
+    --primary: #{$primary};
+    --blue: #{$blue};
+    /* Typography */
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Theme */
+    color-scheme: dark;
+    --bg: #0b1220; /* fondo oscuro */
+    --panel: #1e2024; /* paneles / cards */
+}
+
+.primary {
+    color: $primary !important;
+}
+.gray {
+    color: $gray !important;
+}
+.gray1 {
+    color: $gray1 !important;
+}
+.info {
+    color: $info !important;
+}
+.error {
+    color: $error !important;
+}
+.warning {
+    color: $warning !important;
+}
+.yellow {
+    color: $yellow !important;
+}
+.danger {
+    color: $danger !important;
+}
+.green {
+    color: $green !important;
+}
+.text {
+    color: $text !important;
+}
+.light-green {
+    color: $greenLight !important;
+}
+.light-yellow {
+    color: $yellowLight !important;
+}
