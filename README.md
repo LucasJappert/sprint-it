@@ -30,7 +30,9 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
 
     - Create a Firebase project at https://console.firebase.google.com/
     - Enable Firestore Database (Authentication is not needed - we use custom auth)
-    - Update `.env` with your Firebase config
+    - Go to Project Settings → General → Your apps → Web app
+    - Copy your Firebase configuration
+    - Create a `.env` file based on `.env.example` and fill in your actual credentials
 
 4. **Service Account Key:**
 
@@ -57,10 +59,49 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
 
     **Note:** The migration creates users in Firestore with encrypted passwords. No Firebase Authentication setup is required.
 
-7. **Start Development Server:**
+7. **Configure Environment Variables:**
+
+    ```bash
+    # Copy the template file
+    cp .env.example .env
+
+    # Edit .env with your actual Firebase credentials
+    # IMPORTANT: Never commit your .env file with real credentials!
+    ```
+
+8. **Start Development Server:**
     ```bash
     npm run dev
     ```
+
+## 🔒 Security & Environment Setup
+
+**⚠️ Important:** This project contains sensitive configuration data that should never be committed to version control.
+
+### Required Files (Not Included in Repository):
+
+-   **`.env`**: Your Firebase project credentials
+
+    -   Copy from `.env.example`
+    -   Fill in your actual Firebase config values
+    -   **Never commit this file!**
+
+-   **`serviceAccountKey.json`**: Firebase service account key for migrations
+    -   Download from Firebase Console → Project Settings → Service Accounts
+    -   **Never commit this file!**
+
+### Environment Variables:
+
+```env
+VITE_FIREBASE_API_KEY=your_api_key_here
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project-id.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+**Get these values from:** Firebase Console → Project Settings → General → Your apps → Web app
 
 ## Default User
 
