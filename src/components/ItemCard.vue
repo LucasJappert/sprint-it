@@ -329,7 +329,7 @@ const onDrop = (e: DragEvent) => {
     /* Asegurar dimensiones visibles */
     min-width: 100px !important;
     min-height: 40px !important;
-    width: auto !important;
+    /* Remover width: auto para permitir que el JS fije el ancho original */
     height: auto !important;
     /* Forzar layout */
     display: flex !important;
