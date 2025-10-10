@@ -5,32 +5,31 @@ import { computed, ref } from "vue";
 export const useDragDropStore = defineStore("dragDrop", () => {
     // Estado del drag
     const dragItem = ref<Item | null>(null);
-    const hoverItem = ref<Item | null>(null);
-    const hoverPosition = ref<"above" | "below" | null>(null);
 
     // Estado del ghost
     const ghostElement = ref<HTMLElement | null>(null);
 
+    // Estado para resaltar bordes de items
+    const highlightedItems = ref<{ itemId: string; position: "above" | "below"; }[]>([]);
+
+    // Estado para umbral mínimo antes de pintar bordes
+    const dragStartPosition = ref<{ x: number; y: number; } | null>(null);
+    const DRAG_THRESHOLD = 3; // píxeles mínimos antes de activar bordes
+
     // Computed para facilitar acceso
     const isDragging = computed(() => dragItem.value !== null);
-    const hasHover = computed(() => hoverItem.value !== null);
 
     // Función para iniciar drag
-    const startDragAsync = (item: Item) => {
+    const startDragAsync = (item: Item, startX: number, startY: number) => {
         dragItem.value = item;
-    };
-
-    // Función para establecer hover
-    const setHoverAsync = (item: Item | null, position: "above" | "below" | null = null) => {
-        hoverItem.value = item;
-        hoverPosition.value = position;
+        dragStartPosition.value = { x: startX, y: startY };
     };
 
     // Función para limpiar estado del drag
     const clearDragStateAsync = () => {
         dragItem.value = null;
-        hoverItem.value = null;
-        hoverPosition.value = null;
+        dragStartPosition.value = null;
+        highlightedItems.value = [];
         removeGhostAsync();
     };
 
@@ -76,37 +75,66 @@ export const useDragDropStore = defineStore("dragDrop", () => {
         }
     };
 
-    // Función para posicionar ghost basado en hover state
-    const positionGhostForHoverAsync = () => {
-        if (!ghostElement.value || !hoverItem.value || !hoverPosition.value || !dragItem.value) {
+    // Función para actualizar posición del ghost siguiendo al mouse
+    const updateGhostPositionWithMouseAsync = (mouseX: number, mouseY: number) => {
+        if (ghostElement.value) {
+            updateGhostPositionAsync(mouseX, mouseY);
+            console.log("[DRAG_STORE] Ghost position - top:", mouseY);
+        }
+    };
+
+    // Función para determinar qué items deben mostrar bordes basado en posición del mouse
+    const updateBorderHighlightsAsync = (mouseX: number, mouseY: number, allItems: Item[]) => {
+        if (!dragItem.value) {
+            highlightedItems.value = [];
             return;
         }
 
-        // Si el hover está sobre el mismo item que se está arrastrando
-        if (hoverItem.value.id === dragItem.value.id) {
-            const targetElement = document.querySelector(`[data-item-id="${hoverItem.value.id}"]`) as HTMLElement;
-            if (targetElement) {
-                const rect = targetElement.getBoundingClientRect();
-                updateGhostPositionAsync(rect.left + 10, rect.top - 10);
-                ghostElement.value.classList.remove("positioned-ghost");
-            }
-        } else {
-            // Si el hover está sobre otro item, posicionar en ubicación de inserción
-            const targetElement = document.querySelector(`[data-item-id="${hoverItem.value.id}"]`) as HTMLElement;
+        const newHighlights: { itemId: string; position: "above" | "below"; }[] = [];
 
-            if (targetElement) {
-                const rect = targetElement.getBoundingClientRect();
-                const ghostHeight = ghostElement.value.offsetHeight || 40;
-                const margin = 6;
+        // Encontrar la posición donde se insertaría el item basado en mouseY
+        let insertIndex = 0;
+        for (let i = 0; i < allItems.length; i++) {
+            const item = allItems[i];
+            if (!item) continue;
 
-                if (hoverPosition.value === "above") {
-                    updateGhostPositionAsync(rect.left, rect.top - ghostHeight - margin);
-                } else {
-                    updateGhostPositionAsync(rect.left, rect.bottom + margin);
+            const element = document.querySelector(`[data-item-id="${item.id}"]`) as HTMLElement | null;
+            if (element) {
+                const rect = element.getBoundingClientRect();
+                if (mouseY < rect.top + rect.height / 2) {
+                    insertIndex = i;
+                    break;
                 }
-
-                ghostElement.value.classList.add("positioned-ghost");
+                insertIndex = i + 1;
             }
+        }
+
+        // Si hay items antes de la posición de inserción, pintar borde inferior del item anterior
+        if (insertIndex > 0) {
+            const prevItem = allItems[insertIndex - 1];
+            if (prevItem && prevItem.id !== dragItem.value.id) {
+                newHighlights.push({ itemId: prevItem.id, position: "below" });
+            }
+        }
+
+        // Si hay items después de la posición de inserción, pintar borde superior del item siguiente
+        if (insertIndex < allItems.length) {
+            const nextItem = allItems[insertIndex];
+            if (nextItem && nextItem.id !== dragItem.value.id) {
+                newHighlights.push({ itemId: nextItem.id, position: "above" });
+            }
+        }
+
+        highlightedItems.value = newHighlights;
+
+        // Log de títulos de items que están entre medio
+        if (newHighlights.length > 0) {
+            const highlightedTitles = newHighlights.map(highlight => {
+                const item = allItems.find(i => i.id === highlight.itemId);
+                return item?.title;
+            }).filter(Boolean);
+
+            console.log("[DRAG_STORE] Items entre medio:", highlightedTitles);
         }
     };
 
@@ -122,21 +150,19 @@ export const useDragDropStore = defineStore("dragDrop", () => {
     return {
         // Estado
         dragItem,
-        hoverItem,
-        hoverPosition,
         ghostElement,
+        highlightedItems,
 
         // Computed
         isDragging,
-        hasHover,
 
         // Funciones
         startDragAsync,
-        setHoverAsync,
         clearDragStateAsync,
         createGhostAsync,
         updateGhostPositionAsync,
-        positionGhostForHoverAsync,
+        updateGhostPositionWithMouseAsync,
+        updateBorderHighlightsAsync,
         removeGhostAsync,
     };
 });

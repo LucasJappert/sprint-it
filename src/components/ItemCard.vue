@@ -4,13 +4,10 @@
         :data-item-id="item.id"
         :class="[
             dragDropStore.dragItem?.id === item.id ? 'dragging' : '',
-            showBorder && borderPosition === 'above' ? 'show-border-top' : '',
-            showBorder && borderPosition === 'below' ? 'show-border-bottom' : '',
+            isHighlighted && highlightPosition === 'above' ? 'show-border-top' : '',
+            isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
         ]"
-        @dragenter.prevent="onDragEnter"
         @dragover.prevent="onDragOver"
-        @dragleave="onDragLeave"
-        @drop.prevent.stop="onDrop"
     >
         <div class="item-col cols-2 text-left">
             <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd">
@@ -82,18 +79,22 @@ const props = defineProps<{
     borderPosition?: "above" | "below" | null;
 }>();
 
-const emit = defineEmits<{
-    dragstart: [item: Item];
-    "item-dragenter": [item: Item];
-    "item-dragover": [{ item: Item; position: "above" | "below" }];
-    "item-dragleave": [item: Item];
-    "item-drop": [item: Item];
-}>();
+// No necesitamos emits - usaremos el store directamente
 
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
 const showTasks = ref(false);
+
+// Computed para determinar si este item debe mostrar bordes
+const isHighlighted = computed(() => {
+    return dragDropStore.highlightedItems.some((highlight) => highlight.itemId === props.item.id);
+});
+
+const highlightPosition = computed(() => {
+    const highlight = dragDropStore.highlightedItems.find((h) => h.itemId === props.item.id);
+    return highlight?.position || null;
+});
 
 const assignedUserName = computed(() => {
     if (props.item.assignedUser === authStore.user?.id) {
@@ -159,11 +160,6 @@ const onSaveEditTask = (data: { title: string; detail: string; priority: string;
 };
 
 const onDragStart = (e: DragEvent) => {
-    console.log("[ItemCard] 🔥 DRAG START DETECTADO!", {
-        itemId: props.item.id,
-        targetElement: (e.currentTarget as HTMLElement)?.tagName,
-    });
-
     const card = (e.currentTarget as HTMLElement)?.closest(".item-card") as HTMLElement;
 
     // dataTransfer: necesario para Firefox/otros
@@ -174,52 +170,29 @@ const onDragStart = (e: DragEvent) => {
         console.warn("[ItemCard] dataTransfer set failed", err);
     }
 
-    // Usar el store para manejar el drag
-    dragDropStore.startDragAsync(props.item);
+    // Usar el store para manejar el drag con posición inicial
+    dragDropStore.startDragAsync(props.item, e.clientX, e.clientY);
 
     // Crear ghost usando el store
     requestAnimationFrame(() => {
         dragDropStore.createGhostAsync(card);
     });
-
-    emit("dragstart", props.item);
 };
 
 const onDragEnd = (e: DragEvent) => {
-    dragDropStore.removeGhostAsync();
-    emit("item-drop", props.item);
+    dragDropStore.clearDragStateAsync();
 };
 
-const onDragEnter = (e: DragEvent) => {
-    dragDropStore.setHoverAsync(props.item);
-    emit("item-dragenter", props.item);
-};
-
-const onDragLeave = (e: DragEvent) => {
-    dragDropStore.setHoverAsync(null);
-    emit("item-dragleave", props.item);
-};
-
-const onDrop = (e: DragEvent) => {
-    emit("item-drop", props.item);
-};
-
-// decide "above" | "below" según mitad vertical de la card
+// Evento para actualizar posición del ghost y bordes mientras se arrastra
 const onDragOver = (e: DragEvent) => {
-    console.log("[ItemCard] 🔥 DRAG OVER DETECTADO!");
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const middle = rect.top + rect.height / 2;
-    const position: "above" | "below" = e.clientY < middle ? "above" : "below";
+    // Actualizar posición del ghost siguiendo al mouse
+    dragDropStore.updateGhostPositionWithMouseAsync(e.clientX, e.clientY);
 
-    // Usar el store para establecer el hover
-    dragDropStore.setHoverAsync(props.item, position);
-
-    // Posicionar el ghost basado en el nuevo hover state
-    dragDropStore.positionGhostForHoverAsync();
-
-    emit("item-dragover", { item: props.item, position });
+    // Nota: Los bordes se actualizarán desde el componente padre (DashboardView)
+    // para tener acceso a todos los items
 };
+
+// No necesitamos estas funciones con la nueva implementación
 </script>
 
 <style scoped lang="scss">

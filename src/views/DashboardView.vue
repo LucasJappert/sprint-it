@@ -7,7 +7,7 @@ import ItemCard from "@/components/ItemCard.vue";
 import { saveSprint } from "@/services/firestore";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item } from "@/types";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
@@ -15,40 +15,13 @@ const dragDropStore = useDragDropStore();
 // Suponiendo que currentSprint.items existe y es reactivo
 const items = computed<Item[]>(() => sprintStore.currentSprint?.items ?? []);
 
-// Debug: agregar logging para ver el estado del store
-watch(
-    () => sprintStore.currentSprint,
-    (newSprint) => {
-        console.log("[DEBUG] currentSprint cambió:", {
-            id: newSprint?.id,
-            itemsCount: newSprint?.items.length ?? 0,
-            items: newSprint?.items.map((i) => ({ id: i.id, title: i.title })) ?? [],
-        });
-    },
-    { immediate: true },
-);
-
-watch(
-    items,
-    (newItems) => {
-        console.log("[DEBUG] items cambió:", {
-            count: newItems.length,
-            items: newItems.map((i) => ({ id: i.id, title: i.title })),
-        });
-    },
-    { immediate: true },
-);
+// Logs de debug removidos para simplificar la lógica
 
 // Asegurar que los sprints estén generados
 onMounted(async () => {
     if (sprintStore.sprints.length === 0) {
-        console.log("[DEBUG] Generando sprints en onMounted");
         await sprintStore.generateSprints();
-    } else {
-        console.log("[DEBUG] Sprints ya existen:", sprintStore.sprints.length);
     }
-
-    // Simulación removida - ya no es necesaria
 });
 
 // Selector de sprint
@@ -126,28 +99,16 @@ const onAddItem = async (itemData: { title: string; detail: string; priority: st
 // Usar el store para el estado del drag & drop
 
 const onItemDragStart = (item: Item) => {
-    console.log("[PARENT] dragstart", { id: item.id, title: item.title });
-    // Usar el store para manejar el drag
-    dragDropStore.startDragAsync(item);
+    // Nota: Las coordenadas iniciales se pasan desde ItemCard
+    // El store ya fue iniciado desde ItemCard con las coordenadas correctas
 };
 
-const onItemDragEnter = (item: Item) => {
-    dragDropStore.setHoverAsync(item);
-    console.log("[PARENT] dragenter", { overId: item.id, title: item.title });
-};
+const onItemDragOver = (e: DragEvent) => {
+    // Actualizar posición del ghost siguiendo al mouse
+    dragDropStore.updateGhostPositionWithMouseAsync(e.clientX, e.clientY);
 
-const onItemDragOver = (payload: { item: Item; position: "above" | "below" }) => {
-    dragDropStore.setHoverAsync(payload.item, payload.position);
-    console.log("[PARENT] dragover", {
-        overId: payload.item.id,
-        title: payload.item.title,
-        position: payload.position,
-    });
-};
-
-const onItemDragLeave = (item: Item) => {
-    console.log("[PARENT] dragleave", { id: item.id });
-    // no limpiamos estado aún; puede reentrar a otro ítem
+    // Actualizar bordes basado en posición del mouse (solo si superó el umbral)
+    dragDropStore.updateBorderHighlightsAsync(e.clientX, e.clientY, items.value);
 };
 
 const reorder = (source: Item, target: Item, position: "above" | "below") => {
@@ -160,10 +121,6 @@ const reorder = (source: Item, target: Item, position: "above" | "below") => {
 
     const toAdjusted = to > from ? to - 1 : to;
 
-    console.group("[PARENT] reorder");
-    console.table(list.map((i) => ({ id: i.id, order: i.order, title: i.title })));
-    console.log("from:", from, "to:", to, "toAdjusted:", toAdjusted);
-
     const moved = list.splice(from, 1)[0];
     if (moved === undefined) return;
     list.splice(toAdjusted, 0, moved);
@@ -171,33 +128,71 @@ const reorder = (source: Item, target: Item, position: "above" | "below") => {
     // Reasignar order determinista
     list.forEach((it, idx) => (it.order = idx + 1));
 
-    console.table(list.map((i) => ({ id: i.id, order: i.order, title: i.title })));
-    console.groupEnd();
-
     if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
 };
 
 const onItemDrop = (target: Item) => {
-    console.log("[PARENT] drop", {
-        source: dragDropStore.dragItem?.id,
-        target: target.id,
-        position: dragDropStore.hoverPosition,
-    });
-
-    if (dragDropStore.dragItem && dragDropStore.hoverPosition && dragDropStore.dragItem.id !== target.id) {
-        reorder(dragDropStore.dragItem, target, dragDropStore.hoverPosition);
+    if (dragDropStore.dragItem && dragDropStore.dragItem.id !== target.id) {
+        // Encontrar la posición basada en el target item
+        const targetIndex = items.value.findIndex((item) => item.id === target.id);
+        if (targetIndex !== -1) {
+            reorder(dragDropStore.dragItem, target, "below");
+        }
     }
     dragDropStore.clearDragStateAsync();
 };
 
-// Observabilidad del estado usando el store
-watch([() => dragDropStore.dragItem, () => dragDropStore.hoverItem, () => dragDropStore.hoverPosition], ([d, h, p]) => {
-    console.log("[PARENT] state", {
-        dragItem: d?.id ?? null,
-        hoverItem: h?.id ?? null,
-        hoverPosition: p ?? null,
+const onBoardDrop = (e: DragEvent) => {
+    if (dragDropStore.dragItem) {
+        // Calcular la posición de inserción basada en donde se soltó el mouse
+        const insertIndex = calculateInsertIndex(e.clientY, items.value);
+
+        if (insertIndex !== -1 && insertIndex !== items.value.findIndex((item) => item.id === dragDropStore.dragItem!.id)) {
+            // Mover el item a la nueva posición
+            moveItemToPosition(dragDropStore.dragItem, insertIndex);
+        }
+    }
+
+    // Limpiar el estado del drag
+    dragDropStore.clearDragStateAsync();
+};
+
+const calculateInsertIndex = (mouseY: number, allItems: Item[]): number => {
+    for (let i = 0; i < allItems.length; i++) {
+        const item = allItems[i];
+        if (!item) continue;
+
+        const element = document.querySelector(`[data-item-id="${item.id}"]`) as HTMLElement | null;
+        if (element) {
+            const rect = element.getBoundingClientRect();
+            if (mouseY < rect.top + rect.height / 2) {
+                return i;
+            }
+        }
+    }
+    return allItems.length;
+};
+
+const moveItemToPosition = (item: Item, targetIndex: number) => {
+    const currentIndex = items.value.findIndex((i) => i.id === item.id);
+    if (currentIndex === -1) return;
+
+    // Crear nueva lista con el item movido
+    const newList = [...items.value];
+    newList.splice(currentIndex, 1); // Remover del índice actual
+    newList.splice(targetIndex, 0, item); // Insertar en nueva posición
+
+    // Actualizar el orden de todos los items
+    newList.forEach((it, idx) => {
+        it.order = idx + 1;
     });
-});
+
+    // Guardar cambios usando la mutación directa y saveSprint
+    if (sprintStore.currentSprint) {
+        sprintStore.currentSprint.items = newList;
+        saveSprint(sprintStore.currentSprint);
+    }
+};
 </script>
 
 <template>
@@ -222,19 +217,14 @@ watch([() => dragDropStore.dragItem, () => dragDropStore.hoverItem, () => dragDr
         </div>
 
         <!-- Lista de items -->
-        <div class="board">
+        <div class="board" @dragover="onItemDragOver" @drop="onBoardDrop">
             <div class="list">
                 <ItemCard
                     v-for="it in items"
                     :key="it.id"
                     :item="it"
-                    :showBorder="dragDropStore.hoverItem?.id === it.id"
-                    :borderPosition="dragDropStore.hoverItem?.id === it.id ? dragDropStore.hoverPosition : null"
-                    @dragstart="onItemDragStart"
-                    @item-dragenter="onItemDragEnter"
-                    @item-dragover="onItemDragOver"
-                    @item-dragleave="onItemDragLeave"
-                    @item-drop="onItemDrop"
+                    :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
+                    :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
                 />
             </div>
         </div>
