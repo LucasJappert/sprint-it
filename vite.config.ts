@@ -10,7 +10,15 @@ export default defineConfig({
         vue(),
         vuetify({ autoImport: true }),
         AutoImport({
-            imports: ["vue"],
+            imports: [
+                "vue",
+                "pinia",
+                // Auto-import specific stores
+                {
+                    from: "@/stores/dragDrop",
+                    imports: ["useDragDropStore"]
+                }
+            ],
             dts: "src/auto-imports.d.ts",
         }),
         Components({

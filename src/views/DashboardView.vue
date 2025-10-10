@@ -10,6 +10,7 @@ import type { Item } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
 
 const sprintStore = useSprintStore();
+const dragDropStore = useDragDropStore();
 
 // Suponiendo que currentSprint.items existe y es reactivo
 const items = computed<Item[]>(() => sprintStore.currentSprint?.items ?? []);
@@ -46,6 +47,8 @@ onMounted(async () => {
     } else {
         console.log("[DEBUG] Sprints ya existen:", sprintStore.sprints.length);
     }
+
+    // Simulación removida - ya no es necesaria
 });
 
 // Selector de sprint
@@ -120,26 +123,21 @@ const onAddItem = async (itemData: { title: string; detail: string; priority: st
     showAddItemDialog.value = false;
 };
 
-const dragItem = ref<Item | null>(null);
-const hoverItem = ref<Item | null>(null);
-const hoverPosition = ref<"above" | "below" | null>(null);
+// Usar el store para el estado del drag & drop
 
 const onItemDragStart = (item: Item) => {
     console.log("[PARENT] dragstart", { id: item.id, title: item.title });
-    // deferir para no mutar DOM en el mismo tick
-    requestAnimationFrame(() => {
-        dragItem.value = item;
-    });
+    // Usar el store para manejar el drag
+    dragDropStore.startDragAsync(item);
 };
 
 const onItemDragEnter = (item: Item) => {
-    hoverItem.value = item;
+    dragDropStore.setHoverAsync(item);
     console.log("[PARENT] dragenter", { overId: item.id, title: item.title });
 };
 
 const onItemDragOver = (payload: { item: Item; position: "above" | "below" }) => {
-    hoverItem.value = payload.item;
-    hoverPosition.value = payload.position;
+    dragDropStore.setHoverAsync(payload.item, payload.position);
     console.log("[PARENT] dragover", {
         overId: payload.item.id,
         title: payload.item.title,
@@ -181,26 +179,19 @@ const reorder = (source: Item, target: Item, position: "above" | "below") => {
 
 const onItemDrop = (target: Item) => {
     console.log("[PARENT] drop", {
-        source: dragItem.value?.id,
+        source: dragDropStore.dragItem?.id,
         target: target.id,
-        position: hoverPosition.value,
+        position: dragDropStore.hoverPosition,
     });
 
-    if (dragItem.value && hoverPosition.value && dragItem.value.id !== target.id) {
-        reorder(dragItem.value, target, hoverPosition.value);
+    if (dragDropStore.dragItem && dragDropStore.hoverPosition && dragDropStore.dragItem.id !== target.id) {
+        reorder(dragDropStore.dragItem, target, dragDropStore.hoverPosition);
     }
-    cleanupDragState();
+    dragDropStore.clearDragStateAsync();
 };
 
-const cleanupDragState = () => {
-    console.log("[PARENT] cleanup drag state");
-    dragItem.value = null;
-    hoverItem.value = null;
-    hoverPosition.value = null;
-};
-
-// Observabilidad del estado
-watch([dragItem, hoverItem, hoverPosition], ([d, h, p]) => {
+// Observabilidad del estado usando el store
+watch([() => dragDropStore.dragItem, () => dragDropStore.hoverItem, () => dragDropStore.hoverPosition], ([d, h, p]) => {
     console.log("[PARENT] state", {
         dragItem: d?.id ?? null,
         hoverItem: h?.id ?? null,
@@ -237,14 +228,13 @@ watch([dragItem, hoverItem, hoverPosition], ([d, h, p]) => {
                     v-for="it in items"
                     :key="it.id"
                     :item="it"
-                    :dragItem="dragItem"
-                    :showBorder="hoverItem?.id === it.id"
-                    :borderPosition="hoverItem?.id === it.id ? hoverPosition : null"
+                    :showBorder="dragDropStore.hoverItem?.id === it.id"
+                    :borderPosition="dragDropStore.hoverItem?.id === it.id ? dragDropStore.hoverPosition : null"
                     @dragstart="onItemDragStart"
-                    @dragenter="onItemDragEnter"
-                    @dragover="onItemDragOver"
-                    @dragleave="onItemDragLeave"
-                    @drop="onItemDrop"
+                    @item-dragenter="onItemDragEnter"
+                    @item-dragover="onItemDragOver"
+                    @item-dragleave="onItemDragLeave"
+                    @item-drop="onItemDrop"
                 />
             </div>
         </div>

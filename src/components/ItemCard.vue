@@ -1,15 +1,16 @@
 <template>
     <div
         class="item-card"
+        :data-item-id="item.id"
         :class="[
-            dragItem === item ? 'dragging' : '',
+            dragDropStore.dragItem?.id === item.id ? 'dragging' : '',
             showBorder && borderPosition === 'above' ? 'show-border-top' : '',
             showBorder && borderPosition === 'below' ? 'show-border-bottom' : '',
         ]"
-        @dragenter.prevent="emit('dragenter', item)"
+        @dragenter.prevent="onDragEnter"
         @dragover.prevent="onDragOver"
-        @dragleave="emit('dragleave', item)"
-        @drop.prevent.stop="emit('drop', item)"
+        @dragleave="onDragLeave"
+        @drop.prevent.stop="onDrop"
     >
         <div class="item-col cols-2 text-left">
             <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd">
@@ -70,28 +71,28 @@ import { saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import AddTaskDialog from "./AddTaskDialog.vue";
 import EditItemDialog from "./EditItemDialog.vue";
 import EditTaskDialog from "./EditTaskDialog.vue";
 
 const props = defineProps<{
     item: Item;
-    dragItem: Item | null;
     showBorder: boolean;
     borderPosition?: "above" | "below" | null;
 }>();
 
 const emit = defineEmits<{
     dragstart: [item: Item];
-    dragenter: [item: Item];
-    dragover: [{ item: Item; position: "above" | "below" }];
-    dragleave: [item: Item];
-    drop: [item: Item];
+    "item-dragenter": [item: Item];
+    "item-dragover": [{ item: Item; position: "above" | "below" }];
+    "item-dragleave": [item: Item];
+    "item-drop": [item: Item];
 }>();
 
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
+const dragDropStore = useDragDropStore();
 const showTasks = ref(false);
 
 const assignedUserName = computed(() => {
@@ -101,10 +102,17 @@ const assignedUserName = computed(() => {
     return props.item.assignedUser;
 });
 
+// Hook para crear simulación de drag al montar el componente
+onMounted(() => {
+    // Simulación removida completamente
+});
+
 const showAddTaskDialog = ref(false);
 const showEditItemDialog = ref(false);
 const showEditTaskDialog = ref(false);
 const editingTask = ref<Task | null>(null);
+
+// Funciones de simulación removidas completamente
 
 const onAddTask = (task: Task) => {
     props.item.tasks.push(task);
@@ -151,8 +159,12 @@ const onSaveEditTask = (data: { title: string; detail: string; priority: string;
 };
 
 const onDragStart = (e: DragEvent) => {
-    const card = (e.currentTarget as HTMLElement)?.closest(".item-card");
-    console.log("[ItemCard] dragstart", { itemId: props.item.id });
+    console.log("[ItemCard] 🔥 DRAG START DETECTADO!", {
+        itemId: props.item.id,
+        targetElement: (e.currentTarget as HTMLElement)?.tagName,
+    });
+
+    const card = (e.currentTarget as HTMLElement)?.closest(".item-card") as HTMLElement;
 
     // dataTransfer: necesario para Firefox/otros
     try {
@@ -162,45 +174,51 @@ const onDragStart = (e: DragEvent) => {
         console.warn("[ItemCard] dataTransfer set failed", err);
     }
 
-    // Ghost image
-    if (e.dataTransfer && card) {
-        const ghost = card.cloneNode(true) as HTMLElement;
-        ghost.style.position = "absolute";
-        ghost.style.top = "-9999px";
-        ghost.style.transform = "scale(0.92)";
-        ghost.style.opacity = "0.9";
-        document.body.appendChild(ghost);
-        e.dataTransfer.setDragImage(ghost, 12, 12);
-        // limpiar en microtask
-        setTimeout(() => {
-            try {
-                document.body.removeChild(ghost);
-            } catch {}
-        }, 0);
-    }
+    // Usar el store para manejar el drag
+    dragDropStore.startDragAsync(props.item);
+
+    // Crear ghost usando el store
+    requestAnimationFrame(() => {
+        dragDropStore.createGhostAsync(card);
+    });
 
     emit("dragstart", props.item);
 };
 
 const onDragEnd = (e: DragEvent) => {
-    console.log("[ItemCard] dragend", { itemId: props.item.id, canceled: e.dataTransfer?.dropEffect === "none" });
+    dragDropStore.removeGhostAsync();
+    emit("item-drop", props.item);
+};
+
+const onDragEnter = (e: DragEvent) => {
+    dragDropStore.setHoverAsync(props.item);
+    emit("item-dragenter", props.item);
+};
+
+const onDragLeave = (e: DragEvent) => {
+    dragDropStore.setHoverAsync(null);
+    emit("item-dragleave", props.item);
+};
+
+const onDrop = (e: DragEvent) => {
+    emit("item-drop", props.item);
 };
 
 // decide "above" | "below" según mitad vertical de la card
 const onDragOver = (e: DragEvent) => {
+    console.log("[ItemCard] 🔥 DRAG OVER DETECTADO!");
     const target = e.currentTarget as HTMLElement;
     const rect = target.getBoundingClientRect();
     const middle = rect.top + rect.height / 2;
     const position: "above" | "below" = e.clientY < middle ? "above" : "below";
 
-    emit("dragover", { item: props.item, position });
+    // Usar el store para establecer el hover
+    dragDropStore.setHoverAsync(props.item, position);
 
-    console.log("[ItemCard] dragover", {
-        overId: props.item.id,
-        clientY: e.clientY,
-        middle,
-        position,
-    });
+    // Posicionar el ghost basado en el nuevo hover state
+    dragDropStore.positionGhostForHoverAsync();
+
+    emit("item-dragover", { item: props.item, position });
 };
 </script>
 
@@ -208,8 +226,8 @@ const onDragOver = (e: DragEvent) => {
 .item-card {
     display: flex;
     align-items: center;
-    padding: 4px;
-    margin-bottom: 4px;
+    padding: 8px;
+    margin-bottom: 6px;
     border: 1px solid $primary;
     border-radius: 8px;
     background: $bg-primary;
@@ -269,5 +287,117 @@ const onDragOver = (e: DragEvent) => {
 
 .cols-3 {
     flex: 1;
+}
+
+/* Estilos para el ghost arrastrable */
+.draggable-ghost {
+    transform: rotate(-2deg) !important;
+    opacity: 0.95 !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+    border: 3px dashed #1976d2 !important;
+    background: rgba(25, 118, 210, 0.2) !important;
+    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+    backdrop-filter: blur(2px) !important;
+    font-weight: bold !important;
+    position: fixed !important;
+    /* Asegurar dimensiones visibles */
+    min-width: 100px !important;
+    min-height: 40px !important;
+    width: auto !important;
+    height: auto !important;
+    /* Forzar layout */
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+}
+
+.draggable-ghost::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, transparent 30%, rgba(25, 118, 210, 0.3) 50%, transparent 70%);
+    border-radius: inherit;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Estilos para el ghost cuando está posicionado dinámicamente */
+.draggable-ghost.positioned-ghost {
+    transform: rotate(0deg) !important;
+    animation: none !important;
+    border: 2px solid #4caf50 !important;
+    background: rgba(76, 175, 80, 0.1) !important;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3) !important;
+}
+
+.draggable-ghost.positioned-ghost::before {
+    background: linear-gradient(45deg, transparent 30%, rgba(76, 175, 80, 0.4) 50%, transparent 70%) !important;
+}
+
+/* Estilos para el ghost de prueba */
+.test-ghost {
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4) !important;
+    border: 3px dashed #fff !important;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.5) !important;
+    animation: pulse 1.5s infinite !important;
+    font-weight: bold !important;
+    font-size: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+}
+
+/* Estilos específicos para el ghost de simulación de drag */
+.drag-simulation-ghost {
+    transform: rotate(-2deg) !important;
+    opacity: 0.9 !important;
+    box-shadow: 0 8px 25px rgba(255, 165, 0, 0.4) !important;
+    border: 3px solid #ff9800 !important;
+    background: rgba(255, 152, 0, 0.15) !important;
+    animation: pulse-simulation 2s infinite !important;
+    position: fixed !important;
+}
+
+@keyframes pulse-simulation {
+    0% {
+        transform: scale(1) rotate(-2deg);
+        box-shadow: 0 8px 25px rgba(255, 165, 0, 0.4);
+    }
+    50% {
+        transform: scale(1.02) rotate(-2deg);
+        box-shadow: 0 12px 35px rgba(255, 165, 0, 0.6);
+    }
+    100% {
+        transform: scale(1) rotate(-2deg);
+        box-shadow: 0 8px 25px rgba(255, 165, 0, 0.4);
+    }
 }
 </style>
