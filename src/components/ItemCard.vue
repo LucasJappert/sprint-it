@@ -198,11 +198,16 @@ const onDrop = (e: DragEvent) => {
     e.preventDefault();
 
     if (dragDropStore.dragItem && dragDropStore.dragItem.id !== props.item.id) {
-        console.log(dragDropStore.dragItem.title, dragDropStore.dragItem.order);
+        // Determinar si el mouse está en la mitad superior o inferior del item
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const mouseY = e.clientY;
+        const isInUpperHalf = mouseY < rect.top + rect.height / 2;
+
         // Log específico para cuando se suelta un item
         const draggedItemTitle = dragDropStore.dragItem?.title || "Item desconocido";
         const targetItemTitle = props.item.title || "Item desconocido";
-        console.log(`✅ Item arrastrado reordenado entre "${draggedItemTitle}" y "${targetItemTitle}"`);
+        const position = isInUpperHalf ? "arriba" : "abajo";
+        console.log(`✅ Item arrastrado "${draggedItemTitle}" reposicionado ${position} de "${targetItemTitle}"`);
 
         // Usar el sprint store directamente para reordenar
         const currentSprint = sprintStore.currentSprint;
@@ -211,10 +216,18 @@ const onDrop = (e: DragEvent) => {
             const targetIndex = currentSprint.items.findIndex((item) => item.id === props.item.id);
 
             if (currentIndex !== -1 && targetIndex !== -1) {
+                // Calcular la posición de inserción deseada
+                let insertIndex = isInUpperHalf ? targetIndex : targetIndex + 1;
+
+                // Ajustar si el índice actual está antes de la posición de inserción
+                if (currentIndex < insertIndex) {
+                    insertIndex--;
+                }
+
                 // Crear nueva lista con el item movido
                 const newList = [...currentSprint.items];
                 newList.splice(currentIndex, 1); // Remover del índice actual
-                newList.splice(targetIndex, 0, dragDropStore.dragItem!); // Insertar en nueva posición
+                newList.splice(insertIndex, 0, dragDropStore.dragItem!); // Insertar en nueva posición
 
                 // Actualizar el orden de todos los items
                 newList.forEach((it, idx) => {
