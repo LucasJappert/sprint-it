@@ -8,6 +8,7 @@
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
         ]"
         @dragover.prevent="onDragOver"
+        @drop.prevent="onDrop"
     >
         <div class="item-col cols-2 text-left">
             <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd">
@@ -166,9 +167,7 @@ const onDragStart = (e: DragEvent) => {
     try {
         e.dataTransfer?.setData("text/plain", String(props.item.id));
         if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
-    } catch (err) {
-        console.warn("[ItemCard] dataTransfer set failed", err);
-    }
+    } catch (err) {}
 
     // Usar el store para manejar el drag con posición inicial
     dragDropStore.startDragAsync(props.item, e.clientX, e.clientY);
@@ -180,6 +179,8 @@ const onDragStart = (e: DragEvent) => {
 };
 
 const onDragEnd = (e: DragEvent) => {
+    // Siempre limpiar el estado del drag cuando termina el evento
+    // El drop ya fue manejado por onDrop si ocurrió
     dragDropStore.clearDragStateAsync();
 };
 
@@ -190,6 +191,45 @@ const onDragOver = (e: DragEvent) => {
 
     // Nota: Los bordes se actualizarán desde el componente padre (DashboardView)
     // para tener acceso a todos los items
+};
+
+// Evento para manejar cuando se suelta un item sobre este componente
+const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+
+    if (dragDropStore.dragItem && dragDropStore.dragItem.id !== props.item.id) {
+        console.log(dragDropStore.dragItem.title, dragDropStore.dragItem.order);
+        // Log específico para cuando se suelta un item
+        const draggedItemTitle = dragDropStore.dragItem?.title || "Item desconocido";
+        const targetItemTitle = props.item.title || "Item desconocido";
+        console.log(`✅ Item arrastrado reordenado entre "${draggedItemTitle}" y "${targetItemTitle}"`);
+
+        // Usar el sprint store directamente para reordenar
+        const currentSprint = sprintStore.currentSprint;
+        if (currentSprint) {
+            const currentIndex = currentSprint.items.findIndex((item) => item.id === dragDropStore.dragItem!.id);
+            const targetIndex = currentSprint.items.findIndex((item) => item.id === props.item.id);
+
+            if (currentIndex !== -1 && targetIndex !== -1) {
+                // Crear nueva lista con el item movido
+                const newList = [...currentSprint.items];
+                newList.splice(currentIndex, 1); // Remover del índice actual
+                newList.splice(targetIndex, 0, dragDropStore.dragItem!); // Insertar en nueva posición
+
+                // Actualizar el orden de todos los items
+                newList.forEach((it, idx) => {
+                    it.order = idx + 1;
+                });
+
+                // Guardar cambios
+                currentSprint.items = newList;
+                saveSprint(currentSprint);
+            }
+        }
+
+        // Limpiar el estado del drag después del drop
+        dragDropStore.clearDragStateAsync();
+    }
 };
 
 // No necesitamos estas funciones con la nueva implementación

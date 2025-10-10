@@ -57,12 +57,6 @@ export const useDragDropStore = defineStore("dragDrop", () => {
         // Agregar el ghost al DOM
         document.body.appendChild(ghostElement.value);
 
-        console.log("[DRAG_STORE] Ghost creado:", {
-            x: ghostElement.value.getBoundingClientRect().left,
-            y: ghostElement.value.getBoundingClientRect().top,
-            width: ghostElement.value.getBoundingClientRect().width,
-            height: ghostElement.value.getBoundingClientRect().height,
-        });
     };
 
     // Función para actualizar posición del ghost
@@ -71,7 +65,6 @@ export const useDragDropStore = defineStore("dragDrop", () => {
             ghostElement.value.style.left = x + "px";
             ghostElement.value.style.top = y + "px";
 
-            console.log("[DRAG_STORE] Ghost posicionado:", { x, y });
         }
     };
 
@@ -79,7 +72,6 @@ export const useDragDropStore = defineStore("dragDrop", () => {
     const updateGhostPositionWithMouseAsync = (mouseX: number, mouseY: number) => {
         if (ghostElement.value) {
             updateGhostPositionAsync(mouseX, mouseY);
-            console.log("[DRAG_STORE] Ghost position - top:", mouseY);
         }
     };
 
@@ -127,15 +119,6 @@ export const useDragDropStore = defineStore("dragDrop", () => {
 
         highlightedItems.value = newHighlights;
 
-        // Log de títulos de items que están entre medio
-        if (newHighlights.length > 0) {
-            const highlightedTitles = newHighlights.map(highlight => {
-                const item = allItems.find(i => i.id === highlight.itemId);
-                return item?.title;
-            }).filter(Boolean);
-
-            console.log("[DRAG_STORE] Items entre medio:", highlightedTitles);
-        }
     };
 
     // Función para remover el ghost
@@ -143,7 +126,6 @@ export const useDragDropStore = defineStore("dragDrop", () => {
         if (ghostElement.value) {
             document.body.removeChild(ghostElement.value);
             ghostElement.value = null;
-            console.log("[DRAG_STORE] Ghost removido");
         }
     };
 
