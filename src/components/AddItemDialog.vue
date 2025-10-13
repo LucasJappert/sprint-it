@@ -26,10 +26,10 @@
                     />
                 </div>
                 <div class="field-group estimated-effort">
-                    <MyInput v-model.number="newItem.estimatedEffort" label="Esfuerzo" type="number" />
+                    <MyInput v-model="newItem.estimatedEffort" label="Esfuerzo" type="number" />
                 </div>
                 <div class="field-group actual-effort">
-                    <MyInput v-model.number="newItem.actualEffort" label="Esf. Real" type="number" />
+                    <MyInput v-model="newItem.actualEffort" label="Esf. Real" type="number" />
                 </div>
             </div>
 
@@ -52,10 +52,10 @@ import MyInput from "@/components/global/MyInput.vue";
 import MySelect from "@/components/global/MySelect.vue";
 import MyTextarea from "@/components/global/MyTextarea.vue";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
-import { getUserByUsername } from "@/services/firestore";
+import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import type { Item } from "@/types";
-import { computed, ref, watch } from "vue";
+import { ref, watch } from "vue";
 
 interface Props {
     visible: boolean;
@@ -74,41 +74,68 @@ const authStore = useAuthStore();
 
 const isEditing = computed(() => !!props.existingItem);
 
-const assignedUserOptions = computed(() => {
-    return SPRINT_TEAM_MEMBERS.map((username) => ({
-        id: username,
-        text: username,
-        name: username,
-        checked: false,
-    }));
+const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
+
+const loadAssignedUserOptions = async () => {
+    const options = [];
+    for (const username of SPRINT_TEAM_MEMBERS) {
+        const user = await getUserByUsername(username);
+        if (user) {
+            options.push({
+                id: username,
+                text: `${(user as any).name} ${(user as any).lastName}`,
+                name: username,
+                checked: false,
+            });
+        }
+    }
+    assignedUserOptions.value = options;
+    console.log(assignedUserOptions.value);
+};
+
+onMounted(() => {
+    loadAssignedUserOptions();
 });
 
 const newItem = ref({
     title: "",
     detail: "",
     priority: "medium",
-    estimatedEffort: "0",
-    actualEffort: "0",
+    estimatedEffort: "",
+    actualEffort: "",
     assignedUser: "",
 });
 
-const resetForm = () => {
+const resetForm = async () => {
     if (props.existingItem) {
+        // Intentar obtener el username del usuario asignado actual
+        let assignedUserValue = "";
+        if (props.existingItem.assignedUser) {
+            try {
+                const username = await getUsernameById(props.existingItem.assignedUser);
+                if (username && SPRINT_TEAM_MEMBERS.includes(username as any)) {
+                    assignedUserValue = username;
+                }
+            } catch (error) {
+                console.warn(`Error al obtener username para ID ${props.existingItem.assignedUser}:`, error);
+            }
+        }
+
         newItem.value = {
             title: props.existingItem.title,
             detail: props.existingItem.detail,
             priority: props.existingItem.priority,
             estimatedEffort: props.existingItem.estimatedEffort.toString(),
             actualEffort: props.existingItem.actualEffort.toString(),
-            assignedUser: props.existingItem.assignedUser || "",
+            assignedUser: assignedUserValue,
         };
     } else {
         newItem.value = {
             title: "",
             detail: "",
             priority: "medium",
-            estimatedEffort: "0",
-            actualEffort: "0",
+            estimatedEffort: "",
+            actualEffort: "",
             assignedUser: "",
         };
     }
@@ -117,8 +144,8 @@ const resetForm = () => {
 // Watch para resetear el form cuando cambia existingItem
 watch(
     () => props.existingItem,
-    () => {
-        resetForm();
+    async () => {
+        await resetForm();
     },
     { immediate: true },
 );

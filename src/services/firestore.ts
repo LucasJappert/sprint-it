@@ -71,3 +71,15 @@ export const validateUsernames = async (usernames: string[]): Promise<{ valid: s
 
     return { valid, invalid };
 };
+
+export const getUsernameById = async (userId: string): Promise<string | null> => {
+    const docRef = doc(usersCollection, userId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        const userData = docSnap.data();
+        return userData?.username || null;
+    }
+
+    return null;
+};

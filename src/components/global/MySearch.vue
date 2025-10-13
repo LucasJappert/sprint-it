@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 /** Item type */
 export interface SearchItem {
@@ -419,7 +419,7 @@ onBeforeUnmount((): void => {
     left: 0;
     right: 0;
     top: calc(100% + 6px);
-    background-color: $bg-transparent;
+    background-color: $bg-primary;
     border: 1px solid var(--sel-035);
     border-radius: 20px;
     max-height: 320px;

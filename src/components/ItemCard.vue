@@ -63,11 +63,11 @@
 </template>
 
 <script setup lang="ts">
-import { saveSprint } from "@/services/firestore";
+import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import AddItemDialog from "./AddItemDialog.vue";
 import AddTaskDialog from "./AddTaskDialog.vue";
 import EditTaskDialog from "./EditTaskDialog.vue";
@@ -95,12 +95,46 @@ const highlightPosition = computed(() => {
     return highlight?.position || null;
 });
 
-const assignedUserName = computed(() => {
-    if (props.item.assignedUser === authStore.user?.id) {
-        return `${authStore.user.name} ${authStore.user.lastName}`;
+const assignedUserName = ref("");
+
+const loadAssignedUserName = async () => {
+    if (!props.item.assignedUser) {
+        assignedUserName.value = "";
+        return;
     }
-    return props.item.assignedUser;
+
+    // Si es el usuario actual, mostrar nombre completo
+    if (props.item.assignedUser === authStore.user?.id) {
+        assignedUserName.value = `${authStore.user.name} ${authStore.user.lastName}`;
+        return;
+    }
+
+    // Para otros usuarios, obtener datos desde Firestore
+    try {
+        const user = await getUser(props.item.assignedUser);
+        if (user) {
+            assignedUserName.value = `${user.name} ${user.lastName}`;
+            return;
+        }
+    } catch (error) {
+        console.warn(`Error al obtener usuario ${props.item.assignedUser}:`, error);
+    }
+
+    assignedUserName.value = props.item.assignedUser;
+};
+
+// Cargar el nombre cuando el componente se monta o cuando cambia el item
+onMounted(() => {
+    loadAssignedUserName();
 });
+
+// Watch para recargar cuando cambia el assignedUser
+watch(
+    () => props.item.assignedUser,
+    () => {
+        loadAssignedUserName();
+    },
+);
 
 // Hook para crear simulación de drag al montar el componente
 onMounted(() => {

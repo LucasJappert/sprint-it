@@ -244,7 +244,6 @@ watch(
 </script>
 
 <style scoped lang="scss">
-$bg-primary: var(--panel) !default;
 $radius: 18px;
 
 /* Wrapper anchors the absolute dropdown */
@@ -369,7 +368,7 @@ $radius: 18px;
 
 /* Dropdown style (now positioned via JS) */
 .dropdown-body {
-    background-color: $bg-transparent;
+    background-color: $bg-primary;
     border: 1px solid var(--sel-035);
     border-radius: $radius;
     max-height: 230px;
@@ -381,7 +380,8 @@ $radius: 18px;
 
 .dropdown-item {
     padding: 8px 14px;
-    color: var(--sel);
+    color: $text;
+    background-color: $bg-primary;
     cursor: pointer;
     transition: background-color 0.15s ease;
     white-space: nowrap;
