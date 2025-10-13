@@ -16,6 +16,7 @@ declare module 'vue' {
     MyLoading: typeof import('./components/global/MyLoading.vue')['default']
     MySearch: typeof import('./components/global/MySearch.vue')['default']
     MySelect: typeof import('./components/global/MySelect.vue')['default']
+    MyTextarea: typeof import('./components/global/MyTextarea.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

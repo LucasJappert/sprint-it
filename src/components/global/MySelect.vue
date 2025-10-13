@@ -269,7 +269,7 @@ $radius: 18px;
     position: relative;
     display: flex;
     align-items: center;
-    border: 1px solid rgba($gray, 0.3) !important;
+    border: 1px solid rgba($primary, 0.3) !important;
     border-radius: $radius;
     padding: 6px 40px 6px 14px;
     color: var(--sel);
@@ -328,7 +328,7 @@ $radius: 18px;
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: #ffffff44 !important;
+    color: rgba(106, 106, 106, 0.3) !important;
     pointer-events: none;
     transition: all 0.18s ease;
     font-weight: 600;
@@ -341,6 +341,7 @@ $radius: 18px;
         border-radius: $radius;
         padding: 0 6px;
         font-size: 0.7rem;
+        color: #6a6a6a !important;
     }
 }
 

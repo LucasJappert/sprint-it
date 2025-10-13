@@ -72,7 +72,7 @@ const classes = computed(() => [
 .my-button {
     width: auto;
     min-width: auto !important;
-    padding: 0 5px !important;
+    padding: 0 5px;
     border: 1px solid $primary;
     color: $primary;
     background-color: rgba($primary, 0.08);

@@ -1,7 +1,7 @@
 <template>
     <div v-if="visible" class="my-dialog-overlay" @click.self="closeDialog">
         <div class="my-dialog" :class="{ 'full-size': fullSize, 'bg-transparent': bgTransparent }" :style="myDialogStyles">
-            <div :class="{ 'slot-container': minWidth800 }">
+            <div :class="{ 'slot-container': hasMinWidth }">
                 <slot />
             </div>
         </div>
@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from "vue";
+import { computed, onBeforeUnmount, onMounted } from "vue";
 
 const emit = defineEmits<{
     (e: "close"): void;
@@ -19,19 +19,28 @@ const props = withDefaults(
     defineProps<{
         visible: boolean;
         myDialogStyles?: string;
-        minWidth800?: boolean;
+        minWidth?: string | number;
         fullSize?: boolean;
         bgTransparent?: boolean;
         persistent?: boolean;
     }>(),
     {
         myDialogStyles: "",
-        minWidth800: true,
+        minWidth: "600px",
         fullSize: false,
         bgTransparent: false,
         persistent: false,
     },
 );
+
+const hasMinWidth = computed(() => !!props.minWidth);
+
+const formattedMinWidth = computed(() => {
+    if (typeof props.minWidth === "number") {
+        return `${props.minWidth}px`;
+    }
+    return props.minWidth;
+});
 
 const closeDialog = () => {
     if (props.persistent) {
@@ -94,7 +103,7 @@ $mobile-resolution: 600px !default;
 .my-dialog {
     background-color: $bg-primary;
     border-radius: 8px;
-    min-width: 600px;
+    min-width: v-bind("formattedMinWidth");
     max-width: 90%;
     box-shadow: 0 2px 10px #000000cc;
     overflow: hidden;
@@ -130,8 +139,8 @@ $mobile-resolution: 600px !default;
         border-radius: 14px 14px 0 0;
     }
     :deep(.body-scroll) {
-        padding: 14px 16px;
-        max-height: 65vh;
+        padding: 20px 24px;
+        max-height: 85vh;
         overflow-y: auto;
     }
     :deep(.footer) {
@@ -139,6 +148,9 @@ $mobile-resolution: 600px !default;
         background: rgba(255, 255, 255, 0.05);
         border-top: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 0 0 14px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
     @media (max-width: 600px) {

@@ -7,22 +7,20 @@
             isHighlighted && highlightPosition === 'above' ? 'show-border-top' : '',
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
         ]"
+        @click="showEditItemDialog = true"
         @dragover.prevent="onDragOver"
         @drop.prevent="onDrop"
     >
         <div class="item-col cols-2 text-left">
-            <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd">
+            <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
                 <v-icon size="16">mdi-drag</v-icon>
             </span>
 
-            <v-btn icon size="x-small" @click="showTasks = !showTasks" @mousedown.stop>
+            <v-btn icon size="x-small" @click.stop="showTasks = !showTasks" @mousedown.stop>
                 <v-icon size="16">{{ showTasks ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
-            <v-btn icon size="x-small" @click="showAddTaskDialog = true" @mousedown.stop>
+            <v-btn icon size="x-small" @click.stop="showAddTaskDialog = true" @mousedown.stop>
                 <v-icon size="16">mdi-plus</v-icon>
-            </v-btn>
-            <v-btn icon size="x-small" @click="showEditItemDialog = true" @mousedown.stop>
-                <v-icon size="16">mdi-pencil</v-icon>
             </v-btn>
         </div>
 
@@ -51,7 +49,7 @@
                 <div class="item-col cols-2">{{ task.estimatedEffort }}</div>
                 <div class="item-col cols-2">{{ task.actualEffort }}</div>
                 <div class="item-col cols-1">
-                    <MyButton @click="onEditTask(task)">
+                    <MyButton @click.stop="onEditTask(task)">
                         <v-icon size="16">mdi-pencil</v-icon>
                     </MyButton>
                 </div>
@@ -250,19 +248,23 @@ const onDrop = (e: DragEvent) => {
 
 <style scoped lang="scss">
 .item-card {
+    color: $text;
     display: flex;
     align-items: center;
     padding: 8px;
-    margin-bottom: 6px;
-    border: 1px solid $primary;
+    border: 1px solid rgba($primary, 0.3);
     border-radius: 8px;
-    background: $bg-primary;
-    cursor: pointer;
-    user-select: none;
+    background: rgba($bg-primary, 0.5);
     transition: box-shadow 0.2s;
     width: 100%;
     box-sizing: border-box;
     position: relative;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba($primary, 0.05);
+        border: 1px solid rgba($primary, 0.5);
+    }
 }
 
 .item-card:hover {

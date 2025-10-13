@@ -1,10 +1,48 @@
+<template>
+    <div class="dashboard">
+        <!-- Header con selector de sprint y controles -->
+        <div class="dashboard-header">
+            <div class="sprint-selector">
+                <MySelect
+                    :options="sprintOptions"
+                    :model-value="sprintStore.currentSprintId"
+                    placeholder="Seleccionar Sprint"
+                    @update:model-value="onSprintChange"
+                />
+            </div>
+
+            <div class="dashboard-actions">
+                <MyButton @click="showAddItemDialog = true">
+                    <v-icon left>mdi-plus</v-icon>
+                    Nuevo Item
+                </MyButton>
+            </div>
+        </div>
+
+        <!-- Lista de items -->
+        <div class="board" @dragover="onItemDragOver" @drop="onBoardDrop">
+            <div class="list">
+                <ItemCard
+                    v-for="it in items"
+                    :key="it.id"
+                    :item="it"
+                    :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
+                    :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
+                />
+            </div>
+        </div>
+
+        <!-- Diálogo para agregar nuevo item -->
+        <AddItemDialog :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @add-item="onAddItem" />
+    </div>
+</template>
+
 <script setup lang="ts">
+import AddItemDialog from "@/components/AddItemDialog.vue";
 import MyButton from "@/components/global/MyButton.vue";
-import MyDialog from "@/components/global/MyDialog.vue";
-import MyInput from "@/components/global/MyInput.vue";
-import MySelect from "@/components/global/MySelect.vue";
 import ItemCard from "@/components/ItemCard.vue";
 import { saveSprint } from "@/services/firestore";
+import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item } from "@/types";
 import { computed, onMounted, ref } from "vue";
@@ -40,60 +78,8 @@ const onSprintChange = (sprintId: string) => {
 // Crear nuevo item
 const showAddItemDialog = ref(false);
 
-// Datos del formulario para nuevo item
-const newItem = ref({
-    title: "",
-    detail: "",
-    priority: "medium",
-    estimatedEffort: "0",
-    actualEffort: "0",
-});
-
-const resetNewItemForm = () => {
-    newItem.value = {
-        title: "",
-        detail: "",
-        priority: "medium",
-        estimatedEffort: "0",
-        actualEffort: "0",
-    };
-};
-
-const handleSaveItem = async () => {
-    if (newItem.value.title.trim()) {
-        const item: Item = {
-            id: `item-${Date.now()}`,
-            title: newItem.value.title.trim(),
-            detail: newItem.value.detail.trim(),
-            priority: newItem.value.priority as "low" | "medium" | "high",
-            estimatedEffort: parseInt(newItem.value.estimatedEffort) || 0,
-            actualEffort: parseInt(newItem.value.actualEffort) || 0,
-            assignedUser: "",
-            tasks: [],
-            order: items.value.length + 1,
-        };
-
-        await sprintStore.addItem(item);
-        showAddItemDialog.value = false;
-        resetNewItemForm();
-    }
-};
-
-const onAddItem = async (itemData: { title: string; detail: string; priority: string; estimatedEffort: number; actualEffort: number }) => {
-    const newItemData: Item = {
-        id: `item-${Date.now()}`,
-        title: itemData.title,
-        detail: itemData.detail,
-        priority: itemData.priority as "low" | "medium" | "high",
-        estimatedEffort: itemData.estimatedEffort,
-        actualEffort: itemData.actualEffort,
-        assignedUser: "",
-        tasks: [],
-        order: items.value.length + 1,
-    };
-
-    await sprintStore.addItem(newItemData);
-    showAddItemDialog.value = false;
+const onAddItem = async (item: Item) => {
+    await sprintStore.addItem(item);
 };
 
 // Usar el store para el estado del drag & drop
@@ -194,68 +180,6 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
     }
 };
 </script>
-
-<template>
-    <div class="dashboard">
-        <!-- Header con selector de sprint y controles -->
-        <div class="dashboard-header">
-            <div class="sprint-selector">
-                <MySelect
-                    :options="sprintOptions"
-                    :model-value="sprintStore.currentSprintId"
-                    placeholder="Seleccionar Sprint"
-                    @update:model-value="onSprintChange"
-                />
-            </div>
-
-            <div class="dashboard-actions">
-                <MyButton @click="showAddItemDialog = true">
-                    <v-icon left>mdi-plus</v-icon>
-                    Nuevo Item
-                </MyButton>
-            </div>
-        </div>
-
-        <!-- Lista de items -->
-        <div class="board" @dragover="onItemDragOver" @drop="onBoardDrop">
-            <div class="list">
-                <ItemCard
-                    v-for="it in items"
-                    :key="it.id"
-                    :item="it"
-                    :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
-                    :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
-                />
-            </div>
-        </div>
-
-        <!-- Diálogo para agregar nuevo item -->
-        <MyDialog :visible="showAddItemDialog" @close="showAddItemDialog = false">
-            <div class="header">
-                <h2>Nuevo Item</h2>
-            </div>
-            <div class="body-scroll">
-                <MyInput v-model="newItem.title" label="Título" @keydown.enter="handleSaveItem" autofocus />
-                <MyInput v-model="newItem.detail" label="Detalle" />
-                <MySelect
-                    v-model="newItem.priority"
-                    label="Prioridad"
-                    :options="[
-                        { name: 'Baja', checked: false, value: 'low' },
-                        { name: 'Media', checked: false, value: 'medium' },
-                        { name: 'Alta', checked: false, value: 'high' },
-                    ]"
-                />
-                <MyInput v-model.number="newItem.estimatedEffort" label="Esfuerzo Estimado" type="number" />
-                <MyInput v-model.number="newItem.actualEffort" label="Esfuerzo Real" type="number" />
-            </div>
-            <div class="footer">
-                <MyButton @click="showAddItemDialog = false">Cancelar</MyButton>
-                <MyButton @click="handleSaveItem" color="primary" :disabled="!newItem.title.trim()">Crear Item</MyButton>
-            </div>
-        </MyDialog>
-    </div>
-</template>
 
 <style scoped>
 .dashboard {
