@@ -124,11 +124,12 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
-    const updateItem = (itemId: string, updatedItem: Partial<Item>) => {
+    const updateItem = async (itemId: string, updatedItem: Partial<Item>) => {
         if (currentSprint.value) {
             const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
             if (index !== -1 && currentSprint.value.items[index]) {
                 Object.assign(currentSprint.value.items[index], updatedItem);
+                await saveSprint(currentSprint.value);
             }
         }
     };

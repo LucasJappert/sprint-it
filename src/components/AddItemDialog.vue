@@ -4,39 +4,50 @@
             <h3 class="text-left">{{ isEditing ? "Editar Item" : "Nuevo Item" }}</h3>
         </div>
         <div class="body-scroll">
-            <!-- Título ocupando 100% del ancho -->
-            <div class="full-width">
-                <MyInput v-model="newItem.title" label="Título" @keydown.enter="handleSave" autofocus />
+            <div v-if="loadingStore.isLoading" class="loading-container">
+                <p>Cargando información del item...</p>
             </div>
+            <template v-else>
+                <!-- Título ocupando 100% del ancho -->
+                <div class="full-width">
+                    <MyInput v-model="newItem.title" label="Título" @keydown.enter="handleSave" autofocus />
+                </div>
 
-            <!-- Campos en una sola fila: persona asignada, prioridad, esfuerzos -->
-            <div class="form-row mt-3">
-                <div class="field-group assigned-user">
-                    <MySelect v-model="newItem.assignedUser" label="Persona Asignada" :options="assignedUserOptions" placeholder="Seleccionar usuario..." />
+                <!-- Campos en una sola fila: persona asignada, prioridad, esfuerzos -->
+                <div class="form-row mt-3">
+                    <div class="field-group assigned-user">
+                        <MySelect
+                            v-model="newItem.assignedUser"
+                            label="Persona Asignada"
+                            :options="assignedUserOptions"
+                            placeholder="Seleccionar usuario..."
+                            @update:options="onAssignedUserChange"
+                        />
+                    </div>
+                    <div class="field-group priority">
+                        <MySelect
+                            v-model="newItem.priority"
+                            label="Prioridad"
+                            :options="[
+                                { name: 'Baja', checked: false, value: 'low' },
+                                { name: 'Media', checked: false, value: 'medium' },
+                                { name: 'Alta', checked: false, value: 'high' },
+                            ]"
+                        />
+                    </div>
+                    <div class="field-group estimated-effort">
+                        <MyInput v-model="newItem.estimatedEffort" label="Esfuerzo" type="number" />
+                    </div>
+                    <div class="field-group actual-effort">
+                        <MyInput v-model="newItem.actualEffort" label="Esf. Real" type="number" />
+                    </div>
                 </div>
-                <div class="field-group priority">
-                    <MySelect
-                        v-model="newItem.priority"
-                        label="Prioridad"
-                        :options="[
-                            { name: 'Baja', checked: false, value: 'low' },
-                            { name: 'Media', checked: false, value: 'medium' },
-                            { name: 'Alta', checked: false, value: 'high' },
-                        ]"
-                    />
-                </div>
-                <div class="field-group estimated-effort">
-                    <MyInput v-model="newItem.estimatedEffort" label="Esfuerzo" type="number" />
-                </div>
-                <div class="field-group actual-effort">
-                    <MyInput v-model="newItem.actualEffort" label="Esf. Real" type="number" />
-                </div>
-            </div>
 
-            <!-- Detalle en textarea ocupando 100% del ancho -->
-            <div class="full-width mt-3">
-                <MyTextarea v-model="newItem.detail" label="Detalle" :rows="8" no-resize class="detail-textarea" />
-            </div>
+                <!-- Detalle en textarea ocupando 100% del ancho -->
+                <div class="full-width mt-3">
+                    <MyTextarea v-model="newItem.detail" label="Detalle" :rows="8" no-resize class="detail-textarea" />
+                </div>
+            </template>
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancelar</MyButton>
@@ -54,6 +65,7 @@ import MyTextarea from "@/components/global/MyTextarea.vue";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
+import { useLoadingStore } from "@/stores/loading";
 import type { Item } from "@/types";
 import { ref, watch } from "vue";
 
@@ -71,6 +83,7 @@ const emit = defineEmits<{
 }>();
 
 const authStore = useAuthStore();
+const loadingStore = useLoadingStore();
 
 const isEditing = computed(() => !!props.existingItem);
 
@@ -84,13 +97,12 @@ const loadAssignedUserOptions = async () => {
             options.push({
                 id: username,
                 text: `${(user as any).name} ${(user as any).lastName}`,
-                name: username,
+                name: `${(user as any).name} ${(user as any).lastName}`,
                 checked: false,
             });
         }
     }
     assignedUserOptions.value = options;
-    console.log(assignedUserOptions.value);
 };
 
 onMounted(() => {
@@ -107,48 +119,80 @@ const newItem = ref({
 });
 
 const resetForm = async () => {
-    if (props.existingItem) {
-        // Intentar obtener el username del usuario asignado actual
-        let assignedUserValue = "";
-        if (props.existingItem.assignedUser) {
-            try {
-                const username = await getUsernameById(props.existingItem.assignedUser);
-                if (username && SPRINT_TEAM_MEMBERS.includes(username as any)) {
-                    assignedUserValue = username;
+    loadingStore.setLoading(true);
+    try {
+        if (props.existingItem) {
+            // Intentar obtener el username del usuario asignado actual
+            let assignedUserValue = "";
+            if (props.existingItem.assignedUser) {
+                try {
+                    const username = await getUsernameById(props.existingItem.assignedUser);
+                    if (username && SPRINT_TEAM_MEMBERS.includes(username as any)) {
+                        assignedUserValue = username;
+                    }
+                } catch (error) {
+                    console.warn(`Error al obtener username para ID ${props.existingItem.assignedUser}:`, error);
                 }
-            } catch (error) {
-                console.warn(`Error al obtener username para ID ${props.existingItem.assignedUser}:`, error);
             }
-        }
 
-        newItem.value = {
-            title: props.existingItem.title,
-            detail: props.existingItem.detail,
-            priority: props.existingItem.priority,
-            estimatedEffort: props.existingItem.estimatedEffort.toString(),
-            actualEffort: props.existingItem.actualEffort.toString(),
-            assignedUser: assignedUserValue,
-        };
-    } else {
-        newItem.value = {
-            title: "",
-            detail: "",
-            priority: "medium",
-            estimatedEffort: "",
-            actualEffort: "",
-            assignedUser: "",
-        };
+            newItem.value = {
+                title: props.existingItem.title,
+                detail: props.existingItem.detail,
+                priority: props.existingItem.priority,
+                estimatedEffort: props.existingItem.estimatedEffort.toString(),
+                actualEffort: props.existingItem.actualEffort.toString(),
+                assignedUser: assignedUserValue,
+            };
+
+            // Esperar a que las opciones estén cargadas si no lo están
+            if (assignedUserOptions.value.length === 0) {
+                await loadAssignedUserOptions();
+            }
+
+            // Pre-seleccionar la opción correspondiente en assignedUserOptions
+            if (assignedUserValue && assignedUserOptions.value.length > 0) {
+                assignedUserOptions.value.forEach((option) => {
+                    option.checked = option.id === assignedUserValue;
+                });
+            }
+        } else {
+            newItem.value = {
+                title: "",
+                detail: "",
+                priority: "medium",
+                estimatedEffort: "",
+                actualEffort: "",
+                assignedUser: "",
+            };
+
+            // Limpiar selección
+            assignedUserOptions.value.forEach((option) => {
+                option.checked = false;
+            });
+        }
+    } finally {
+        loadingStore.setLoading(false);
     }
 };
 
 // Watch para resetear el form cuando cambia existingItem
 watch(
     () => props.existingItem,
-    async () => {
+    async (newItem, oldItem) => {
         await resetForm();
     },
     { immediate: true },
 );
+
+const onAssignedUserChange = (options: any[]) => {
+    // Encontrar la opción seleccionada
+    const selectedOption = options.find((option: any) => option.checked);
+    if (selectedOption) {
+        newItem.value.assignedUser = selectedOption.id;
+    } else {
+        newItem.value.assignedUser = "";
+    }
+};
 
 const handleSave = async () => {
     if (newItem.value.title.trim()) {
@@ -245,6 +289,12 @@ const handleSave = async () => {
     padding: 0 !important;
     line-height: 1.6 !important;
     margin-top: 4px !important;
+}
+
+.loading-container {
+    padding: 16px;
+    text-align: center;
+    color: #666;
 }
 
 /* Responsive */

@@ -33,7 +33,7 @@
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
-        <AddItemDialog :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @add-item="onAddItem" />
+        <AddItemDialog :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @save="onAddItem" />
     </div>
 </template>
 

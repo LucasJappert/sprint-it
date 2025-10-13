@@ -58,7 +58,14 @@
     </v-card-text>
 
     <AddTaskDialog :visible="showAddTaskDialog" :item="item" @close="showAddTaskDialog = false" @save="onAddTask" />
-    <AddItemDialog :visible="showEditItemDialog" :existing-item="item" :next-order="item.order" @close="showEditItemDialog = false" @save="onSaveEditItem" />
+    <AddItemDialog
+        v-if="showEditItemDialog"
+        :visible="showEditItemDialog"
+        :existing-item="item"
+        :next-order="item.order"
+        @close="showEditItemDialog = false"
+        @save="onSaveEditItem"
+    />
     <EditTaskDialog :visible="showEditTaskDialog" :task="editingTask" @close="showEditTaskDialog = false" @save="onSaveEditTask" />
 </template>
 
@@ -164,14 +171,15 @@ const onTaskMove = (_evt: any, _originalEvent: any) => {
     // Move between items (future)
 };
 
-const onSaveEditItem = (item: Item) => {
-    props.item.title = item.title;
-    props.item.detail = item.detail;
-    props.item.priority = item.priority;
-    props.item.estimatedEffort = item.estimatedEffort;
-    props.item.actualEffort = item.actualEffort;
-    props.item.assignedUser = item.assignedUser;
-    if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+const onSaveEditItem = async (item: Item) => {
+    await sprintStore.updateItem(props.item.id, {
+        title: item.title,
+        detail: item.detail,
+        priority: item.priority,
+        estimatedEffort: item.estimatedEffort,
+        actualEffort: item.actualEffort,
+        assignedUser: item.assignedUser,
+    });
     showEditItemDialog.value = false;
 };
 
