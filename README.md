@@ -107,6 +107,24 @@ VITE_FIREBASE_APP_ID=your_app_id
 
 After running the migration, you can log in with the default user credentials that will be created during the migration process. The migration script will display the login credentials once it completes successfully.
 
+## User Management
+
+### Creating Additional Users
+
+To create additional users in the system:
+
+1. **Create a temporary file**: Copy `create-user-template.js` and modify it with the new user's data
+2. **Configure user**: Edit the `userConfig` section with:
+    - `name`: User's first name
+    - `lastName`: User's last name
+    - `username`: Unique username
+    - `email`: User's email
+    - `password`: Password (will be encrypted automatically)
+3. **Run script**: `node create-user-template.js`
+4. **Delete file**: Remove the file after execution to avoid leaving traces in the repository
+
+**Note**: Requires `serviceAccountKey.json` in the project root.
+
 ## Scripts
 
 -   `npm run dev` - Start development server

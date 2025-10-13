@@ -59,6 +59,24 @@
 
 -   Nunca exponer claves; usar `.env` + `import.meta.env` (documentar variables).
 
+## User Management
+
+### Creating Users
+
+Para crear un nuevo usuario en el sistema:
+
+1. **Crear archivo temporal**: Copia `create-user-template.js` y modifícalo con los datos del nuevo usuario
+2. **Configurar usuario**: Edita la sección `userConfig` con:
+    - `name`: Nombre del usuario
+    - `lastName`: Apellido del usuario
+    - `username`: Nombre de usuario único
+    - `email`: Email del usuario
+    - `password`: Contraseña (se encriptará automáticamente)
+3. **Ejecutar script**: `node create-user-template.js`
+4. **Eliminar archivo**: Borra el archivo después de la ejecución para no dejar rastro en el repositorio
+
+**Nota**: Requiere tener `serviceAccountKey.json` en la raíz del proyecto.
+
 ## Agent Tasks (you may run)
 
 -   “Create a Vue 3 component with props typed and arrow functions.”

@@ -58,7 +58,7 @@
     </v-card-text>
 
     <AddTaskDialog :visible="showAddTaskDialog" :item="item" @close="showAddTaskDialog = false" @save="onAddTask" />
-    <EditItemDialog :visible="showEditItemDialog" :item="item" @close="showEditItemDialog = false" @save="onSaveEditItem" />
+    <AddItemDialog :visible="showEditItemDialog" :existing-item="item" :next-order="item.order" @close="showEditItemDialog = false" @save="onSaveEditItem" />
     <EditTaskDialog :visible="showEditTaskDialog" :task="editingTask" @close="showEditTaskDialog = false" @save="onSaveEditTask" />
 </template>
 
@@ -68,8 +68,8 @@ import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { computed, onMounted, ref } from "vue";
+import AddItemDialog from "./AddItemDialog.vue";
 import AddTaskDialog from "./AddTaskDialog.vue";
-import EditItemDialog from "./EditItemDialog.vue";
 import EditTaskDialog from "./EditTaskDialog.vue";
 
 const props = defineProps<{
@@ -130,12 +130,13 @@ const onTaskMove = (_evt: any, _originalEvent: any) => {
     // Move between items (future)
 };
 
-const onSaveEditItem = (data: { title: string; detail: string; priority: string; estimatedEffort: number; actualEffort: number }) => {
-    props.item.title = data.title;
-    props.item.detail = data.detail;
-    props.item.priority = data.priority as "low" | "medium" | "high";
-    props.item.estimatedEffort = data.estimatedEffort;
-    props.item.actualEffort = data.actualEffort;
+const onSaveEditItem = (item: Item) => {
+    props.item.title = item.title;
+    props.item.detail = item.detail;
+    props.item.priority = item.priority;
+    props.item.estimatedEffort = item.estimatedEffort;
+    props.item.actualEffort = item.actualEffort;
+    props.item.assignedUser = item.assignedUser;
     if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
     showEditItemDialog.value = false;
 };

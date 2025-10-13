@@ -1,5 +1,5 @@
 import type { Sprint } from "@/types";
-import { collection, doc, getDoc, onSnapshot, setDoc, type DocumentData } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, where, type DocumentData } from "firebase/firestore";
 import { db } from "./firebase";
 
 const sprintsCollection = collection(db, "sprints");
@@ -42,4 +42,32 @@ export const getUser = async (userId: string) => {
     const docRef = doc(usersCollection, userId);
     const docSnap = await getDoc(docRef);
     return docSnap.exists() ? docSnap.data() : null;
+};
+
+export const getUserByUsername = async (username: string) => {
+    const q = query(usersCollection, where('username', '==', username));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+        const docSnap = querySnapshot.docs[0];
+        if (docSnap) {
+            return { id: docSnap.id, ...docSnap.data() };
+        }
+    }
+    return null;
+};
+
+export const validateUsernames = async (usernames: string[]): Promise<{ valid: string[], invalid: string[]; }> => {
+    const valid: string[] = [];
+    const invalid: string[] = [];
+
+    for (const username of usernames) {
+        const user = await getUserByUsername(username);
+        if (user) {
+            valid.push(username);
+        } else {
+            invalid.push(username);
+        }
+    }
+
+    return { valid, invalid };
 };

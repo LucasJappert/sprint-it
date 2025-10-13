@@ -16,7 +16,7 @@ export interface Task {
     priority: "low" | "medium" | "high";
     estimatedEffort: number;
     actualEffort: number;
-    assignedUser: string; // user id
+    assignedUser: string | null; // user id (nullable)
 }
 
 export interface Item {
@@ -26,7 +26,7 @@ export interface Item {
     priority: "low" | "medium" | "high";
     estimatedEffort: number;
     actualEffort: number;
-    assignedUser: string; // user id
+    assignedUser: string | null; // user id (nullable)
     tasks: Task[];
     order: number;
 }

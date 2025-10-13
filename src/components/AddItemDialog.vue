@@ -1,7 +1,7 @@
 <template>
     <MyDialog :visible="visible" :min-width="800" @close="$emit('close')">
         <div class="header">
-            <h2>Nuevo Item</h2>
+            <h3 class="text-left">{{ isEditing ? "Editar Item" : "Nuevo Item" }}</h3>
         </div>
         <div class="body-scroll">
             <!-- Título ocupando 100% del ancho -->
@@ -12,7 +12,7 @@
             <!-- Campos en una sola fila: persona asignada, prioridad, esfuerzos -->
             <div class="form-row mt-3">
                 <div class="field-group assigned-user">
-                    <MyInput v-model="newItem.assignedUser" label="Persona Asignada" />
+                    <MySelect v-model="newItem.assignedUser" label="Persona Asignada" :options="assignedUserOptions" placeholder="Seleccionar usuario..." />
                 </div>
                 <div class="field-group priority">
                     <MySelect
@@ -40,7 +40,7 @@
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancelar</MyButton>
-            <MyButton btn-class="px-2" @click="handleSave" :disabled="!newItem.title.trim()">Crear Item</MyButton>
+            <MyButton btn-class="px-2" @click="handleSave" :disabled="!newItem.title.trim()">{{ isEditing ? "Guardar Cambios" : "Crear Item" }}</MyButton>
         </div>
     </MyDialog>
 </template>
@@ -51,20 +51,37 @@ import MyDialog from "@/components/global/MyDialog.vue";
 import MyInput from "@/components/global/MyInput.vue";
 import MySelect from "@/components/global/MySelect.vue";
 import MyTextarea from "@/components/global/MyTextarea.vue";
+import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
+import { getUserByUsername } from "@/services/firestore";
+import { useAuthStore } from "@/stores/auth";
 import type { Item } from "@/types";
-import { ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 interface Props {
     visible: boolean;
     nextOrder: number;
+    existingItem?: Item | null;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
     close: [];
-    "add-item": [item: Item];
+    save: [item: Item];
 }>();
+
+const authStore = useAuthStore();
+
+const isEditing = computed(() => !!props.existingItem);
+
+const assignedUserOptions = computed(() => {
+    return SPRINT_TEAM_MEMBERS.map((username) => ({
+        id: username,
+        text: username,
+        name: username,
+        checked: false,
+    }));
+});
 
 const newItem = ref({
     title: "",
@@ -76,30 +93,63 @@ const newItem = ref({
 });
 
 const resetForm = () => {
-    newItem.value = {
-        title: "",
-        detail: "",
-        priority: "medium",
-        estimatedEffort: "0",
-        actualEffort: "0",
-        assignedUser: "",
-    };
+    if (props.existingItem) {
+        newItem.value = {
+            title: props.existingItem.title,
+            detail: props.existingItem.detail,
+            priority: props.existingItem.priority,
+            estimatedEffort: props.existingItem.estimatedEffort.toString(),
+            actualEffort: props.existingItem.actualEffort.toString(),
+            assignedUser: props.existingItem.assignedUser || "",
+        };
+    } else {
+        newItem.value = {
+            title: "",
+            detail: "",
+            priority: "medium",
+            estimatedEffort: "0",
+            actualEffort: "0",
+            assignedUser: "",
+        };
+    }
 };
 
-const handleSave = () => {
+// Watch para resetear el form cuando cambia existingItem
+watch(
+    () => props.existingItem,
+    () => {
+        resetForm();
+    },
+    { immediate: true },
+);
+
+const handleSave = async () => {
     if (newItem.value.title.trim()) {
+        let assignedUserId = null;
+
+        // Si hay un usuario asignado, obtener su ID desde Firestore
+        if (newItem.value.assignedUser.trim()) {
+            const user = await getUserByUsername(newItem.value.assignedUser.trim());
+            if (user) {
+                assignedUserId = user.id;
+            } else {
+                console.error(`Usuario ${newItem.value.assignedUser} no encontrado en la base de datos`);
+                return; // No guardar si el usuario no existe
+            }
+        }
+
         const item: Item = {
-            id: `item-${Date.now()}`,
+            id: props.existingItem?.id || `item-${Date.now()}`,
             title: newItem.value.title.trim(),
             detail: newItem.value.detail.trim(),
             priority: newItem.value.priority as "low" | "medium" | "high",
             estimatedEffort: parseInt(newItem.value.estimatedEffort) || 0,
             actualEffort: parseInt(newItem.value.actualEffort) || 0,
-            assignedUser: newItem.value.assignedUser.trim(),
-            tasks: [],
-            order: props.nextOrder,
+            assignedUser: assignedUserId,
+            tasks: props.existingItem?.tasks || [],
+            order: props.existingItem?.order || props.nextOrder,
         };
-        emit("add-item", item);
+        emit("save", item);
         emit("close");
         resetForm();
     }
