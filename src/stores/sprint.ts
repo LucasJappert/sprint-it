@@ -1,4 +1,5 @@
-import { getSprint, saveSprint, subscribeToSprint } from "@/services/firestore";
+import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
+import { getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
 import { useLoadingStore } from "@/stores/loading";
 import type { Item, Sprint } from "@/types";
 import { defineStore } from "pinia";
@@ -16,95 +17,37 @@ export const useSprintStore = defineStore("sprint", () => {
     const generateSprints = async () => {
         loadingStore.setLoading(true);
         try {
-            const now = new Date();
-            const currentWeekStart = new Date(now);
-            currentWeekStart.setDate(now.getDate() - now.getDay()); // Monday
+            // Obtener todos los sprints existentes
+            const allSprints = await getAllSprints();
 
-            const sprintsList: Sprint[] = [];
+            if (allSprints.length === 0) {
+                // Crear Sprint 1 inicial si no existen sprints
+                const sprint1Start = new Date(2025, 9, 13); // 13 de octubre de 2025 (mes 9 porque enero es 0)
+                const sprint1End = new Date(2025, 9, 27); // 2 semanas después
 
-            // Past sprints (last 4 weeks)
-            for (let i = 4; i > 0; i--) {
-                const start = new Date(currentWeekStart);
-                start.setDate(start.getDate() - i * 14);
-                const end = new Date(start);
-                end.setDate(end.getDate() + 13);
-
-                const sprintId = `sprint-${i}-past`;
-                let sprint = await getSprint(sprintId);
-                if (!sprint) {
-                    sprint = {
-                        id: sprintId,
-                        name: `Sprint ${i} (Past)`,
-                        startDate: start,
-                        endDate: end,
-                        items: [],
-                    };
-                    await saveSprint(sprint);
-                }
-                sprintsList.push(sprint);
+                const sprint1 = {
+                    id: "sprint-1",
+                    titulo: "Sprint 1",
+                    fechaDesde: sprint1Start,
+                    fechaHasta: sprint1End,
+                    diasHabiles: 10,
+                    items: [],
+                };
+                await saveSprint(sprint1);
+                allSprints.push(sprint1);
             }
 
-            // Current sprint
-            const currentStart = new Date(currentWeekStart);
-            const currentEnd = new Date(currentStart);
-            currentEnd.setDate(currentEnd.getDate() + 13);
+            sprints.value = allSprints;
+            currentSprintId.value = allSprints[0]?.id || "sprint-1";
 
-            let currentSprintData = await getSprint("current-sprint");
-            if (!currentSprintData) {
-                currentSprintData = {
-                    id: "current-sprint",
-                    name: "Current Sprint",
-                    startDate: currentStart,
-                    endDate: currentEnd,
-                    items: [
-                        {
-                            id: "default-item",
-                            title: "Default Item",
-                            detail: "This is a default item",
-                            priority: "medium" as const,
-                            estimatedEffort: 0,
-                            actualEffort: 0,
-                            assignedUser: "",
-                            tasks: [],
-                            order: 0,
-                        },
-                    ],
-                } as Sprint;
-                await saveSprint(currentSprintData);
-            }
-            sprintsList.push(currentSprintData as Sprint);
-
-            // Future sprints (next 4)
-            for (let i = 1; i <= 4; i++) {
-                const start = new Date(currentWeekStart);
-                start.setDate(start.getDate() + i * 14);
-                const end = new Date(start);
-                end.setDate(end.getDate() + 13);
-
-                const sprintId = `sprint-${i}-future`;
-                let sprint = await getSprint(sprintId);
-                if (!sprint) {
-                    sprint = {
-                        id: sprintId,
-                        name: `Sprint ${i} (Future)`,
-                        startDate: start,
-                        endDate: end,
-                        items: [],
-                    };
-                    await saveSprint(sprint);
-                }
-                sprintsList.push(sprint);
-            }
-
-            sprints.value = sprintsList;
-            currentSprintId.value = "current-sprint";
-
-            // Subscribe to current sprint changes
-            subscribeToSprint("current-sprint", (updatedSprint) => {
-                const index = sprints.value.findIndex(s => s.id === updatedSprint.id);
-                if (index !== -1) {
-                    sprints.value[index] = updatedSprint;
-                }
+            // Subscribe to all sprint changes
+            allSprints.forEach((sprint: Sprint) => {
+                subscribeToSprint(sprint.id, (updatedSprint) => {
+                    const index = sprints.value.findIndex(s => s.id === updatedSprint.id);
+                    if (index !== -1) {
+                        sprints.value[index] = updatedSprint;
+                    }
+                });
             });
         } finally {
             loadingStore.setLoading(false);
@@ -160,6 +103,57 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    const createNewSprint = async () => {
+        const lastSprintNumber = sprints.value.length > 0
+            ? Math.max(...sprints.value.map(s => {
+                const parts = s.titulo.split(' ');
+                const numStr = parts.length > 1 ? parts[1] : '0';
+                const num = parseInt(numStr || '0');
+                return isNaN(num) ? 0 : num;
+            }))
+            : 0;
+        const newSprintNumber = lastSprintNumber + 1;
+
+        const lastSprint = sprints.value[sprints.value.length - 1];
+        if (!lastSprint) return;
+
+        const newStart = new Date(lastSprint.fechaHasta);
+        newStart.setDate(newStart.getDate() + 1); // Día siguiente al último sprint
+        const newEnd = new Date(newStart);
+        newEnd.setDate(newEnd.getDate() + 13); // 2 semanas después
+
+        const newSprint: Sprint = {
+            id: `sprint-${newSprintNumber}`,
+            titulo: `Sprint ${newSprintNumber}`,
+            fechaDesde: newStart,
+            fechaHasta: newEnd,
+            diasHabiles: 10,
+            items: [],
+        };
+
+        await saveSprint(newSprint);
+        sprints.value.push(newSprint);
+        // No cambiar currentSprintId para mantener la selección actual
+
+        // Subscribe to new sprint changes
+        subscribeToSprint(newSprint.id, (updatedSprint) => {
+            const index = sprints.value.findIndex(s => s.id === updatedSprint.id);
+            if (index !== -1) {
+                sprints.value[index] = updatedSprint;
+            }
+        });
+
+        // Emitir notificación de éxito
+        notifyOk(`Sprint ${newSprintNumber} creado`, "El nuevo sprint ha sido creado exitosamente");
+    };
+
+    const updateSprintDiasHabiles = async (diasHabiles: number) => {
+        if (currentSprint.value) {
+            currentSprint.value.diasHabiles = diasHabiles;
+            await saveSprint(currentSprint.value);
+        }
+    };
+
     return {
         sprints,
         currentSprintId,
@@ -169,5 +163,7 @@ export const useSprintStore = defineStore("sprint", () => {
         updateItem,
         moveTask,
         reorderTasks,
+        createNewSprint,
+        updateSprintDiasHabiles,
     };
 });

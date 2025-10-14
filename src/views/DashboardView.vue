@@ -9,14 +9,33 @@
                     placeholder="Seleccionar Sprint"
                     @update:model-value="onSprintChange"
                 />
+                <div style="width: 120px">
+                    <MyInput
+                        v-model="currentSprintDiasHabilesString"
+                        type="number"
+                        label="Días hábiles"
+                        :min="1"
+                        :max="10"
+                        @blur="updateDiasHabiles"
+                        centered
+                    />
+                </div>
             </div>
 
-            <div class="dashboard-actions">
-                <MyButton @click="showAddItemDialog = true">
+            <div class="sprint-actions">
+                <MyButton @click="createNewSprint" variant="outlined">
                     <v-icon left>mdi-plus</v-icon>
-                    Nuevo Item
+                    Nuevo Sprint
                 </MyButton>
             </div>
+        </div>
+
+        <!-- Botón para agregar nuevo item -->
+        <div class="board-header">
+            <MyButton @click="showAddItemDialog = true">
+                <v-icon left>mdi-plus</v-icon>
+                Nuevo Item
+            </MyButton>
         </div>
 
         <!-- Lista de items -->
@@ -77,14 +96,42 @@ onMounted(async () => {
 // Selector de sprint
 const sprintOptions = computed(() =>
     sprintStore.sprints.map((sprint) => ({
-        name: sprint.name,
+        name: sprint.titulo,
         checked: sprint.id === sprintStore.currentSprintId,
         value: sprint.id,
     })),
 );
 
-const onSprintChange = (sprintId: string) => {
+// Días hábiles del sprint actual
+const currentSprintDiasHabiles = computed({
+    get: () => sprintStore.currentSprint?.diasHabiles || 10,
+    set: (value: number) => {
+        if (sprintStore.currentSprint) {
+            sprintStore.currentSprint.diasHabiles = value;
+        }
+    },
+});
+
+const currentSprintDiasHabilesString = computed({
+    get: () => currentSprintDiasHabiles.value.toString(),
+    set: (value: string) => {
+        const num = parseInt(value);
+        if (!isNaN(num)) {
+            currentSprintDiasHabiles.value = num;
+        }
+    },
+});
+
+const updateDiasHabiles = async () => {
+    await sprintStore.updateSprintDiasHabiles(currentSprintDiasHabiles.value);
+};
+
+const onSprintChange = async (sprintId: string) => {
     sprintStore.currentSprintId = sprintId;
+};
+
+const createNewSprint = async () => {
+    await sprintStore.createNewSprint();
 };
 
 // Crear nuevo item
@@ -208,12 +255,26 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
 }
 
 .sprint-selector {
-    min-width: 250px;
-}
-
-.dashboard-actions {
     display: flex;
     gap: 8px;
+    align-items: center;
+    min-width: 270px;
+
+    .my-input {
+        width: 120px !important;
+    }
+}
+
+.sprint-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.board-header {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-start;
 }
 
 .board {

@@ -337,6 +337,7 @@ $bg-primary: var(--panel) !default;
         border: 1px solid var(--sel-03) !important;
         border-radius: 18px !important;
         color: #ffffffbb !important;
+        width: 100% !important;
     }
     :deep(.v-field--focused) {
         border-color: var(--sel) !important;

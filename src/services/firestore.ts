@@ -17,8 +17,8 @@ export const getSprint = async (sprintId: string): Promise<Sprint | null> => {
         const data = docSnap.data();
         return {
             ...data,
-            startDate: data.startDate?.toDate() || new Date(),
-            endDate: data.endDate?.toDate() || new Date(),
+            fechaDesde: data.fechaDesde?.toDate() || new Date(),
+            fechaHasta: data.fechaHasta?.toDate() || new Date(),
         } as Sprint;
     }
     return null;
@@ -28,7 +28,12 @@ export const subscribeToSprint = (sprintId: string, callback: (sprint: Sprint) =
     const docRef = doc(sprintsCollection, sprintId);
     return onSnapshot(docRef, (doc) => {
         if (doc.exists()) {
-            callback(doc.data() as Sprint);
+            const data = doc.data();
+            callback({
+                ...data,
+                fechaDesde: data.fechaDesde?.toDate() || new Date(),
+                fechaHasta: data.fechaHasta?.toDate() || new Date(),
+            } as Sprint);
         }
     });
 };
@@ -82,4 +87,16 @@ export const getUsernameById = async (userId: string): Promise<string | null> =>
     }
 
     return null;
+};
+
+export const getAllSprints = async (): Promise<Sprint[]> => {
+    const querySnapshot = await getDocs(sprintsCollection);
+    return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            ...data,
+            fechaDesde: data.fechaDesde?.toDate() || new Date(),
+            fechaHasta: data.fechaHasta?.toDate() || new Date(),
+        } as Sprint;
+    });
 };

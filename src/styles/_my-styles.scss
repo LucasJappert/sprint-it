@@ -1,0 +1,370 @@
+.bg-primary {
+    background-color: $primary !important;
+    color: white !important;
+    * {
+        color: white;
+    }
+}
+
+.bg-primary-transparent {
+    background-color: $primary-transparent !important;
+    color: white !important;
+    * {
+        color: white;
+    }
+}
+//TODO: Eliminar de aca y usar el scss de reports
+.bg-primary-transparent-padding {
+    background-color: $primary-transparent !important;
+    color: white !important;
+    padding: 20px;
+    * {
+        color: white;
+    }
+}
+
+.flex-start {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+}
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.flex-column {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    &.right {
+        align-items: flex-end;
+    }
+}
+
+.custom-bg-and-border {
+    background-color: rgba($bg-primary, 0.8) !important;
+    border: 1px solid $primary !important;
+    border-top-left-radius: 9999px !important;
+    border-bottom-left-radius: 9999px !important;
+    border-top-right-radius: 9999px !important;
+    border-bottom-right-radius: 9999px !important;
+}
+.custom-bg-and-border1 {
+    background-color: $bg-primary !important;
+    border: 1px solid $primary !important;
+    border-top-left-radius: 9999px !important;
+    border-bottom-left-radius: 9999px !important;
+    border-top-right-radius: 9999px !important;
+    border-bottom-right-radius: 9999px !important;
+}
+button {
+    transition: all 0.3s !important;
+    cursor: pointer;
+    &:hover {
+        background-color: rgba($bg-primary, 1) !important;
+    }
+}
+.my-green-button {
+    background-color: $primary !important;
+    filter: brightness(80%);
+    &:hover {
+        background-color: $primary !important;
+        filter: brightness(100%);
+    }
+}
+.my-green-button1 {
+    background-color: $bg-primary !important;
+    border: 1px solid $primary !important;
+    color: $primary !important;
+    border-radius: 30px !important;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    filter: brightness(100%);
+    transition: all 0.3s !important;
+    &:hover {
+        filter: brightness(80%);
+    }
+}
+.button-error {
+    border: 1px solid $error !important;
+    color: $error !important;
+}
+
+.my-green-switch {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    .v-switch__track {
+        background-color: $bg-primary !important;
+        border: 1px solid $primary !important;
+        border-radius: 30px !important;
+        height: 30px !important;
+        transition: all 0.3s !important;
+        filter: brightness(100%);
+    }
+
+    .v-switch__thumb {
+        background-color: $primary !important;
+        border: 1px solid $primary !important;
+        box-shadow: none !important;
+        height: 22px !important;
+        width: 22px !important;
+        transition: all 0.3s !important;
+    }
+
+    .v-label {
+        color: $primary !important;
+        margin-left: 8px;
+        user-select: none;
+    }
+
+    &:hover .v-switch__track {
+        filter: brightness(80%);
+    }
+
+    &.v-input--disabled {
+        opacity: 0.6 !important;
+        cursor: not-allowed !important;
+
+        .v-label {
+            cursor: not-allowed !important;
+        }
+    }
+}
+
+//TODO: Eliminar de aca y usar el scss de reports
+.report-header-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.text-bold {
+    font-weight: bold;
+}
+.bold {
+    font-weight: bold;
+}
+.no-bold {
+    font-weight: normal !important;
+}
+.no-uppercase {
+    text-transform: none !important;
+}
+.relative {
+    position: relative;
+}
+.absolute {
+    position: absolute;
+}
+.block {
+    display: block;
+}
+.w-100 {
+    width: 100%;
+}
+.w-90 {
+    width: 90%;
+}
+.w-50 {
+    width: 50%;
+}
+.w-45 {
+    width: 45%;
+}
+.h-30 {
+    height: 30%;
+}
+.h-40 {
+    height: 40%;
+}
+.h-45 {
+    height: 45%;
+}
+.h-47 {
+    height: 47%;
+}
+.h-50 {
+    height: 50%;
+}
+.h-60 {
+    height: 60%;
+}
+.h-70 {
+    height: 70%;
+}
+.h-80 {
+    height: 80%;
+}
+.h-85 {
+    height: 85%;
+}
+.h-90 {
+    height: 90%;
+}
+.h-95 {
+    height: 95%;
+}
+.h-100 {
+    height: 100%;
+}
+.h-40p {
+    height: 40px;
+}
+.full-size {
+    width: 100%;
+    height: 100%;
+}
+.vh-100 {
+    height: 100vh;
+}
+.h-30p {
+    height: 30px;
+}
+.h-40p {
+    height: 40px;
+}
+.h-60p {
+    height: 60px;
+}
+.h-200p {
+    height: 200px;
+}
+.min-w-1280 {
+    min-width: 1280px;
+}
+.min-w-1000 {
+    min-width: 1000px;
+}
+.min-w-400 {
+    min-width: 400px;
+}
+.min-w-300 {
+    min-width: 300px;
+}
+.min-w-200 {
+    min-width: 200px;
+}
+.min-w-250 {
+    min-width: 250px;
+}
+.min-h-300 {
+    min-height: 300px;
+}
+.no-select {
+    user-select: none;
+}
+a {
+    text-decoration: none;
+    color: inherit;
+}
+/* Scrollbar global */
+::-webkit-scrollbar {
+    width: 8px; /* ancho del scroll vertical */
+    height: 8px; /* alto del scroll horizontal */
+}
+
+/* Fondo de la barra */
+::-webkit-scrollbar-track {
+    background: $bg-primary; /* color de fondo */
+    border: 1px solid #000000; /* opcional: borde */
+    border-radius: 4px;
+}
+
+/* Barra en sí */
+::-webkit-scrollbar-thumb {
+    background-color: $primary; /* color del thumb */
+    border-radius: 4px;
+    border: 1px solid #000000; /* opcional: borde */
+}
+
+/* Al hacer hover */
+::-webkit-scrollbar-thumb:hover {
+    background-color: $primary; /* color del thumb */
+    cursor: grab;
+}
+
+html {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.my-full-screen-button {
+    position: absolute !important;
+    bottom: 0px !important;
+    right: 0px !important;
+    cursor: pointer !important;
+    width: 30px;
+    min-width: 40px !important;
+}
+.circle-50 {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+.circle-40 {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50%;
+}
+.circle-30 {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50%;
+}
+.color-white {
+    color: white !important;
+}
+.color-primary {
+    color: $primary !important;
+}
+.color-info {
+    color: $info !important;
+}
+.color-yellow {
+    color: $yellow !important;
+}
+.no-data-container {
+    background-color: #ffffff10 !important;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.only-mobile {
+    @media (min-width: $mobile-resolution) {
+        display: none !important;
+    }
+}
+.hover-underline {
+    transition: all 0.3s !important;
+    &:hover {
+        text-decoration: underline !important;
+    }
+}
+.ellipsis {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.pointer {
+    cursor: pointer;
+}
+.font-09 {
+    font-size: 0.9rem !important;
+}
+.font-08 {
+    font-size: 0.8rem !important;
+}
+hr {
+    border: 0;
+    opacity: 1 !important;
+    border-top: 1px dashed rgba($primary, 0.3) !important;
+}

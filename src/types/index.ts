@@ -33,8 +33,9 @@ export interface Item {
 
 export interface Sprint {
     id: string;
-    name: string;
-    startDate: Date;
-    endDate: Date;
+    titulo: string;
+    fechaDesde: Date;
+    fechaHasta: Date;
+    diasHabiles: number;
     items: Item[];
 }
