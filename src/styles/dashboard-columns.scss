@@ -1,0 +1,35 @@
+.item-col {
+    padding: 0 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cols-actions {
+    flex: 0 0 120px;
+    max-width: 120px;
+    text-align: left;
+}
+
+.cols-order {
+    flex: 0 0 50px;
+    max-width: 50px;
+    text-align: center;
+}
+
+.cols-title {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+
+.cols-assigned {
+    flex: 0 0 120px;
+    max-width: 120px;
+    text-align: left;
+}
+
+.cols-effort {
+    flex: 0 0 100px;
+    max-width: 100px;
+}

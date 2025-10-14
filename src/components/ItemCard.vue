@@ -11,15 +11,15 @@
         @dragover.prevent="onDragOver"
         @drop.prevent="onDrop"
     >
-        <div class="item-col cols-2 text-left">
+        <div class="item-col cols-actions text-left">
             <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
-                <v-icon size="16">mdi-drag</v-icon>
+                <v-icon size="24">mdi-drag</v-icon>
             </span>
 
             <v-btn icon size="x-small" @click.stop="showTasks = !showTasks" @mousedown.stop>
                 <v-icon size="16">{{ showTasks ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
-            <v-btn icon size="x-small" @click.stop="showAddTaskDialog = true" @mousedown.stop>
+            <v-btn icon size="x-small" @click.stop="showAddTaskDialog = true" @mousedown.stop class="ml-1">
                 <v-icon size="16">mdi-plus</v-icon>
             </v-btn>
         </div>
@@ -27,14 +27,14 @@
         <div class="item-col cols-order">
             {{ item.order }}
         </div>
-        <div class="item-col cols-3 text-left">
+        <div class="item-col cols-title text-left">
             <strong>{{ item.title }}</strong>
         </div>
-        <div class="item-col cols-2">
+        <div class="item-col cols-assigned">
             {{ assignedUserName }}
         </div>
-        <div class="item-col cols-2">{{ item.estimatedEffort }}</div>
-        <div class="item-col cols-2">{{ item.actualEffort }}</div>
+        <div class="item-col cols-effort">{{ item.estimatedEffort }}</div>
+        <div class="item-col cols-effort">{{ item.actualEffort }}</div>
     </div>
 
     <v-card-text v-if="showTasks" class="ml-4">
@@ -290,12 +290,13 @@ const onDrop = (e: DragEvent) => {
 </script>
 
 <style scoped lang="scss">
+@import "@/styles/dashboard-columns.scss";
 .item-card {
     color: $text;
     display: flex;
     align-items: center;
-    padding: 8px;
-    border: 1px solid rgba($primary, 0.3);
+    padding: 3px 8px;
+    border: 1px solid rgba($gray, 0.3);
     border-radius: 8px;
     background: rgba($bg-primary, 0.5);
     transition: box-shadow 0.2s;
@@ -336,28 +337,6 @@ const onDrop = (e: DragEvent) => {
 }
 .drag-handle:active {
     cursor: grabbing;
-}
-
-.item-col {
-    padding: 0 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.cols-order {
-    flex: 0 0 90px;
-    max-width: 90px;
-    text-align: left;
-}
-
-.cols-2 {
-    flex: 0 0 16.666%;
-    max-width: 16.666%;
-}
-
-.cols-3 {
-    flex: 1;
 }
 
 /* Estilos para el ghost arrastrable */

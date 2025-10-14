@@ -4,50 +4,45 @@
             <h3 class="text-left">{{ isEditing ? "Editar Item" : "Nuevo Item" }}</h3>
         </div>
         <div class="body-scroll">
-            <div v-if="loadingStore.isLoading" class="loading-container">
-                <p>Cargando información del item...</p>
+            <!-- Título ocupando 100% del ancho -->
+            <div class="full-width">
+                <MyInput v-model="newItem.title" label="Título" @keydown.enter="handleSave" autofocus />
             </div>
-            <template v-else>
-                <!-- Título ocupando 100% del ancho -->
-                <div class="full-width">
-                    <MyInput v-model="newItem.title" label="Título" @keydown.enter="handleSave" autofocus />
-                </div>
 
-                <!-- Campos en una sola fila: persona asignada, prioridad, esfuerzos -->
-                <div class="form-row mt-3">
-                    <div class="field-group assigned-user">
-                        <MySelect
-                            v-model="newItem.assignedUser"
-                            label="Persona Asignada"
-                            :options="assignedUserOptions"
-                            placeholder="Seleccionar usuario..."
-                            @update:options="onAssignedUserChange"
-                        />
-                    </div>
-                    <div class="field-group priority">
-                        <MySelect
-                            v-model="newItem.priority"
-                            label="Prioridad"
-                            :options="[
-                                { name: 'Baja', checked: false, value: 'low' },
-                                { name: 'Media', checked: false, value: 'medium' },
-                                { name: 'Alta', checked: false, value: 'high' },
-                            ]"
-                        />
-                    </div>
-                    <div class="field-group estimated-effort">
-                        <MyInput v-model="newItem.estimatedEffort" label="Esfuerzo" type="number" />
-                    </div>
-                    <div class="field-group actual-effort">
-                        <MyInput v-model="newItem.actualEffort" label="Esf. Real" type="number" />
-                    </div>
+            <!-- Campos en una sola fila: persona asignada, prioridad, esfuerzos -->
+            <div class="form-row mt-3">
+                <div class="field-group assigned-user">
+                    <MySelect
+                        v-model="newItem.assignedUser"
+                        label="Persona Asignada"
+                        :options="assignedUserOptions"
+                        placeholder="Seleccionar usuario..."
+                        @update:options="onAssignedUserChange"
+                    />
                 </div>
+                <div class="field-group priority">
+                    <MySelect
+                        v-model="newItem.priority"
+                        label="Prioridad"
+                        :options="[
+                            { name: 'Baja', checked: false, value: 'low' },
+                            { name: 'Media', checked: false, value: 'medium' },
+                            { name: 'Alta', checked: false, value: 'high' },
+                        ]"
+                    />
+                </div>
+                <div class="field-group estimated-effort">
+                    <MyInput v-model="newItem.estimatedEffort" label="Esfuerzo" type="number" />
+                </div>
+                <div class="field-group actual-effort">
+                    <MyInput v-model="newItem.actualEffort" label="Esf. Real" type="number" />
+                </div>
+            </div>
 
-                <!-- Detalle en textarea ocupando 100% del ancho -->
-                <div class="full-width mt-3">
-                    <MyTextarea v-model="newItem.detail" label="Detalle" :rows="8" no-resize class="detail-textarea" />
-                </div>
-            </template>
+            <!-- Detalle en textarea ocupando 100% del ancho -->
+            <div class="full-width mt-3">
+                <MyTextarea v-model="newItem.detail" label="Detalle" :rows="8" no-resize class="detail-textarea" />
+            </div>
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancelar</MyButton>

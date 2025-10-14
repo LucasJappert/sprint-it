@@ -21,6 +21,18 @@
 
         <!-- Lista de items -->
         <div class="board" @dragover="onItemDragOver" @drop="onBoardDrop">
+            <!-- Cabecera de columnas -->
+            <div class="header-row">
+                <div class="item-col cols-actions text-left">
+                    <!-- Espacio para drag handle y botones -->
+                </div>
+                <div class="item-col cols-order">#</div>
+                <div class="item-col cols-title text-left">Título</div>
+                <div class="item-col cols-assigned">Asignado</div>
+                <div class="item-col cols-effort">Esf. Estimado</div>
+                <div class="item-col cols-effort">Esf. Real</div>
+            </div>
+
             <div class="list">
                 <ItemCard
                     v-for="it in items"
@@ -181,7 +193,8 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import "@/styles/dashboard-columns.scss";
 .dashboard {
     padding: 16px;
 }
@@ -205,6 +218,17 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
 
 .board {
     padding: 8px;
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background: rgba($bg-primary, 0.8);
+    border-bottom: 1px solid rgba($primary, 0.3);
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    color: $text;
 }
 
 .list {
