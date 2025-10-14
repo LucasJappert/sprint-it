@@ -1,3 +1,4 @@
+import MyAlerts from "@/plugins/my-alerts";
 import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
 import { getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
 import { useLoadingStore } from "@/stores/loading";
@@ -130,6 +131,14 @@ export const useSprintStore = defineStore("sprint", () => {
             diasHabiles: 10,
             items: [],
         };
+
+        const html = `
+            <p><strong>Título:</strong> ${newSprint.titulo}</p>
+            <p><strong>Fecha Desde:</strong> ${newSprint.fechaDesde.toLocaleDateString("es-ES")}</p>
+            <p><strong>Fecha Hasta:</strong> ${newSprint.fechaHasta.toLocaleDateString("es-ES")}</p>
+        `;
+        const result = await MyAlerts.confirmAsync("Estás seguro de crear el siguiente sprint?", html, "info");
+        if (!result) return;
 
         await saveSprint(newSprint);
         sprints.value.push(newSprint);

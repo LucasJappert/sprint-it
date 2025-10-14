@@ -6,6 +6,7 @@ import { aliases, mdi } from "vuetify/iconsets/mdi";
 import "vuetify/styles";
 import "./styles/_my-styles.scss";
 
+import MyAlerts from "@/plugins/my-alerts";
 import App from "./App.vue";
 import router from "./router/index";
 
@@ -34,6 +35,7 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(vuetify);
+app.use(MyAlerts);
 
 // Initialize auth after Pinia is set up
 import { useAuthStore } from "@/stores/auth";

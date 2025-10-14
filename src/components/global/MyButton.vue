@@ -71,7 +71,7 @@ const classes = computed(() => [
 <style scoped lang="scss">
 .my-button {
     width: auto;
-    min-width: auto !important;
+    min-width: auto;
     padding: 0 5px;
     border: 1px solid $primary;
     color: $primary;

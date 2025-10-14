@@ -2,13 +2,11 @@
     <div class="dashboard">
         <!-- Header con selector de sprint y controles -->
         <div class="dashboard-header">
-            <div class="sprint-selector">
-                <MySelect
-                    :options="sprintOptions"
-                    :model-value="sprintStore.currentSprintId"
-                    placeholder="Seleccionar Sprint"
-                    @update:model-value="onSprintChange"
-                />
+            <div class="sprint-container-1">
+                <div style="width: 150px">
+                    <MySelect :options="sprintOptions" placeholder-title="Seleccionar Sprint" @update:options="onSprintOptionsChange" />
+                </div>
+
                 <div style="width: 120px">
                     <MyInput
                         v-model="currentSprintDiasHabilesString"
@@ -20,6 +18,8 @@
                         centered
                     />
                 </div>
+
+                <div class="sprint-dates">({{ currentSprintDates }})</div>
             </div>
 
             <div class="sprint-actions">
@@ -112,6 +112,14 @@ const currentSprintDiasHabiles = computed({
     },
 });
 
+// Fechas del sprint actual formateadas
+const currentSprintDates = computed(() => {
+    if (!sprintStore.currentSprint) return "";
+    const desde = sprintStore.currentSprint.fechaDesde.toLocaleDateString("es-ES");
+    const hasta = sprintStore.currentSprint.fechaHasta.toLocaleDateString("es-ES");
+    return `${desde} - ${hasta}`;
+});
+
 const currentSprintDiasHabilesString = computed({
     get: () => currentSprintDiasHabiles.value.toString(),
     set: (value: string) => {
@@ -126,8 +134,11 @@ const updateDiasHabiles = async () => {
     await sprintStore.updateSprintDiasHabiles(currentSprintDiasHabiles.value);
 };
 
-const onSprintChange = async (sprintId: string) => {
-    sprintStore.currentSprintId = sprintId;
+const onSprintOptionsChange = (options: any[]) => {
+    const selectedOption = options.find((opt) => opt.checked);
+    if (selectedOption) {
+        sprintStore.currentSprintId = selectedOption.value;
+    }
 };
 
 const createNewSprint = async () => {
@@ -254,15 +265,17 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
     gap: 16px;
 }
 
-.sprint-selector {
+.sprint-container-1 {
     display: flex;
     gap: 8px;
     align-items: center;
-    min-width: 270px;
+}
 
-    .my-input {
-        width: 120px !important;
-    }
+.sprint-dates {
+    font-size: 0.9rem;
+    color: $text;
+    opacity: 0.8;
+    white-space: nowrap;
 }
 
 .sprint-actions {
@@ -302,10 +315,6 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
     .dashboard-header {
         flex-direction: column;
         align-items: stretch;
-    }
-
-    .sprint-selector {
-        min-width: auto;
     }
 }
 </style>

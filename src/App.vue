@@ -2,11 +2,8 @@
 import MyLoading from "@/components/global/MyLoading.vue";
 import MyNotificationsHost from "@/plugins/my-notification-helper/MyNotificationsHost.vue";
 import { useLoadingStore } from "@/stores/loading";
-import { onMounted } from "vue";
 
 const loadingStore = useLoadingStore();
-
-onMounted(() => {});
 </script>
 
 <template>
