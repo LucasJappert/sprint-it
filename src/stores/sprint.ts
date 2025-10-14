@@ -118,10 +118,9 @@ export const useSprintStore = defineStore("sprint", () => {
         const lastSprint = sprints.value[sprints.value.length - 1];
         if (!lastSprint) return;
 
-        const newStart = new Date(lastSprint.fechaHasta);
-        newStart.setDate(newStart.getDate() + 1); // Día siguiente al último sprint
+        const newStart = new Date(lastSprint.fechaHasta); // Comienza el mismo día que termina el anterior
         const newEnd = new Date(newStart);
-        newEnd.setDate(newEnd.getDate() + 13); // 2 semanas después
+        newEnd.setDate(newEnd.getDate() + 14); // 2 semanas completas (14 días)
 
         const newSprint: Sprint = {
             id: `sprint-${newSprintNumber}`,
@@ -156,6 +155,45 @@ export const useSprintStore = defineStore("sprint", () => {
         notifyOk(`Sprint ${newSprintNumber} creado`, "El nuevo sprint ha sido creado exitosamente");
     };
 
+    const recalculateSprintDates = async () => {
+        loadingStore.setLoading(true);
+        try {
+            // Ordenar sprints por número
+            const sortedSprints = [...sprints.value].sort((a, b) => {
+                const numA = parseInt(a.id.replace("sprint-", ""));
+                const numB = parseInt(b.id.replace("sprint-", ""));
+                return numA - numB;
+            });
+
+            // Fijar fechaDesde del primer sprint (si es sprint-1)
+            if (sortedSprints[0] && sortedSprints[0].id === "sprint-1") {
+                sortedSprints[0].fechaDesde = new Date(2025, 9, 13); // 13 de octubre de 2025
+                sortedSprints[0].fechaHasta = new Date(sortedSprints[0].fechaDesde);
+                sortedSprints[0].fechaHasta.setDate(sortedSprints[0].fechaHasta.getDate() + 14);
+                await saveSprint(sortedSprints[0]);
+            }
+
+            // Recalcular fechas para los siguientes sprints
+            for (let i = 1; i < sortedSprints.length; i++) {
+                const prevSprint = sortedSprints[i - 1];
+                const currentSprint = sortedSprints[i];
+                if (prevSprint && currentSprint) {
+                    currentSprint.fechaDesde = new Date(prevSprint.fechaHasta);
+                    currentSprint.fechaHasta = new Date(currentSprint.fechaDesde);
+                    currentSprint.fechaHasta.setDate(currentSprint.fechaHasta.getDate() + 14);
+                    await saveSprint(currentSprint);
+                }
+            }
+
+            // Actualizar el array local
+            sprints.value = sortedSprints;
+
+            notifyOk("Fechas recalculadas", "Las fechas de los sprints han sido corregidas");
+        } finally {
+            loadingStore.setLoading(false);
+        }
+    };
+
     const updateSprintDiasHabiles = async (diasHabiles: number) => {
         if (currentSprint.value) {
             currentSprint.value.diasHabiles = diasHabiles;
@@ -173,6 +211,7 @@ export const useSprintStore = defineStore("sprint", () => {
         moveTask,
         reorderTasks,
         createNewSprint,
+        recalculateSprintDates,
         updateSprintDiasHabiles,
     };
 });
