@@ -61,6 +61,8 @@ const show = async (x: number, y: number) => {
 const hide = () => {
     isVisible.value = false;
     emit("close");
+    // Limpiar el estado del item con menú contextual abierto
+    // Esto se maneja desde el componente padre
 };
 
 const onOptionClick = (option: ContextMenuOption) => {

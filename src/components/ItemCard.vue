@@ -6,6 +6,7 @@
             dragDropStore.dragItem?.id === item.id ? 'dragging' : '',
             isHighlighted && highlightPosition === 'above' ? 'show-border-top' : '',
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
+            props.isContextMenuOpen ? 'context-menu-open' : '',
         ]"
         @click="showEditItemDialog = true"
         @contextmenu.prevent.stop="onRightClick"
@@ -73,7 +74,7 @@
     <EditTaskDialog :visible="showEditTaskDialog" :task="editingTask" @close="showEditTaskDialog = false" @save="onSaveEditTask" />
 
     <!-- Menú contextual -->
-    <ContextMenu :options="contextMenuOptions" ref="contextMenuRef" />
+    <ContextMenu :options="contextMenuOptions" ref="contextMenuRef" @close="onContextMenuClosed" />
 </template>
 
 <script setup lang="ts">
@@ -93,9 +94,13 @@ const props = defineProps<{
     item: Item;
     showBorder: boolean;
     borderPosition?: "above" | "below" | null;
+    isContextMenuOpen?: boolean;
 }>();
 
-// No necesitamos emits - usaremos el store directamente
+const emit = defineEmits<{
+    contextMenuOpened: [itemId: string];
+    contextMenuClosed: [];
+}>();
 
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
@@ -240,6 +245,13 @@ const onSaveEditTask = (data: { title: string; detail: string; priority: string;
 const onRightClick = (event: MouseEvent) => {
     event.preventDefault();
     contextMenuRef.value?.show(event.clientX, event.clientY);
+    // Emitir evento para indicar que este item tiene el menú contextual abierto
+    emit("contextMenuOpened", props.item.id);
+};
+
+const onContextMenuClosed = () => {
+    // Emitir evento para indicar que el menú contextual se cerró
+    emit("contextMenuClosed");
 };
 
 const onDragStart = (e: DragEvent) => {
@@ -346,13 +358,15 @@ const onDrop = (e: DragEvent) => {
     position: relative;
     cursor: pointer;
 
-    &:hover {
+    &:hover,
+    &.context-menu-open {
         background: rgba($primary, 0.05);
         border: 1px solid rgba($primary, 0.5);
     }
 }
 
-.item-card:hover {
+.item-card:hover,
+.item-card.context-menu-open {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 

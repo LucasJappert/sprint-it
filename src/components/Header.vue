@@ -1,0 +1,82 @@
+<template>
+    <v-app-bar color="bg-primary" dark>
+        <v-spacer />
+        <v-menu>
+            <template #activator="{ props }">
+                <v-avatar v-bind="props" size="40" class="avatar">
+                    <v-img src="https://picsum.photos/40/40" alt="Avatar" />
+                </v-avatar>
+            </template>
+            <div class="menu">
+                <div class="menu-item">
+                    <span>Hola {{ authStore.user?.username }}</span>
+                </div>
+                <div class="menu-item" @click="logout">
+                    <v-icon>mdi-logout</v-icon>
+                    <span>Desloguearse</span>
+                </div>
+            </div>
+        </v-menu>
+    </v-app-bar>
+</template>
+
+<script setup lang="ts">
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
+
+const authStore = useAuthStore();
+const router = useRouter();
+
+const logout = async () => {
+    await authStore.logout();
+    router.push("/");
+};
+</script>
+
+<style scoped lang="scss">
+@import "@/styles/variables.scss";
+
+.menu {
+    background: $bg-primary;
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    min-width: 200px;
+    padding: 4px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    &:active {
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+}
+
+.menu-item .v-icon {
+    margin-right: 12px;
+    color: $text;
+}
+
+.menu-item span {
+    font-size: 14px;
+    color: $text;
+}
+
+.avatar {
+    margin-right: 5px;
+}
+</style>

@@ -1,4 +1,5 @@
 <template>
+    <Header />
     <div class="dashboard">
         <!-- Header con selector de sprint y controles -->
         <div class="dashboard-header">
@@ -61,6 +62,9 @@
                     :item="it"
                     :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
                     :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
+                    :isContextMenuOpen="contextMenuItemId === it.id"
+                    @contextMenuOpened="onContextMenuOpened"
+                    @contextMenuClosed="onContextMenuClosed"
                 />
             </div>
         </div>
@@ -73,6 +77,7 @@
 <script setup lang="ts">
 import AddItemDialog from "@/components/AddItemDialog.vue";
 import MyButton from "@/components/global/MyButton.vue";
+import Header from "@/components/Header.vue";
 import ItemCard from "@/components/ItemCard.vue";
 import { saveSprint } from "@/services/firestore";
 import { useDragDropStore } from "@/stores/dragDrop";
@@ -82,6 +87,9 @@ import { computed, onMounted, ref } from "vue";
 
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
+
+// Estado para controlar qué item tiene el menú contextual abierto
+const contextMenuItemId = ref<string | null>(null);
 
 // Suponiendo que currentSprint.items existe y es reactivo
 const items = computed<Item[]>(() => sprintStore.currentSprint?.items ?? []);
@@ -250,6 +258,15 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
         sprintStore.currentSprint.items = newList;
         saveSprint(sprintStore.currentSprint);
     }
+};
+
+const onContextMenuOpened = (itemId: string) => {
+    contextMenuItemId.value = itemId;
+};
+
+// Limpiar el estado cuando se cierra el menú contextual
+const onContextMenuClosed = () => {
+    contextMenuItemId.value = null;
 };
 </script>
 
