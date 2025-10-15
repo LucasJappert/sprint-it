@@ -36,10 +36,7 @@
         <div class="item-col cols-effort">{{ item.estimatedEffort }}</div>
         <div class="item-col cols-effort">{{ item.actualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
-            <span class="priority-content">
-                <span class="priority-dot" :style="{ backgroundColor: getPriorityColor(item.priority) }"></span>
-                {{ getPriorityText(item.priority) }}
-            </span>
+            <span class="priority-content" v-html="getPriorityHtml(item.priority)"></span>
         </div>
     </div>
 
@@ -50,10 +47,7 @@
                     {{ task.title }}
                 </div>
                 <div class="item-col cols-2 priority-cell">
-                    <span class="priority-content">
-                        <span class="priority-dot" :style="{ backgroundColor: getPriorityColor(task.priority) }"></span>
-                        {{ task.priority }}
-                    </span>
+                    <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
                 </div>
                 <div class="item-col cols-2">{{ task.estimatedEffort }}</div>
                 <div class="item-col cols-2">{{ task.actualEffort }}</div>
@@ -79,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
@@ -162,30 +157,9 @@ const showEditItemDialog = ref(false);
 const showEditTaskDialog = ref(false);
 const editingTask = ref<Task | null>(null);
 
-const getPriorityColor = (priority: string) => {
-    switch (priority) {
-        case "low":
-            return "#4caf50";
-        case "medium":
-            return "#ff9800";
-        case "high":
-            return "#f44336";
-        default:
-            return "#666";
-    }
-};
-
-const getPriorityText = (priority: string) => {
-    switch (priority) {
-        case "low":
-            return "Baja";
-        case "medium":
-            return "Media";
-        case "high":
-            return "Alta";
-        default:
-            return priority;
-    }
+const getPriorityHtml = (priority: string) => {
+    const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
+    return option ? option.html : priority;
 };
 
 // Funciones de simulación removidas completamente
@@ -227,7 +201,7 @@ const onSaveEditTask = (data: { title: string; detail: string; priority: string;
     if (editingTask.value) {
         editingTask.value.title = data.title;
         editingTask.value.detail = data.detail;
-        editingTask.value.priority = data.priority as "low" | "medium" | "high";
+        editingTask.value.priority = data.priority as "Normal" | "Medium" | "High";
         editingTask.value.estimatedEffort = data.estimatedEffort;
         editingTask.value.actualEffort = data.actualEffort;
         if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);

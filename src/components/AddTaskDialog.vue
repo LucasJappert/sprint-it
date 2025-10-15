@@ -9,11 +9,14 @@
             <MySelect
                 v-model="priority"
                 label="Prioridad"
-                :options="[
-                    { id: 'low', text: 'Baja', name: 'Baja', checked: false },
-                    { id: 'medium', text: 'Media', name: 'Media', checked: false },
-                    { id: 'high', text: 'Alta', name: 'Alta', checked: false },
-                ]"
+                :options="
+                    PRIORITY_OPTIONS.map((option) => ({
+                        id: option.value,
+                        text: option.name,
+                        name: option.name,
+                        checked: false,
+                    }))
+                "
             />
             <MyInput v-model.number="estimatedEffort" label="Esfuerzo Estimado" type="number" />
             <MyInput v-model.number="actualEffort" label="Esfuerzo Real" type="number" />
@@ -30,6 +33,7 @@ import MyButton from "@/components/global/MyButton.vue";
 import MyDialog from "@/components/global/MyDialog.vue";
 import MyInput from "@/components/global/MyInput.vue";
 import MySelect from "@/components/global/MySelect.vue";
+import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import type { Item, Task } from "@/types";
 import { ref } from "vue";
 
@@ -45,14 +49,14 @@ const emit = defineEmits<{
 
 const title = ref("");
 const detail = ref("");
-const priority = ref("medium");
+const priority = ref(PRIORITY_VALUES.LOW);
 const estimatedEffort = ref("0");
 const actualEffort = ref("0");
 
 const resetForm = () => {
     title.value = "";
     detail.value = "";
-    priority.value = "medium";
+    priority.value = PRIORITY_VALUES.LOW;
     estimatedEffort.value = "0";
     actualEffort.value = "0";
 };
@@ -63,7 +67,7 @@ const handleSave = () => {
             id: `task-${Date.now()}`,
             title: title.value.trim(),
             detail: detail.value.trim(),
-            priority: priority.value as "low" | "medium" | "high",
+            priority: priority.value,
             estimatedEffort: parseInt(estimatedEffort.value) || 0,
             actualEffort: parseInt(actualEffort.value) || 0,
             assignedUser: props.item.assignedUser,

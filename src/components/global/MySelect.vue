@@ -23,7 +23,8 @@
                 </template>
                 <template v-else>
                     <span class="selected-single" :title="selectedLabel">
-                        {{ hasValue ? selectedLabel : "" }}
+                        <span v-if="selectedOptions[0]?.html" v-html="selectedOptions[0].html"></span>
+                        <span v-else>{{ hasValue ? selectedLabel : "" }}</span>
                     </span>
                 </template>
             </div>
@@ -52,8 +53,11 @@
                         :title="option.name"
                     >
                         <span class="dropdown-item-content">
-                            <span v-if="option.color" class="priority-dot" :style="{ backgroundColor: option.color }"></span>
-                            {{ option.name }}
+                            <span v-if="option.html" v-html="option.html"></span>
+                            <span v-else>
+                                <span v-if="option.color" class="priority-dot" :style="{ backgroundColor: option.color }"></span>
+                                {{ option.name }}
+                            </span>
                         </span>
                     </div>
                 </div>
@@ -70,6 +74,7 @@ export interface ISelectOption {
     name: string;
     checked: boolean;
     color?: string;
+    html?: string;
     [key: string]: any;
 }
 

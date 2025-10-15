@@ -21,7 +21,7 @@
                     />
                 </div>
                 <div class="field-group priority">
-                    <MySelect v-model="newItem.priority" label="Prioridad" :options="priorityOptions" />
+                    <MySelect v-model="newItem.priority" label="Prioridad" :options="priorityOptions" @update:options="onPriorityChange" />
                 </div>
                 <div class="field-group estimated-effort">
                     <MyInput v-model="newItem.estimatedEffort" label="Esfuerzo" type="number" />
@@ -38,7 +38,7 @@
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancelar</MyButton>
-            <MyButton btn-class="px-2" @click="handleSave" :disabled="!newItem.title.trim()">{{ isEditing ? "Guardar Cambios" : "Crear Item" }}</MyButton>
+            <MyButton btn-class="px-2" @click="handleSave" :disabled="!canSave">{{ isEditing ? "Guardar Cambios" : "Crear Item" }}</MyButton>
         </div>
     </MyDialog>
 </template>
@@ -49,12 +49,13 @@ import MyDialog from "@/components/global/MyDialog.vue";
 import MyInput from "@/components/global/MyInput.vue";
 import MySelect from "@/components/global/MySelect.vue";
 import MyTextarea from "@/components/global/MyTextarea.vue";
+import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { Item } from "@/types";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 interface Props {
     visible: boolean;
@@ -74,13 +75,39 @@ const loadingStore = useLoadingStore();
 
 const isEditing = computed(() => !!props.existingItem);
 
+const originalAssignedUser = ref("");
+
+const hasChanges = computed(() => {
+    if (!props.existingItem) return newItem.value.title.trim() !== ""; // Para nuevos items, habilitar si hay título
+
+    const changes =
+        newItem.value.title !== props.existingItem.title ||
+        newItem.value.detail !== props.existingItem.detail ||
+        newItem.value.priority !== props.existingItem.priority ||
+        parseInt(newItem.value.estimatedEffort) !== props.existingItem.estimatedEffort ||
+        parseInt(newItem.value.actualEffort) !== props.existingItem.actualEffort ||
+        newItem.value.assignedUser !== originalAssignedUser.value;
+
+    return changes;
+});
+
+const canSave = computed(() => {
+    if (!isEditing.value) {
+        // Para nuevos items: habilitar si hay título
+        return newItem.value.title.trim() !== "";
+    }
+    // Para editar: habilitar si hay cambios Y hay título
+    return hasChanges.value && newItem.value.title.trim() !== "";
+});
+
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
 
-const priorityOptions = ref<{ name: string; checked: boolean; value: string; color: string }[]>([
-    { name: "Baja", checked: false, value: "low", color: "#4caf50" },
-    { name: "Media", checked: false, value: "medium", color: "#ff9800" },
-    { name: "Alta", checked: false, value: "high", color: "#f44336" },
-]);
+const priorityOptions = ref(
+    PRIORITY_OPTIONS.map((option: any) => ({
+        ...option,
+        checked: false,
+    })),
+);
 
 const loadAssignedUserOptions = async () => {
     const options = [];
@@ -137,6 +164,9 @@ const resetForm = async () => {
                 assignedUser: assignedUserValue,
             };
 
+            // Guardar el valor original del assignedUser para comparación
+            originalAssignedUser.value = assignedUserValue;
+
             // Esperar a que las opciones estén cargadas si no lo están
             if (assignedUserOptions.value.length === 0) {
                 await loadAssignedUserOptions();
@@ -150,16 +180,14 @@ const resetForm = async () => {
             }
 
             // Pre-seleccionar la prioridad en las opciones del select
-            console.log("🔍 Preseleccionando prioridad:", props.existingItem!.priority);
             priorityOptions.value.forEach((option) => {
-                option.checked = option.value === props.existingItem!.priority;
-                console.log(`   ${option.name}: checked=${option.checked} (value=${option.value})`);
+                option.checked = option.value.toLowerCase() === props.existingItem!.priority.toLowerCase();
             });
         } else {
             newItem.value = {
                 title: "",
                 detail: "",
-                priority: "medium",
+                priority: PRIORITY_VALUES.LOW,
                 estimatedEffort: "",
                 actualEffort: "",
                 assignedUser: "",
@@ -199,6 +227,16 @@ const onAssignedUserChange = (options: any[]) => {
     }
 };
 
+const onPriorityChange = (options: any[]) => {
+    // Encontrar la opción seleccionada
+    const selectedOption = options.find((option: any) => option.checked);
+    if (selectedOption) {
+        newItem.value.priority = selectedOption.value;
+    } else {
+        newItem.value.priority = "medium";
+    }
+};
+
 const handleSave = async () => {
     if (newItem.value.title.trim()) {
         let assignedUserId = null;
@@ -218,7 +256,7 @@ const handleSave = async () => {
             id: props.existingItem?.id || `item-${Date.now()}`,
             title: newItem.value.title.trim(),
             detail: newItem.value.detail.trim(),
-            priority: newItem.value.priority as "low" | "medium" | "high",
+            priority: newItem.value.priority as PriorityValue,
             estimatedEffort: parseInt(newItem.value.estimatedEffort) || 0,
             actualEffort: parseInt(newItem.value.actualEffort) || 0,
             assignedUser: assignedUserId,

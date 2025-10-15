@@ -19,7 +19,7 @@
 
 -   **Functions:** prefer arrow functions always; names in camelCase; async functions end with 'Async'.
 -   **Strings:** **double quotes** only.
--   **Control flow:** avoid `else` when posible; use early returns; single-line if without braces; prefer `if (condition) return action();` or `if (condition) continue;` over multi-line blocks.
+-   **Control flow:** avoid `else` when posible; use early returns; single-line if without braces; prefer `if (condition) return action();` or `if (condition) continue;` over multi-line blocks. Always prefer early returns over else statements.
 -   **Imports:** absolute via `@/`; no default barrels ocultando tipos.
 -   **TypeScript:** explicit types on public APIs; no `any`; enable `strict`.
 -   **Vue:** `<script setup lang="ts">`; Composition API; no Options API.

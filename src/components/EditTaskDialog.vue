@@ -6,15 +6,7 @@
         <div class="body-scroll">
             <MyInput v-model="title" label="Título" @keydown.enter="handleSave" autofocus />
             <MyInput v-model="detail" label="Detalle" />
-            <MySelect
-                v-model="priority"
-                label="Prioridad"
-                :options="[
-                    { id: 'low', text: 'Baja', name: 'Baja', checked: false },
-                    { id: 'medium', text: 'Media', name: 'Media', checked: false },
-                    { id: 'high', text: 'Alta', name: 'Alta', checked: false },
-                ]"
-            />
+            <MySelect v-model="priority" label="Prioridad" :options="priorityOptions" />
             <MyInput v-model.number="estimatedEffort" label="Esfuerzo Estimado" type="number" />
             <MyInput v-model.number="actualEffort" label="Esfuerzo Real" type="number" />
         </div>
@@ -30,6 +22,7 @@ import MyButton from "@/components/global/MyButton.vue";
 import MyDialog from "@/components/global/MyDialog.vue";
 import MyInput from "@/components/global/MyInput.vue";
 import MySelect from "@/components/global/MySelect.vue";
+import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import type { Task } from "@/types";
 import { computed, ref, watch } from "vue";
 
@@ -48,6 +41,13 @@ const detail = ref("");
 const priority = ref("medium");
 const estimatedEffort = ref("0");
 const actualEffort = ref("0");
+
+const priorityOptions = ref(
+    PRIORITY_OPTIONS.map((option) => ({
+        ...option,
+        checked: false,
+    })),
+);
 
 const hasChanges = computed(() => {
     if (!props.task) return false;
@@ -69,6 +69,11 @@ watch(
             priority.value = props.task.priority;
             estimatedEffort.value = props.task.estimatedEffort.toString();
             actualEffort.value = props.task.actualEffort.toString();
+
+            // Pre-seleccionar la prioridad en las opciones del select
+            priorityOptions.value.forEach((option) => {
+                option.checked = option.value === props.task!.priority;
+            });
         }
     },
 );

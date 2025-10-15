@@ -1,3 +1,5 @@
+import type { PriorityValue } from "@/constants/priorities";
+
 export interface User {
     id: string;
     name: string;
@@ -13,7 +15,7 @@ export interface Task {
     id: string;
     title: string;
     detail: string;
-    priority: "low" | "medium" | "high";
+    priority: PriorityValue;
     estimatedEffort: number;
     actualEffort: number;
     assignedUser: string | null; // user id (nullable)
@@ -23,7 +25,7 @@ export interface Item {
     id: string;
     title: string;
     detail: string;
-    priority: "low" | "medium" | "high";
+    priority: PriorityValue;
     estimatedEffort: number;
     actualEffort: number;
     assignedUser: string | null; // user id (nullable)
