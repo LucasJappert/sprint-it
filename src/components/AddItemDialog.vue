@@ -63,6 +63,15 @@ interface Props {
     existingItem?: Item | null;
 }
 
+interface NewItemForm {
+    title: string;
+    detail: string;
+    priority: PriorityValue;
+    estimatedEffort: string;
+    actualEffort: string;
+    assignedUser: string;
+}
+
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
@@ -129,10 +138,10 @@ onMounted(() => {
     loadAssignedUserOptions();
 });
 
-const newItem = ref({
+const newItem = ref<NewItemForm>({
     title: "",
     detail: "",
-    priority: "medium",
+    priority: PRIORITY_VALUES.LOW,
     estimatedEffort: "",
     actualEffort: "",
     assignedUser: "",
@@ -198,9 +207,9 @@ const resetForm = async () => {
                 option.checked = false;
             });
 
-            // Limpiar selección de prioridad
+            // Seleccionar prioridad por defecto (low)
             priorityOptions.value.forEach((option) => {
-                option.checked = false;
+                option.checked = option.value === PRIORITY_VALUES.LOW;
             });
         }
     } finally {
@@ -233,7 +242,7 @@ const onPriorityChange = (options: any[]) => {
     if (selectedOption) {
         newItem.value.priority = selectedOption.value;
     } else {
-        newItem.value.priority = "medium";
+        newItem.value.priority = PRIORITY_VALUES.MEDIUM;
     }
 };
 
