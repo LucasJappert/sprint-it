@@ -51,6 +51,7 @@
                 <div class="item-col cols-assigned">Asignado</div>
                 <div class="item-col cols-effort">Esf. Estimado</div>
                 <div class="item-col cols-effort">Esf. Real</div>
+                <div class="item-col cols-priority">Prioridad</div>
             </div>
 
             <div class="list">

@@ -51,7 +51,10 @@
                         @click="onOptionClick(index)"
                         :title="option.name"
                     >
-                        <span>{{ option.name }}</span>
+                        <span class="dropdown-item-content">
+                            <span v-if="option.color" class="priority-dot" :style="{ backgroundColor: option.color }"></span>
+                            {{ option.name }}
+                        </span>
                     </div>
                 </div>
             </transition>
@@ -66,6 +69,7 @@ import type { AccentColor } from "../../types";
 export interface ISelectOption {
     name: string;
     checked: boolean;
+    color?: string;
     [key: string]: any;
 }
 
@@ -395,6 +399,19 @@ $radius: 18px;
     &.selected {
         background-color: var(--sel-038);
     }
+}
+
+.dropdown-item-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.priority-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 /* Provide accent variables for teleported dropdown as well */

@@ -21,15 +21,7 @@
                     />
                 </div>
                 <div class="field-group priority">
-                    <MySelect
-                        v-model="newItem.priority"
-                        label="Prioridad"
-                        :options="[
-                            { name: 'Baja', checked: false, value: 'low' },
-                            { name: 'Media', checked: false, value: 'medium' },
-                            { name: 'Alta', checked: false, value: 'high' },
-                        ]"
-                    />
+                    <MySelect v-model="newItem.priority" label="Prioridad" :options="priorityOptions" />
                 </div>
                 <div class="field-group estimated-effort">
                     <MyInput v-model="newItem.estimatedEffort" label="Esfuerzo" type="number" />
@@ -83,6 +75,12 @@ const loadingStore = useLoadingStore();
 const isEditing = computed(() => !!props.existingItem);
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
+
+const priorityOptions = ref<{ name: string; checked: boolean; value: string; color: string }[]>([
+    { name: "Baja", checked: false, value: "low", color: "#4caf50" },
+    { name: "Media", checked: false, value: "medium", color: "#ff9800" },
+    { name: "Alta", checked: false, value: "high", color: "#f44336" },
+]);
 
 const loadAssignedUserOptions = async () => {
     const options = [];
@@ -150,6 +148,13 @@ const resetForm = async () => {
                     option.checked = option.id === assignedUserValue;
                 });
             }
+
+            // Pre-seleccionar la prioridad en las opciones del select
+            console.log("🔍 Preseleccionando prioridad:", props.existingItem!.priority);
+            priorityOptions.value.forEach((option) => {
+                option.checked = option.value === props.existingItem!.priority;
+                console.log(`   ${option.name}: checked=${option.checked} (value=${option.value})`);
+            });
         } else {
             newItem.value = {
                 title: "",
@@ -162,6 +167,11 @@ const resetForm = async () => {
 
             // Limpiar selección
             assignedUserOptions.value.forEach((option) => {
+                option.checked = false;
+            });
+
+            // Limpiar selección de prioridad
+            priorityOptions.value.forEach((option) => {
                 option.checked = false;
             });
         }

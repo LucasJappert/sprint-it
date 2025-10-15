@@ -35,6 +35,12 @@
         </div>
         <div class="item-col cols-effort">{{ item.estimatedEffort }}</div>
         <div class="item-col cols-effort">{{ item.actualEffort }}</div>
+        <div class="item-col cols-priority priority-cell">
+            <span class="priority-content">
+                <span class="priority-dot" :style="{ backgroundColor: getPriorityColor(item.priority) }"></span>
+                {{ getPriorityText(item.priority) }}
+            </span>
+        </div>
     </div>
 
     <v-card-text v-if="showTasks" class="ml-4">
@@ -43,8 +49,11 @@
                 <div class="item-col cols-3">
                     {{ task.title }}
                 </div>
-                <div class="item-col cols-2">
-                    {{ task.priority }}
+                <div class="item-col cols-2 priority-cell">
+                    <span class="priority-content">
+                        <span class="priority-dot" :style="{ backgroundColor: getPriorityColor(task.priority) }"></span>
+                        {{ task.priority }}
+                    </span>
                 </div>
                 <div class="item-col cols-2">{{ task.estimatedEffort }}</div>
                 <div class="item-col cols-2">{{ task.actualEffort }}</div>
@@ -152,6 +161,32 @@ const showAddTaskDialog = ref(false);
 const showEditItemDialog = ref(false);
 const showEditTaskDialog = ref(false);
 const editingTask = ref<Task | null>(null);
+
+const getPriorityColor = (priority: string) => {
+    switch (priority) {
+        case "low":
+            return "#4caf50";
+        case "medium":
+            return "#ff9800";
+        case "high":
+            return "#f44336";
+        default:
+            return "#666";
+    }
+};
+
+const getPriorityText = (priority: string) => {
+    switch (priority) {
+        case "low":
+            return "Baja";
+        case "medium":
+            return "Media";
+        case "high":
+            return "Alta";
+        default:
+            return priority;
+    }
+};
 
 // Funciones de simulación removidas completamente
 
@@ -449,5 +484,23 @@ const onDrop = (e: DragEvent) => {
         transform: scale(1) rotate(-2deg);
         box-shadow: 0 8px 25px rgba(255, 165, 0, 0.4);
     }
+}
+
+.priority-cell {
+    display: flex;
+    align-items: center;
+}
+
+.priority-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 </style>
