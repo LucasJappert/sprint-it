@@ -8,6 +8,7 @@
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
         ]"
         @click="showEditItemDialog = true"
+        @contextmenu.prevent="onRightClick"
         @dragover.prevent="onDragOver"
         @drop.prevent="onDrop"
     >
@@ -70,17 +71,22 @@
         @save="onSaveEditItem"
     />
     <EditTaskDialog :visible="showEditTaskDialog" :task="editingTask" @close="showEditTaskDialog = false" @save="onSaveEditTask" />
+
+    <!-- Menú contextual -->
+    <ContextMenu :options="contextMenuOptions" ref="contextMenuRef" />
 </template>
 
 <script setup lang="ts">
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
+import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
 import AddItemDialog from "./AddItemDialog.vue";
 import AddTaskDialog from "./AddTaskDialog.vue";
+import ContextMenu from "./ContextMenu.vue";
 import EditTaskDialog from "./EditTaskDialog.vue";
 
 const props = defineProps<{
@@ -157,6 +163,27 @@ const showEditItemDialog = ref(false);
 const showEditTaskDialog = ref(false);
 const editingTask = ref<Task | null>(null);
 
+// Menú contextual
+const contextMenuRef = ref();
+const contextMenuOptions = computed(() => [
+    {
+        key: "add-task",
+        label: "Agregar task",
+        icon: "mdi-plus",
+        action: () => {
+            showAddTaskDialog.value = true;
+        },
+    },
+    {
+        key: "delete",
+        label: "Eliminar",
+        icon: "mdi-delete",
+        action: async () => {
+            await sprintStore.deleteItem(props.item.id);
+        },
+    },
+]);
+
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
     return option ? option.html : priority;
@@ -208,6 +235,11 @@ const onSaveEditTask = (data: { title: string; detail: string; priority: string;
     }
     showEditTaskDialog.value = false;
     editingTask.value = null;
+};
+
+const onRightClick = (event: MouseEvent) => {
+    event.preventDefault();
+    contextMenuRef.value?.show(event.clientX, event.clientY);
 };
 
 const onDragStart = (e: DragEvent) => {

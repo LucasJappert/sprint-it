@@ -194,6 +194,16 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    const deleteItem = async (itemId: string) => {
+        if (currentSprint.value) {
+            const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (index !== -1) {
+                currentSprint.value.items.splice(index, 1);
+                await saveSprint(currentSprint.value);
+            }
+        }
+    };
+
     const updateSprintDiasHabiles = async (diasHabiles: number) => {
         if (currentSprint.value) {
             currentSprint.value.diasHabiles = diasHabiles;
@@ -208,6 +218,7 @@ export const useSprintStore = defineStore("sprint", () => {
         generateSprints,
         addItem,
         updateItem,
+        deleteItem,
         moveTask,
         reorderTasks,
         createNewSprint,

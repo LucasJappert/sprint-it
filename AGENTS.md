@@ -83,10 +83,10 @@ Para crear un nuevo usuario en el sistema:
 -   “Add a Pinia store named useUserStore with persistent state.”
 -   “Refactor functions to early-return style and double quotes.”
 
-## Do / Don’t
+## Do / Don't
 
--   DO: prefer functional utilities; small components.
--   DON’T: side effects in composables durante import; no `any`; no Options API.
+-   DO: prefer functional utilities; small components; usar `ContextMenu.vue` para menús contextuales reutilizables.
+-   DON'T: side effects in composables durante import; no `any`; no Options API; no implementar lógica de menú contextual directamente en componentes - usar `ContextMenu.vue`.
 
 ## Project-Specific Rules (Lucas)
 
