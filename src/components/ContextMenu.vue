@@ -1,11 +1,9 @@
 <template>
     <Teleport to="body">
-        <div v-if="isVisible" class="context-menu-overlay" @click="hide">
-            <div class="context-menu" :style="{ left: positionX + 'px', top: positionY + 'px' }" @click.stop>
-                <div v-for="option in options" :key="option.key" class="context-menu-item" @click="onOptionClick(option)">
-                    <v-icon v-if="option.icon" size="16" class="context-menu-icon">{{ option.icon }}</v-icon>
-                    <span class="context-menu-text">{{ option.label }}</span>
-                </div>
+        <div v-if="isVisible" class="context-menu" :style="{ left: positionX + 'px', top: positionY + 'px' }" @click.stop>
+            <div v-for="option in options" :key="option.key" class="context-menu-item" @click="onOptionClick(option)">
+                <v-icon v-if="option.icon" size="16" class="context-menu-icon">{{ option.icon }}</v-icon>
+                <span class="context-menu-text">{{ option.label }}</span>
             </div>
         </div>
     </Teleport>
@@ -33,7 +31,7 @@ const isVisible = ref(false);
 const positionX = ref(0);
 const positionY = ref(0);
 
-const show = (x: number, y: number) => {
+const show = async (x: number, y: number) => {
     // Calcular posición ajustada para mantener el menú dentro de la pantalla
     const menuWidth = 120; // min-width del menú
     const menuHeight = props.options.length * 40 + 8; // aproximado: items * altura + padding
@@ -54,6 +52,10 @@ const show = (x: number, y: number) => {
     positionX.value = Math.max(10, adjustedX); // mínimo margen izquierdo
     positionY.value = Math.max(10, adjustedY); // mínimo margen superior
     isVisible.value = true;
+
+    // Agregar listener para cerrar menú al hacer click fuera
+    await nextTick();
+    document.addEventListener("mousedown", closeOnClickOutside, { once: true });
 };
 
 const hide = () => {
@@ -66,6 +68,14 @@ const onOptionClick = (option: ContextMenuOption) => {
     hide();
 };
 
+const closeOnClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    // Solo cerrar si el click no fue dentro del menú
+    if (!target.closest(".context-menu")) {
+        hide();
+    }
+};
+
 // Exponer métodos para uso externo
 defineExpose({
     show,
@@ -76,23 +86,15 @@ defineExpose({
 <style scoped lang="scss">
 @import "@/styles/variables.scss";
 
-.context-menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1000;
-}
-
 .context-menu {
-    position: absolute;
+    position: fixed;
     background: $bg-primary;
     border-radius: 4px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
     min-width: 120px;
     padding: 4px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1000;
 }
 
 .context-menu-item {
@@ -101,6 +103,11 @@ defineExpose({
     padding: 8px 16px;
     cursor: pointer;
     transition: background-color 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    &:last-child {
+        border-bottom: none;
+    }
 
     &:hover {
         background-color: rgba(255, 255, 255, 0.04);

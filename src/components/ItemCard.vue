@@ -8,7 +8,7 @@
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
         ]"
         @click="showEditItemDialog = true"
-        @contextmenu.prevent="onRightClick"
+        @contextmenu.prevent.stop="onRightClick"
         @dragover.prevent="onDragOver"
         @drop.prevent="onDrop"
     >
