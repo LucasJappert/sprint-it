@@ -1,3 +1,6 @@
+.v-application {
+    background-color: $bg-primary !important;
+}
 .bg-primary {
     background-color: $primary !important;
     color: white !important;
@@ -5,17 +8,9 @@
         color: white;
     }
 }
-
-.bg-primary-transparent {
-    background-color: $primary-transparent !important;
-    color: white !important;
-    * {
-        color: white;
-    }
-}
 //TODO: Eliminar de aca y usar el scss de reports
 .bg-primary-transparent-padding {
-    background-color: $primary-transparent !important;
+    background-color: $bg-primary !important;
     color: white !important;
     padding: 20px;
     * {

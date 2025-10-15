@@ -350,17 +350,17 @@ $bg-primary: var(--panel) !default;
         text-align: v-bind("getTextAlignValue") !important;
     }
     :deep(.v-label) {
-        color: rgba($gray, 0.3) !important;
-        font-weight: 600;
+        color: $text;
+        font-weight: 300;
     }
     :deep(.v-field-label--floating) {
         opacity: 1 !important;
         top: -10px !important;
-        background-color: $bg-primary;
         border-radius: 20px;
         padding: 0 6px;
-        font-size: 0.7rem;
-        color: $gray !important;
+        background-color: $bg-primary;
+        padding: 0 6px;
+        font-size: 0.6rem;
     }
     :deep(.v-field__overlay),
     :deep(.v-field__outline),

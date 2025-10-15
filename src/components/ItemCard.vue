@@ -298,7 +298,7 @@ const onDrop = (e: DragEvent) => {
     padding: 3px 8px;
     border: 1px solid rgba($gray, 0.3);
     border-radius: 8px;
-    background: rgba($bg-primary, 0.5);
+    background: $bg-secondary;
     transition: box-shadow 0.2s;
     width: 100%;
     box-sizing: border-box;

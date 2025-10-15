@@ -4,7 +4,7 @@
         <div class="dashboard-header">
             <div class="sprint-container-1">
                 <div style="width: 150px">
-                    <MySelect :options="sprintOptions" placeholder-title="Seleccionar Sprint" @update:options="onSprintOptionsChange" />
+                    <MySelect :options="sprintOptions" placeholder-title="Seleccionar Sprint" @update:options="onSprintOptionsChange" density="compact" />
                 </div>
 
                 <div style="width: 120px">
@@ -16,6 +16,7 @@
                         :max="10"
                         @blur="updateDiasHabiles"
                         centered
+                        density="compact"
                     />
                 </div>
 
@@ -298,7 +299,7 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
     display: flex;
     align-items: center;
     padding: 8px;
-    background: rgba($bg-primary, 0.8);
+    background: rgba($bg-secondary, 0.8);
     border-bottom: 1px solid rgba($primary, 0.3);
     border-radius: 8px 8px 0 0;
     font-weight: bold;

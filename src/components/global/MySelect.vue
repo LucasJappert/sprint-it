@@ -327,20 +327,21 @@ $radius: 18px;
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: rgba(106, 106, 106, 0.3) !important;
     pointer-events: none;
     transition: all 0.18s ease;
-    font-weight: 600;
     opacity: 1;
+    font-weight: 300;
+    font-size: 1rem;
+    color: rgba($text, 0.8);
 
     &.is-active {
         transform: none;
         top: -10px;
-        background-color: $bg-primary;
         border-radius: $radius;
+        background-color: $bg-primary;
         padding: 0 6px;
-        font-size: 0.7rem;
-        color: #6a6a6a !important;
+        font-size: 0.6rem;
+        color: $text;
     }
 }
 
