@@ -266,6 +266,7 @@ const handleSave = async () => {
             estimatedEffort: parseInt(estimatedEffort.value) || 0,
             actualEffort: parseInt(actualEffort.value) || 0,
             assignedUser: assignedUserId,
+            order: props.existingTask?.order || 0,
         };
         emit("save", task);
         resetForm();

@@ -21,6 +21,7 @@ export interface Task {
     estimatedEffort: number;
     actualEffort: number;
     assignedUser: string | null; // user id (nullable)
+    order: number;
 }
 
 export interface Item {

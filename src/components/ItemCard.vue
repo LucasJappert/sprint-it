@@ -42,7 +42,7 @@
     </div>
 
     <div v-if="showTasks">
-        <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" @editTask="onEditTask" />
+        <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" @editTask="onEditTask" />
     </div>
 
     <AddTaskDialog :visible="showAddTaskDialog" :item="item" @close="showAddTaskDialog = false" @save="onAddTask" />
@@ -196,6 +196,8 @@ const getStateHtml = (state: string | undefined) => {
 // Funciones de simulación removidas completamente
 
 const onAddTask = (task: Task) => {
+    // Asignar orden basado en la cantidad actual de tasks
+    task.order = props.item.tasks.length + 1;
     props.item.tasks.push(task);
     if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
     showAddTaskDialog.value = false;
@@ -283,6 +285,11 @@ const onDragOver = (e: DragEvent) => {
     // Actualizar posición del ghost siguiendo al mouse
     dragDropStore.updateGhostPositionWithMouseAsync(e.clientX, e.clientY);
 
+    // Actualizar bordes para tasks si estamos arrastrando una task
+    if (dragDropStore.dragTask) {
+        dragDropStore.updateTaskBorderHighlightsAsync(e.clientX, e.clientY, props.item.tasks);
+    }
+
     // Nota: Los bordes se actualizarán desde el componente padre (DashboardView)
     // para tener acceso a todos los items
 };
@@ -291,6 +298,93 @@ const onDragOver = (e: DragEvent) => {
 const onDrop = (e: DragEvent) => {
     e.preventDefault();
 
+    // Si estamos arrastrando una task
+    if (dragDropStore.dragTask) {
+        const draggedTask = dragDropStore.dragTask;
+        const sourceItem = dragDropStore.dragTaskParentItem;
+
+        // Determinar si el mouse está en la mitad superior o inferior del item
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const mouseY = e.clientY;
+        const isInUpperHalf = mouseY < rect.top + rect.height / 2;
+
+        // Si estamos dentro del mismo item, reordenar tasks
+        if (sourceItem && sourceItem.id === props.item.id) {
+            // Determinar la posición de inserción basada en tasks
+            let insertIndex = 0;
+            for (let i = 0; i < props.item.tasks.length; i++) {
+                const task = props.item.tasks[i];
+                if (!task) continue;
+
+                const element = document.querySelector(`[data-task-id="${task.id}"]`) as HTMLElement | null;
+                if (element) {
+                    const taskRect = element.getBoundingClientRect();
+                    if (mouseY < taskRect.top + taskRect.height / 2) {
+                        insertIndex = i;
+                        break;
+                    }
+                    insertIndex = i + 1;
+                }
+            }
+
+            // Reordenar la task dentro del mismo item
+            const currentIndex = props.item.tasks.findIndex((task) => task.id === draggedTask.id);
+            if (currentIndex !== -1) {
+                // Ajustar si el índice actual está antes de la posición de inserción
+                if (currentIndex < insertIndex) {
+                    insertIndex--;
+                }
+
+                // Crear nueva lista con la task movida
+                const newList = [...props.item.tasks];
+                newList.splice(currentIndex, 1); // Remover del índice actual
+                newList.splice(insertIndex, 0, draggedTask); // Insertar en nueva posición
+
+                // Actualizar el orden de todas las tasks
+                newList.forEach((task, idx) => {
+                    task.order = idx + 1;
+                });
+
+                // Guardar cambios
+                props.item.tasks = newList;
+                if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+            }
+        } else {
+            // Moviendo task a otro item
+            const targetItem = props.item;
+            const position = isInUpperHalf ? "above" : "below";
+
+            // Remover la task del item fuente
+            if (sourceItem) {
+                sourceItem.tasks = sourceItem.tasks.filter((task) => task.id !== draggedTask.id);
+                // Reordenar las tasks restantes
+                sourceItem.tasks.forEach((task, idx) => {
+                    task.order = idx + 1;
+                });
+            }
+
+            // Agregar la task al item destino
+            if (position === "above") {
+                targetItem.tasks.unshift(draggedTask);
+            } else {
+                targetItem.tasks.push(draggedTask);
+            }
+
+            // Reordenar las tasks en el item destino
+            targetItem.tasks.forEach((task, idx) => {
+                task.order = idx + 1;
+            });
+
+            // Guardar cambios
+            if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+        }
+
+        // Limpiar el estado del drag después del drop
+        dragDropStore.clearDragStateAsync();
+        return;
+    }
+
+    // Lógica original para items
     if (dragDropStore.dragItem && dragDropStore.dragItem.id !== props.item.id) {
         // Determinar si el mouse está en la mitad superior o inferior del item
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
