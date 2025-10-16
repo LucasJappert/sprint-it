@@ -2,7 +2,7 @@
     <Teleport to="body">
         <div v-if="isVisible" class="context-menu" :style="{ left: positionX + 'px', top: positionY + 'px' }" @click.stop>
             <div v-for="option in options" :key="option.key" class="context-menu-item" @click="onOptionClick(option)">
-                <v-icon v-if="option.icon" size="16" class="context-menu-icon">{{ option.icon }}</v-icon>
+                <v-icon v-if="option.icon" size="16" class="context-menu-icon" :class="option.color">{{ option.icon }}</v-icon>
                 <span class="context-menu-text">{{ option.label }}</span>
             </div>
         </div>
@@ -16,6 +16,7 @@ export interface ContextMenuOption {
     key: string;
     label: string;
     icon?: string;
+    color?: string;
     action: () => void;
 }
 

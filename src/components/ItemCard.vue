@@ -13,17 +13,13 @@
         @dragover.prevent="onDragOver"
         @drop.prevent="onDrop"
     >
-        <div class="item-col cols-actions text-left">
-            <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
-                <v-icon size="24">mdi-drag</v-icon>
-            </span>
-
+        <div class="cols-actions text-left">
             <v-btn icon size="x-small" @click.stop="showTasks = !showTasks" @mousedown.stop>
                 <v-icon size="16">{{ showTasks ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
-            <v-btn icon size="x-small" @click.stop="showAddTaskDialog = true" @mousedown.stop class="ml-1">
-                <v-icon size="16">mdi-plus</v-icon>
-            </v-btn>
+            <span class="drag-handle ml-1" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
+                <v-icon size="24">mdi-drag</v-icon>
+            </span>
         </div>
 
         <div class="item-col cols-order">
@@ -174,7 +170,8 @@ const contextMenuOptions = computed(() => [
     {
         key: "add-task",
         label: "Agregar task",
-        icon: "mdi-plus",
+        icon: "mdi-invoice-list-outline",
+        color: "yellow",
         action: () => {
             showAddTaskDialog.value = true;
         },
@@ -182,7 +179,8 @@ const contextMenuOptions = computed(() => [
     {
         key: "delete",
         label: "Eliminar",
-        icon: "mdi-delete",
+        icon: "mdi-trash-can-outline",
+        color: "error",
         action: async () => {
             await sprintStore.deleteItem(props.item.id);
         },
