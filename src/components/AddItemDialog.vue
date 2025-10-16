@@ -9,7 +9,7 @@
                 <MyInput v-model="newItem.title" label="Título" @keydown.enter="handleSave" autofocus />
             </div>
 
-            <!-- Campos en una sola fila: persona asignada, prioridad, esfuerzos -->
+            <!-- Campos en una sola fila: persona asignada, estado, prioridad, esfuerzos -->
             <div class="form-row mt-3">
                 <div class="field-group assigned-user">
                     <MySelect
@@ -19,6 +19,9 @@
                         placeholder="Seleccionar usuario..."
                         @update:options="onAssignedUserChange"
                     />
+                </div>
+                <div class="field-group state">
+                    <MySelect v-model="newItem.state" label="Estado" :options="stateOptions" @update:options="onStateChange" />
                 </div>
                 <div class="field-group priority">
                     <MySelect v-model="newItem.priority" label="Prioridad" :options="priorityOptions" @update:options="onPriorityChange" />
@@ -50,6 +53,7 @@ import MyInput from "@/components/global/MyInput.vue";
 import MySelect from "@/components/global/MySelect.vue";
 import MyTextarea from "@/components/global/MyTextarea.vue";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
+import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
@@ -67,6 +71,7 @@ interface NewItemForm {
     title: string;
     detail: string;
     priority: PriorityValue;
+    state: StateValue;
     estimatedEffort: string;
     actualEffort: string;
     assignedUser: string;
@@ -93,6 +98,7 @@ const hasChanges = computed(() => {
         newItem.value.title !== props.existingItem.title ||
         newItem.value.detail !== props.existingItem.detail ||
         newItem.value.priority !== props.existingItem.priority ||
+        newItem.value.state !== (props.existingItem.state || STATE_VALUES.TODO) ||
         parseInt(newItem.value.estimatedEffort) !== props.existingItem.estimatedEffort ||
         parseInt(newItem.value.actualEffort) !== props.existingItem.actualEffort ||
         newItem.value.assignedUser !== originalAssignedUser.value;
@@ -113,6 +119,13 @@ const assignedUserOptions = ref<{ id: string; text: string; name: string; checke
 
 const priorityOptions = ref(
     PRIORITY_OPTIONS.map((option: any) => ({
+        ...option,
+        checked: false,
+    })),
+);
+
+const stateOptions = ref(
+    STATE_OPTIONS.map((option: any) => ({
         ...option,
         checked: false,
     })),
@@ -142,6 +155,7 @@ const newItem = ref<NewItemForm>({
     title: "",
     detail: "",
     priority: PRIORITY_VALUES.NORMAL,
+    state: STATE_VALUES.TODO,
     estimatedEffort: "",
     actualEffort: "",
     assignedUser: "",
@@ -168,6 +182,7 @@ const resetForm = async () => {
                 title: props.existingItem.title,
                 detail: props.existingItem.detail,
                 priority: props.existingItem.priority,
+                state: props.existingItem.state || STATE_VALUES.TODO,
                 estimatedEffort: props.existingItem.estimatedEffort.toString(),
                 actualEffort: props.existingItem.actualEffort.toString(),
                 assignedUser: assignedUserValue,
@@ -192,11 +207,17 @@ const resetForm = async () => {
             priorityOptions.value.forEach((option) => {
                 option.checked = option.value.toLowerCase() === props.existingItem!.priority.toLowerCase();
             });
+
+            // Pre-seleccionar el estado en las opciones del select
+            stateOptions.value.forEach((option) => {
+                option.checked = option.value.toLowerCase() === (props.existingItem!.state || STATE_VALUES.TODO).toLowerCase();
+            });
         } else {
             newItem.value = {
                 title: "",
                 detail: "",
                 priority: PRIORITY_VALUES.NORMAL,
+                state: STATE_VALUES.TODO,
                 estimatedEffort: "",
                 actualEffort: "",
                 assignedUser: "",
@@ -210,6 +231,11 @@ const resetForm = async () => {
             // Seleccionar prioridad por defecto (low)
             priorityOptions.value.forEach((option) => {
                 option.checked = option.value === PRIORITY_VALUES.NORMAL;
+            });
+
+            // Seleccionar estado por defecto (TODO)
+            stateOptions.value.forEach((option) => {
+                option.checked = option.value === STATE_VALUES.TODO;
             });
         }
     } finally {
@@ -246,6 +272,16 @@ const onPriorityChange = (options: any[]) => {
     }
 };
 
+const onStateChange = (options: any[]) => {
+    // Encontrar la opción seleccionada
+    const selectedOption = options.find((option: any) => option.checked);
+    if (selectedOption) {
+        newItem.value.state = selectedOption.value;
+    } else {
+        newItem.value.state = STATE_VALUES.TODO;
+    }
+};
+
 const handleSave = async () => {
     if (newItem.value.title.trim()) {
         let assignedUserId = null;
@@ -266,6 +302,7 @@ const handleSave = async () => {
             title: newItem.value.title.trim(),
             detail: newItem.value.detail.trim(),
             priority: newItem.value.priority as PriorityValue,
+            state: newItem.value.state as StateValue,
             estimatedEffort: parseInt(newItem.value.estimatedEffort) || 0,
             actualEffort: parseInt(newItem.value.actualEffort) || 0,
             assignedUser: assignedUserId,
@@ -297,14 +334,19 @@ const handleSave = async () => {
     width: 100%;
 }
 
-/* Persona asignada - 35% */
+/* Persona asignada - 25% */
 .assigned-user {
-    flex: 0 0 35%;
+    flex: 0 0 25%;
 }
 
-/* Prioridad - 35% */
+/* Estado - 20% */
+.state {
+    flex: 0 0 20%;
+}
+
+/* Prioridad - 20% */
 .priority {
-    flex: 0 0 30%;
+    flex: 0 0 20%;
 }
 
 /* Esfuerzo estimado - 15% */
@@ -361,6 +403,7 @@ const handleSave = async () => {
     }
 
     .assigned-user,
+    .state,
     .priority,
     .estimated-effort,
     .actual-effort {

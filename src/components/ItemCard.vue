@@ -14,7 +14,7 @@
         @drop.prevent="onDrop"
     >
         <div class="cols-actions text-left">
-            <v-btn v-if="item.tasks.length > 0" icon size="x-small" @click="showTasks = !showTasks" @mousedown.stop>
+            <v-btn v-if="item.tasks.length > 0" icon size="x-small" @click.stop="showTasks = !showTasks" @mousedown.stop>
                 <v-icon size="16">{{ showTasks ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
             <span class="drag-handle ml-1" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
@@ -31,6 +31,9 @@
         <div class="item-col cols-assigned">
             {{ assignedUserName }}
         </div>
+        <div class="item-col cols-state state-cell">
+            <span class="state-content" v-html="getStateHtml(item.state || STATE_VALUES.TODO)"></span>
+        </div>
         <div class="item-col cols-effort">{{ item.estimatedEffort }}</div>
         <div class="item-col cols-effort">{{ item.actualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
@@ -43,6 +46,9 @@
             <v-card variant="outlined" class="mb-2 d-flex align-center pa-2">
                 <div class="item-col cols-3">
                     {{ task.title }}
+                </div>
+                <div class="item-col cols-2 state-cell">
+                    <span class="state-content" v-html="getStateHtml(task.state || STATE_VALUES.TODO)"></span>
                 </div>
                 <div class="item-col cols-2 priority-cell">
                     <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
@@ -75,6 +81,7 @@
 
 <script setup lang="ts">
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
+import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
@@ -192,6 +199,12 @@ const getPriorityHtml = (priority: string) => {
     return option ? option.html : priority;
 };
 
+const getStateHtml = (state: string | undefined) => {
+    if (!state) return "To Do"; // Default fallback
+    const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
+    return option ? option.html : state;
+};
+
 // Funciones de simulación removidas completamente
 
 const onAddTask = (task: Task) => {
@@ -215,6 +228,7 @@ const onSaveEditItem = async (item: Item) => {
         title: item.title,
         detail: item.detail,
         priority: item.priority,
+        state: item.state,
         estimatedEffort: item.estimatedEffort,
         actualEffort: item.actualEffort,
         assignedUser: item.assignedUser,
@@ -227,11 +241,12 @@ const onEditTask = (task: Task) => {
     showEditTaskDialog.value = true;
 };
 
-const onSaveEditTask = (data: { title: string; detail: string; priority: string; estimatedEffort: number; actualEffort: number }) => {
+const onSaveEditTask = (data: { title: string; detail: string; priority: string; state: string; estimatedEffort: number; actualEffort: number }) => {
     if (editingTask.value) {
         editingTask.value.title = data.title;
         editingTask.value.detail = data.detail;
         editingTask.value.priority = data.priority as "Normal" | "Medium" | "High";
+        editingTask.value.state = data.state as StateValue;
         editingTask.value.estimatedEffort = data.estimatedEffort;
         editingTask.value.actualEffort = data.actualEffort;
         if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
@@ -516,6 +531,24 @@ const onDrop = (e: DragEvent) => {
 }
 
 .priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.state-cell {
+    display: flex;
+    align-items: center;
+}
+
+.state-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.state-dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;

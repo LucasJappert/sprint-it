@@ -9,7 +9,7 @@
                 <MyInput v-model="title" label="Título" @keydown.enter="handleSave" autofocus />
             </div>
 
-            <!-- Campos en una sola fila: persona asignada, prioridad, esfuerzos -->
+            <!-- Campos en una sola fila: persona asignada, estado, prioridad, esfuerzos -->
             <div class="form-row mt-3">
                 <div class="field-group assigned-user">
                     <MySelect
@@ -19,6 +19,9 @@
                         placeholder="Seleccionar usuario..."
                         @update:options="onAssignedUserChange"
                     />
+                </div>
+                <div class="field-group state">
+                    <MySelect v-model="state" label="Estado" :options="stateOptions" @update:options="onStateChange" />
                 </div>
                 <div class="field-group priority">
                     <MySelect v-model="priority" label="Prioridad" :options="priorityOptions" @update:options="onPriorityChange" />
@@ -50,10 +53,11 @@ import MyInput from "@/components/global/MyInput.vue";
 import MySelect from "@/components/global/MySelect.vue";
 import MyTextarea from "@/components/global/MyTextarea.vue";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
+import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { getUserByUsername } from "@/services/firestore";
 import type { Item, Task } from "@/types";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
     visible: boolean;
@@ -68,6 +72,7 @@ const emit = defineEmits<{
 const title = ref("");
 const detail = ref("");
 const priority = ref(PRIORITY_VALUES.NORMAL);
+const state = ref(STATE_VALUES.TODO);
 const estimatedEffort = ref("");
 const actualEffort = ref("");
 const assignedUser = ref("");
@@ -76,6 +81,13 @@ const assignedUserOptions = ref<{ id: string; text: string; name: string; checke
 
 const priorityOptions = ref(
     PRIORITY_OPTIONS.map((option: any) => ({
+        ...option,
+        checked: false,
+    })),
+);
+
+const stateOptions = ref(
+    STATE_OPTIONS.map((option: any) => ({
         ...option,
         checked: false,
     })),
@@ -105,6 +117,7 @@ const resetForm = () => {
     title.value = "";
     detail.value = "";
     priority.value = PRIORITY_VALUES.NORMAL;
+    state.value = STATE_VALUES.TODO;
     estimatedEffort.value = "";
     actualEffort.value = "";
     assignedUser.value = "";
@@ -117,6 +130,11 @@ const resetForm = () => {
     // Seleccionar prioridad por defecto (NORMAL)
     priorityOptions.value.forEach((option) => {
         option.checked = option.value === PRIORITY_VALUES.NORMAL;
+    });
+
+    // Seleccionar estado por defecto (TODO)
+    stateOptions.value.forEach((option) => {
+        option.checked = option.value === STATE_VALUES.TODO;
     });
 };
 
@@ -140,6 +158,16 @@ const onPriorityChange = (options: any[]) => {
     }
 };
 
+const onStateChange = (options: any[]) => {
+    // Encontrar la opción seleccionada
+    const selectedOption = options.find((option: any) => option.checked);
+    if (selectedOption) {
+        state.value = selectedOption.value;
+    } else {
+        state.value = STATE_VALUES.TODO;
+    }
+};
+
 const handleSave = async () => {
     if (title.value.trim()) {
         let assignedUserId = null;
@@ -160,6 +188,7 @@ const handleSave = async () => {
             title: title.value.trim(),
             detail: detail.value.trim(),
             priority: priority.value,
+            state: state.value,
             estimatedEffort: parseInt(estimatedEffort.value) || 0,
             actualEffort: parseInt(actualEffort.value) || 0,
             assignedUser: assignedUserId,
@@ -173,6 +202,16 @@ const handleClose = () => {
     emit("close");
     resetForm();
 };
+
+// Llamar resetForm cuando se abre el diálogo para asegurar valores por defecto
+watch(
+    () => props.visible,
+    (visible) => {
+        if (visible) {
+            resetForm();
+        }
+    },
+);
 </script>
 
 <style scoped>
@@ -193,14 +232,19 @@ const handleClose = () => {
     width: 100%;
 }
 
-/* Persona asignada - 35% */
+/* Persona asignada - 25% */
 .assigned-user {
-    flex: 0 0 35%;
+    flex: 0 0 25%;
 }
 
-/* Prioridad - 30% */
+/* Estado - 20% */
+.state {
+    flex: 0 0 20%;
+}
+
+/* Prioridad - 20% */
 .priority {
-    flex: 0 0 30%;
+    flex: 0 0 20%;
 }
 
 /* Esfuerzo estimado - 15% */
@@ -251,6 +295,7 @@ const handleClose = () => {
     }
 
     .assigned-user,
+    .state,
     .priority,
     .estimated-effort,
     .actual-effort {

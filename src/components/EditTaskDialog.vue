@@ -7,6 +7,7 @@
             <MyInput v-model="title" label="Título" @keydown.enter="handleSave" autofocus />
             <MyInput v-model="detail" label="Detalle" />
             <MySelect v-model="priority" label="Prioridad" :options="priorityOptions" />
+            <MySelect v-model="state" label="Estado" :options="stateOptions" />
             <MyInput v-model.number="estimatedEffort" label="Esfuerzo Estimado" type="number" />
             <MyInput v-model.number="actualEffort" label="Esfuerzo Real" type="number" />
         </div>
@@ -23,6 +24,7 @@ import MyDialog from "@/components/global/MyDialog.vue";
 import MyInput from "@/components/global/MyInput.vue";
 import MySelect from "@/components/global/MySelect.vue";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
+import { STATE_OPTIONS } from "@/constants/states";
 import type { Task } from "@/types";
 import { computed, ref, watch } from "vue";
 
@@ -33,17 +35,25 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     close: [];
-    save: [data: { title: string; detail: string; priority: string; estimatedEffort: number; actualEffort: number }];
+    save: [data: { title: string; detail: string; priority: string; state: string; estimatedEffort: number; actualEffort: number }];
 }>();
 
 const title = ref("");
 const detail = ref("");
 const priority = ref("medium");
+const state = ref("To Do");
 const estimatedEffort = ref("0");
 const actualEffort = ref("0");
 
 const priorityOptions = ref(
     PRIORITY_OPTIONS.map((option) => ({
+        ...option,
+        checked: false,
+    })),
+);
+
+const stateOptions = ref(
+    STATE_OPTIONS.map((option) => ({
         ...option,
         checked: false,
     })),
@@ -55,6 +65,7 @@ const hasChanges = computed(() => {
         title.value !== props.task.title ||
         detail.value !== props.task.detail ||
         priority.value !== props.task.priority ||
+        state.value !== props.task.state ||
         estimatedEffort.value !== props.task.estimatedEffort.toString() ||
         actualEffort.value !== props.task.actualEffort.toString()
     );
@@ -67,12 +78,18 @@ watch(
             title.value = props.task.title;
             detail.value = props.task.detail;
             priority.value = props.task.priority;
+            state.value = props.task.state;
             estimatedEffort.value = props.task.estimatedEffort.toString();
             actualEffort.value = props.task.actualEffort.toString();
 
             // Pre-seleccionar la prioridad en las opciones del select
             priorityOptions.value.forEach((option) => {
                 option.checked = option.value === props.task!.priority;
+            });
+
+            // Pre-seleccionar el estado en las opciones del select
+            stateOptions.value.forEach((option) => {
+                option.checked = option.value === props.task!.state;
             });
         }
     },
@@ -83,6 +100,7 @@ const handleSave = () => {
         title: title.value,
         detail: detail.value,
         priority: priority.value,
+        state: state.value,
         estimatedEffort: parseInt(estimatedEffort.value) || 0,
         actualEffort: parseInt(actualEffort.value) || 0,
     });

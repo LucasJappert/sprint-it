@@ -50,6 +50,7 @@
                 <div class="item-col cols-order">#</div>
                 <div class="item-col cols-title text-left">Título</div>
                 <div class="item-col cols-assigned">Asignado</div>
+                <div class="item-col cols-state">Estado</div>
                 <div class="item-col cols-effort">Esf. Estimado</div>
                 <div class="item-col cols-effort">Esf. Real</div>
                 <div class="item-col cols-priority">Prioridad</div>
