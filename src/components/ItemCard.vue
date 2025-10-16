@@ -41,30 +41,19 @@
         </div>
     </div>
 
-    <v-card-text v-if="showTasks" class="ml-4">
-        <div v-for="task in item.tasks" :key="task.id">
-            <v-card variant="outlined" class="mb-2 d-flex align-center pa-2">
-                <div class="item-col cols-3">
-                    {{ task.title }}
-                </div>
-                <div class="item-col cols-2 state-cell">
-                    <span class="state-content" v-html="getStateHtml(task.state || STATE_VALUES.TODO)"></span>
-                </div>
-                <div class="item-col cols-2 priority-cell">
-                    <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
-                </div>
-                <div class="item-col cols-2">{{ task.estimatedEffort }}</div>
-                <div class="item-col cols-2">{{ task.actualEffort }}</div>
-                <div class="item-col cols-1">
-                    <MyButton @click.stop="onEditTask(task)">
-                        <v-icon size="16">mdi-pencil</v-icon>
-                    </MyButton>
-                </div>
-            </v-card>
-        </div>
-    </v-card-text>
+    <div v-if="showTasks">
+        <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" @editTask="onEditTask" />
+    </div>
 
     <AddTaskDialog :visible="showAddTaskDialog" :item="item" @close="showAddTaskDialog = false" @save="onAddTask" />
+    <AddTaskDialog
+        v-if="showEditTaskDialog"
+        :visible="showEditTaskDialog"
+        :item="item"
+        :existing-task="editingTask"
+        @close="showEditTaskDialog = false"
+        @save="onSaveEditTask"
+    />
     <AddItemDialog
         v-if="showEditItemDialog"
         :visible="showEditItemDialog"
@@ -73,7 +62,6 @@
         @close="showEditItemDialog = false"
         @save="onSaveEditItem"
     />
-    <EditTaskDialog :visible="showEditTaskDialog" :task="editingTask" @close="showEditTaskDialog = false" @save="onSaveEditTask" />
 
     <!-- Menú contextual -->
     <ContextMenu :options="contextMenuOptions" ref="contextMenuRef" @close="onContextMenuClosed" />
@@ -81,7 +69,7 @@
 
 <script setup lang="ts">
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
-import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
+import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
@@ -91,7 +79,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import AddItemDialog from "./AddItemDialog.vue";
 import AddTaskDialog from "./AddTaskDialog.vue";
 import ContextMenu from "./ContextMenu.vue";
-import EditTaskDialog from "./EditTaskDialog.vue";
+import TaskCard from "./TaskCard.vue";
 
 const props = defineProps<{
     item: Item;
@@ -241,15 +229,14 @@ const onEditTask = (task: Task) => {
     showEditTaskDialog.value = true;
 };
 
-const onSaveEditTask = (data: { title: string; detail: string; priority: string; state: string; estimatedEffort: number; actualEffort: number }) => {
+const onSaveEditTask = (task: Task) => {
     if (editingTask.value) {
-        editingTask.value.title = data.title;
-        editingTask.value.detail = data.detail;
-        editingTask.value.priority = data.priority as "Normal" | "Medium" | "High";
-        editingTask.value.state = data.state as StateValue;
-        editingTask.value.estimatedEffort = data.estimatedEffort;
-        editingTask.value.actualEffort = data.actualEffort;
-        if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+        // Encontrar la task en el array y actualizarla
+        const taskIndex = props.item.tasks.findIndex((t) => t.id === editingTask.value!.id);
+        if (taskIndex !== -1) {
+            props.item.tasks[taskIndex] = task;
+            if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+        }
     }
     showEditTaskDialog.value = false;
     editingTask.value = null;
@@ -362,9 +349,10 @@ const onDrop = (e: DragEvent) => {
     display: flex;
     align-items: center;
     padding: 3px 8px;
+    height: 40px;
     border: 1px solid rgba($gray, 0.3);
     border-radius: 8px;
-    background: $bg-secondary;
+    background: rgba($bg-secondary, 0.7);
     transition: box-shadow 0.2s;
     width: 100%;
     box-sizing: border-box;
@@ -373,8 +361,8 @@ const onDrop = (e: DragEvent) => {
 
     &:hover,
     &.context-menu-open {
-        background: rgba($primary, 0.05);
-        border: 1px solid rgba($primary, 0.5);
+        background: rgba($bg-secondary, 1);
+        border: 1px solid rgba($gray, 1);
     }
 }
 

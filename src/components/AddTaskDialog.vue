@@ -1,7 +1,7 @@
 <template>
     <MyDialog :visible="visible" :min-width="800" @close="handleClose">
         <div class="header">
-            <h3 class="text-left">Nueva Tarea</h3>
+            <h3 class="text-left">{{ isEditing ? "Editar Tarea" : "Nueva Tarea" }}</h3>
         </div>
         <div class="body-scroll">
             <!-- Título ocupando 100% del ancho -->
@@ -41,7 +41,7 @@
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="handleClose">Cancelar</MyButton>
-            <MyButton btn-class="px-2" @click="handleSave" :disabled="!title.trim()">Agregar Tarea</MyButton>
+            <MyButton btn-class="px-2" @click="handleSave" :disabled="!canSave">{{ isEditing ? "Guardar Cambios" : "Agregar Tarea" }}</MyButton>
         </div>
     </MyDialog>
 </template>
@@ -55,19 +55,48 @@ import MyTextarea from "@/components/global/MyTextarea.vue";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
-import { getUserByUsername } from "@/services/firestore";
+import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import type { Item, Task } from "@/types";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
     visible: boolean;
     item: Item;
+    existingTask?: Task | null;
 }>();
 
 const emit = defineEmits<{
     close: [];
     save: [task: Task];
 }>();
+
+const isEditing = computed(() => !!props.existingTask);
+
+const canSave = computed(() => {
+    if (!isEditing.value) {
+        // Para nuevas tasks: habilitar si hay título
+        return title.value.trim() !== "";
+    }
+    // Para editar: habilitar si hay cambios Y hay título
+    return hasChanges.value && title.value.trim() !== "";
+});
+
+const hasChanges = computed(() => {
+    if (!props.existingTask) return title.value.trim() !== ""; // Para nuevas tasks, habilitar si hay título
+
+    const changes =
+        title.value !== props.existingTask.title ||
+        detail.value !== props.existingTask.detail ||
+        priority.value !== props.existingTask.priority ||
+        state.value !== (props.existingTask.state || STATE_VALUES.TODO) ||
+        parseInt(estimatedEffort.value) !== props.existingTask.estimatedEffort ||
+        parseInt(actualEffort.value) !== props.existingTask.actualEffort ||
+        assignedUser.value !== originalAssignedUser.value;
+
+    return changes;
+});
+
+const originalAssignedUser = ref("");
 
 const title = ref("");
 const detail = ref("");
@@ -113,29 +142,74 @@ onMounted(() => {
     loadAssignedUserOptions();
 });
 
-const resetForm = () => {
-    title.value = "";
-    detail.value = "";
-    priority.value = PRIORITY_VALUES.NORMAL;
-    state.value = STATE_VALUES.TODO;
-    estimatedEffort.value = "";
-    actualEffort.value = "";
-    assignedUser.value = "";
+const resetForm = async () => {
+    if (props.existingTask) {
+        // Intentar obtener el username del usuario asignado actual
+        let assignedUserValue = "";
+        if (props.existingTask.assignedUser) {
+            try {
+                const username = await getUsernameById(props.existingTask.assignedUser);
+                if (username && SPRINT_TEAM_MEMBERS.includes(username as any)) {
+                    assignedUserValue = username;
+                }
+            } catch (error) {
+                console.warn(`Error al obtener username para ID ${props.existingTask.assignedUser}:`, error);
+            }
+        }
 
-    // Limpiar selección
-    assignedUserOptions.value.forEach((option) => {
-        option.checked = false;
-    });
+        title.value = props.existingTask.title;
+        detail.value = props.existingTask.detail;
+        priority.value = props.existingTask.priority as any;
+        state.value = (props.existingTask.state || STATE_VALUES.TODO) as any;
+        estimatedEffort.value = props.existingTask.estimatedEffort.toString();
+        actualEffort.value = props.existingTask.actualEffort.toString();
+        assignedUser.value = assignedUserValue;
 
-    // Seleccionar prioridad por defecto (NORMAL)
-    priorityOptions.value.forEach((option) => {
-        option.checked = option.value === PRIORITY_VALUES.NORMAL;
-    });
+        // Esperar a que las opciones estén cargadas si no lo están
+        if (assignedUserOptions.value.length === 0) {
+            await loadAssignedUserOptions();
+        }
 
-    // Seleccionar estado por defecto (TODO)
-    stateOptions.value.forEach((option) => {
-        option.checked = option.value === STATE_VALUES.TODO;
-    });
+        // Pre-seleccionar la opción correspondiente en assignedUserOptions
+        if (assignedUserValue && assignedUserOptions.value.length > 0) {
+            assignedUserOptions.value.forEach((option) => {
+                option.checked = option.id === assignedUserValue;
+            });
+        }
+
+        // Pre-seleccionar la prioridad en las opciones del select
+        priorityOptions.value.forEach((option) => {
+            option.checked = option.value.toLowerCase() === props.existingTask!.priority.toLowerCase();
+        });
+
+        // Pre-seleccionar el estado en las opciones del select
+        stateOptions.value.forEach((option) => {
+            option.checked = option.value.toLowerCase() === (props.existingTask!.state || STATE_VALUES.TODO).toLowerCase();
+        });
+    } else {
+        title.value = "";
+        detail.value = "";
+        priority.value = PRIORITY_VALUES.NORMAL;
+        state.value = STATE_VALUES.TODO;
+        estimatedEffort.value = "";
+        actualEffort.value = "";
+        assignedUser.value = "";
+
+        // Limpiar selección
+        assignedUserOptions.value.forEach((option) => {
+            option.checked = false;
+        });
+
+        // Seleccionar prioridad por defecto (NORMAL)
+        priorityOptions.value.forEach((option) => {
+            option.checked = option.value === PRIORITY_VALUES.NORMAL;
+        });
+
+        // Seleccionar estado por defecto (TODO)
+        stateOptions.value.forEach((option) => {
+            option.checked = option.value === STATE_VALUES.TODO;
+        });
+    }
 };
 
 const onAssignedUserChange = (options: any[]) => {
@@ -184,11 +258,11 @@ const handleSave = async () => {
         }
 
         const task: Task = {
-            id: `task-${Date.now()}`,
+            id: props.existingTask?.id || `task-${Date.now()}`,
             title: title.value.trim(),
             detail: detail.value.trim(),
-            priority: priority.value,
-            state: state.value,
+            priority: priority.value as any,
+            state: state.value as any,
             estimatedEffort: parseInt(estimatedEffort.value) || 0,
             actualEffort: parseInt(actualEffort.value) || 0,
             assignedUser: assignedUserId,
@@ -203,7 +277,7 @@ const handleClose = () => {
     resetForm();
 };
 
-// Llamar resetForm cuando se abre el diálogo para asegurar valores por defecto
+// Llamar resetForm cuando se abre el diálogo o cambia existingTask
 watch(
     () => props.visible,
     (visible) => {
@@ -211,6 +285,16 @@ watch(
             resetForm();
         }
     },
+);
+
+watch(
+    () => props.existingTask,
+    async (newTask, oldTask) => {
+        if (props.visible) {
+            await resetForm();
+        }
+    },
+    { immediate: true },
 );
 </script>
 
