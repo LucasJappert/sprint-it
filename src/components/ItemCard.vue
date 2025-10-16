@@ -14,7 +14,7 @@
         @drop.prevent="onDrop"
     >
         <div class="cols-actions text-left">
-            <v-btn icon size="x-small" @click.stop="showTasks = !showTasks" @mousedown.stop>
+            <v-btn v-if="item.tasks.length > 0" icon size="x-small" @click="showTasks = !showTasks" @mousedown.stop>
                 <v-icon size="16">{{ showTasks ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
             <span class="drag-handle ml-1" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>

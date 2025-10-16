@@ -141,7 +141,7 @@ onMounted(() => {
 const newItem = ref<NewItemForm>({
     title: "",
     detail: "",
-    priority: PRIORITY_VALUES.LOW,
+    priority: PRIORITY_VALUES.NORMAL,
     estimatedEffort: "",
     actualEffort: "",
     assignedUser: "",
@@ -196,7 +196,7 @@ const resetForm = async () => {
             newItem.value = {
                 title: "",
                 detail: "",
-                priority: PRIORITY_VALUES.LOW,
+                priority: PRIORITY_VALUES.NORMAL,
                 estimatedEffort: "",
                 actualEffort: "",
                 assignedUser: "",
@@ -209,7 +209,7 @@ const resetForm = async () => {
 
             // Seleccionar prioridad por defecto (low)
             priorityOptions.value.forEach((option) => {
-                option.checked = option.value === PRIORITY_VALUES.LOW;
+                option.checked = option.value === PRIORITY_VALUES.NORMAL;
             });
         }
     } finally {
