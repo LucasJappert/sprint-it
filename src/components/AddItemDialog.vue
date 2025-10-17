@@ -1,7 +1,10 @@
 <template>
     <MyDialog :visible="visible" :min-width="800" @close="$emit('close')">
         <div class="header">
-            <h3 class="text-left">{{ isEditing ? "Editar Item" : "Nuevo Item" }}</h3>
+            <h3 class="text-left flex-center justify-start">
+                <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
+                {{ isEditing ? "Editar Item" : "Nuevo Item" }}
+            </h3>
         </div>
         <div class="body-scroll">
             <!-- Título ocupando 100% del ancho -->
@@ -9,7 +12,7 @@
                 <MyInput v-model="newItem.title" label="Título" @keydown.enter="handleSave" autofocus />
             </div>
 
-            <!-- Campos en una sola fila: persona asignada, estado, prioridad, esfuerzos -->
+            <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
             <div class="form-row mt-3">
                 <div class="field-group assigned-user">
                     <MySelect
@@ -23,14 +26,14 @@
                 <div class="field-group state">
                     <MySelect v-model="newItem.state" label="Estado" :options="stateOptions" @update:options="onStateChange" />
                 </div>
-                <div class="field-group priority">
-                    <MySelect v-model="newItem.priority" label="Prioridad" :options="priorityOptions" @update:options="onPriorityChange" />
-                </div>
                 <div class="field-group estimated-effort">
                     <MyInput v-model="newItem.estimatedEffort" label="Esfuerzo" type="number" />
                 </div>
                 <div class="field-group actual-effort">
                     <MyInput v-model="newItem.actualEffort" label="Esf. Real" type="number" />
+                </div>
+                <div class="field-group priority">
+                    <MySelect v-model="newItem.priority" label="Prioridad" :options="priorityOptions" @update:options="onPriorityChange" />
                 </div>
             </div>
 
@@ -344,11 +347,6 @@ const handleSave = async () => {
     flex: 0 0 20%;
 }
 
-/* Prioridad - 20% */
-.priority {
-    flex: 0 0 20%;
-}
-
 /* Esfuerzo estimado - 15% */
 .estimated-effort {
     flex: 0 0 15%;
@@ -357,6 +355,11 @@ const handleSave = async () => {
 /* Esfuerzo real - 15% */
 .actual-effort {
     flex: 0 0 15%;
+}
+
+/* Prioridad - 20% */
+.priority {
+    flex: 0 0 20%;
 }
 
 /* Textarea para detalle ocupando 100% del ancho */

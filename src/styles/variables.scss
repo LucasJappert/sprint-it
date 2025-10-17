@@ -1,6 +1,6 @@
 $bg-primary: #171717;
 $bg-secondary: #2a2a2a;
-$primary: #148a22;
+$primary: #00ffff; // neon celeste
 $primary1: #632a48;
 // Celeste (blue accent) for products section
 $blue: #33c7ff;
@@ -9,7 +9,7 @@ $gray1: #b8b8b8;
 $info: #2196f3;
 $error: #f44336;
 $warning: #ff9800;
-$yellow: #ffeb3b;
+$yellow: #c5b738;
 $text: #a8a8a8;
 $danger: #f44336;
 $green: #008035;
@@ -50,6 +50,9 @@ $margins-from-screen: 5px;
 }
 .info {
     color: $info !important;
+}
+.blue {
+    color: $blue !important;
 }
 .error {
     color: $error !important;

@@ -7,14 +7,14 @@
             isHighlighted && highlightPosition === 'above' ? 'show-border-top' : '',
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
         ]"
-        @click="onEditTask(task)"
+        @click.stop="onEditTask(task)"
         @contextmenu.prevent.stop="onRightClick"
         @dragover.prevent="onDragOver"
         @drop.prevent="onDrop"
     >
         <div class="cols-actions text-left">
             <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
-                <v-icon size="20">mdi-drag</v-icon>
+                <v-icon size="24">mdi-drag</v-icon>
             </span>
         </div>
 
@@ -22,6 +22,7 @@
             {{ task.order }}
         </div>
         <div class="item-col cols-title text-left">
+            <v-icon class="yellow mr-1" size="16">mdi-clipboard-check-outline</v-icon>
             <strong>{{ task.title }}</strong>
         </div>
         <div class="item-col cols-assigned">
@@ -30,8 +31,7 @@
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(task.state || STATE_VALUES.TODO)"></span>
         </div>
-        <div class="item-col cols-effort">{{ task.estimatedEffort }}</div>
-        <div class="item-col cols-effort">{{ task.actualEffort }}</div>
+        <div class="item-col cols-effort">{{ task.estimatedEffort }}-{{ task.actualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
             <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
         </div>
@@ -86,6 +86,89 @@ const onEditTask = (task: Task) => {
     emit("editTask", task);
 };
 
+const onDragOver = (e: DragEvent) => {
+    // Permitir el drop
+    e.preventDefault();
+};
+
+const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+
+    if (dragDropStore.dragTask && dragDropStore.dragTask.id !== props.task.id) {
+        const draggedTask = dragDropStore.dragTask;
+        const sourceItem = dragDropStore.dragTaskParentItem;
+
+        // Determinar si el mouse está en la mitad superior o inferior de la task
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const mouseY = e.clientY;
+        const isInUpperHalf = mouseY < rect.top + rect.height / 2;
+
+        // Calcular la posición de inserción
+        const targetIndex = props.item.tasks.findIndex((task) => task.id === props.task.id);
+        const insertIndex = isInUpperHalf ? targetIndex : targetIndex + 1;
+
+        // Mover la task
+        moveTask(draggedTask, sourceItem, insertIndex);
+
+        // Limpiar el estado del drag
+        dragDropStore.clearDragStateAsync();
+    }
+};
+
+const moveTask = (draggedTask: Task, sourceItem: Item | null, insertIndex: number) => {
+    const isMovingBetweenItems = sourceItem && sourceItem.id !== props.item.id;
+
+    console.log(`🔄 Moviendo task "${draggedTask.title}" - Entre items: ${isMovingBetweenItems}`);
+
+    if (isMovingBetweenItems) {
+        // Remover del item fuente
+        if (sourceItem) {
+            const originalCount = sourceItem.tasks.length;
+            sourceItem.tasks = sourceItem.tasks.filter((task) => task.id !== draggedTask.id);
+            sourceItem.tasks.forEach((task, idx) => {
+                task.order = idx + 1;
+            });
+            console.log(`🗑️ Removida de source item. Tasks restantes: ${sourceItem.tasks.length} (era ${originalCount})`);
+        }
+
+        // Insertar en el item destino
+        props.item.tasks.splice(insertIndex, 0, draggedTask);
+        props.item.tasks.forEach((task, idx) => {
+            task.order = idx + 1;
+        });
+
+        console.log(`✅ Task movida entre items. Target tasks: ${props.item.tasks.map((t) => `"${t.title}"`).join(", ")}`);
+    } else {
+        // Reordenar dentro del mismo item
+        const currentIndex = props.item.tasks.findIndex((task) => task.id === draggedTask.id);
+        if (currentIndex !== -1) {
+            // Ajustar si el índice actual está antes de la posición de inserción
+            let adjustedInsertIndex = insertIndex;
+            if (currentIndex < insertIndex) {
+                adjustedInsertIndex--;
+            }
+
+            console.log(`🔄 Reordenando en mismo item: ${currentIndex} -> ${adjustedInsertIndex}`);
+
+            // Crear nueva lista con la task movida
+            const newList = [...props.item.tasks];
+            newList.splice(currentIndex, 1);
+            newList.splice(adjustedInsertIndex, 0, draggedTask);
+
+            // Actualizar el orden
+            newList.forEach((task, idx) => {
+                task.order = idx + 1;
+            });
+
+            props.item.tasks = newList;
+            console.log(`✅ Task reordenada. Tasks: ${props.item.tasks.map((t) => `"${t.title}"`).join(", ")}`);
+        }
+    }
+
+    // Guardar cambios
+    if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+};
+
 const onRightClick = (event: MouseEvent) => {
     event.preventDefault();
     // TODO: Implementar menú contextual para tasks
@@ -114,64 +197,6 @@ const onDragEnd = (e: DragEvent) => {
     // Siempre limpiar el estado del drag cuando termina el evento
     dragDropStore.clearDragStateAsync();
 };
-
-// Evento para actualizar posición del ghost y bordes mientras se arrastra
-const onDragOver = (e: DragEvent) => {
-    // Actualizar posición del ghost siguiendo al mouse
-    dragDropStore.updateGhostPositionWithMouseAsync(e.clientX, e.clientY);
-
-    // Actualizar bordes para tasks
-    dragDropStore.updateTaskBorderHighlightsAsync(e.clientX, e.clientY, props.item.tasks);
-};
-
-// Evento para manejar cuando se suelta una task sobre este componente
-const onDrop = (e: DragEvent) => {
-    e.preventDefault();
-
-    if (dragDropStore.dragTask && dragDropStore.dragTask.id !== props.task.id) {
-        // Determinar si el mouse está en la mitad superior o inferior de la task
-        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        const mouseY = e.clientY;
-        const isInUpperHalf = mouseY < rect.top + rect.height / 2;
-
-        // Log específico para cuando se suelta una task
-        const draggedTaskTitle = dragDropStore.dragTask?.title || "Task desconocida";
-        const targetTaskTitle = props.task.title || "Task desconocida";
-        const position = isInUpperHalf ? "arriba" : "abajo";
-        console.log(`✅ Task arrastrada "${draggedTaskTitle}" reposicionada ${position} de "${targetTaskTitle}"`);
-
-        // Reordenar tasks dentro del mismo item
-        const currentIndex = props.item.tasks.findIndex((task) => task.id === dragDropStore.dragTask!.id);
-        const targetIndex = props.item.tasks.findIndex((task) => task.id === props.task.id);
-
-        if (currentIndex !== -1 && targetIndex !== -1) {
-            // Calcular la posición de inserción deseada
-            let insertIndex = isInUpperHalf ? targetIndex : targetIndex + 1;
-
-            // Ajustar si el índice actual está antes de la posición de inserción
-            if (currentIndex < insertIndex) {
-                insertIndex--;
-            }
-
-            // Crear nueva lista con la task movida
-            const newList = [...props.item.tasks];
-            newList.splice(currentIndex, 1); // Remover del índice actual
-            newList.splice(insertIndex, 0, dragDropStore.dragTask!); // Insertar en nueva posición
-
-            // Actualizar el orden de todas las tasks
-            newList.forEach((task, idx) => {
-                task.order = idx + 1;
-            });
-
-            // Guardar cambios
-            props.item.tasks = newList;
-            if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
-        }
-
-        // Limpiar el estado del drag después del drop
-        dragDropStore.clearDragStateAsync();
-    }
-};
 </script>
 
 <style scoped lang="scss">
@@ -187,7 +212,8 @@ const onDrop = (e: DragEvent) => {
     border-radius: 8px;
     background: rgba($bg-secondary, 0.2);
     transition: box-shadow 0.2s;
-    width: 100%;
+    width: calc(100% - 8px);
+    margin-left: 8px;
     box-sizing: border-box;
     position: relative;
     cursor: pointer;

@@ -47,12 +47,11 @@
                 <div class="item-col cols-actions text-left">
                     <!-- Espacio para drag handle y botones -->
                 </div>
-                <div class="item-col cols-order">#</div>
+                <div class="item-col cols-order flex-center">#</div>
                 <div class="item-col cols-title text-left">Título</div>
                 <div class="item-col cols-assigned">Asignado</div>
                 <div class="item-col cols-state">Estado</div>
-                <div class="item-col cols-effort">Esf. Estimado</div>
-                <div class="item-col cols-effort">Esf. Real</div>
+                <div class="item-col cols-effort flex-center" title="Estimado/Real">Esfuerzos</div>
                 <div class="item-col cols-priority">Prioridad</div>
             </div>
 
@@ -274,7 +273,9 @@ const onContextMenuClosed = () => {
 <style scoped lang="scss">
 @import "@/styles/dashboard-columns.scss";
 .dashboard {
-    padding: 16px;
+    padding: 6px;
+    padding-top: 66px; /* Adjusted for 50px header + 16px padding */
+    font-size: 12px;
 }
 
 .dashboard-header {
@@ -318,7 +319,7 @@ const onContextMenuClosed = () => {
     display: flex;
     align-items: center;
     padding: 8px;
-    background: rgba($bg-secondary, 0.8);
+    background: #00000020;
     border-bottom: 1px solid rgba($primary, 0.3);
     border-radius: 8px 8px 0 0;
     font-weight: bold;

@@ -1,3 +1,16 @@
+.header-row {
+    .item-col {
+        border-right: 1px solid rgba($gray, 0.2);
+        height: 28px;
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+
+        &:last-child {
+            border-right: none;
+        }
+    }
+}
 .item-col {
     padding: 0 4px;
     overflow: hidden;
@@ -24,8 +37,8 @@
 }
 
 .cols-assigned {
-    flex: 0 0 120px;
-    max-width: 120px;
+    flex: 0 0 130px;
+    max-width: 130px;
     text-align: left;
 }
 
@@ -41,7 +54,7 @@
 }
 
 .cols-priority {
-    flex: 0 0 100px;
-    max-width: 100px;
+    flex: 0 0 80px;
+    max-width: 80px;
     text-align: center;
 }

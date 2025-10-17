@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar color="bg-primary" dark>
+    <v-app-bar color="rgba(0, 0, 0, 0.2)" dark height="50">
         <v-spacer />
         <v-menu>
             <template #activator="{ props }">
@@ -36,6 +36,9 @@ const logout = async () => {
 <style scoped lang="scss">
 @import "@/styles/variables.scss";
 
+.v-app-bar {
+    box-shadow: 0 0 5px #00ffff50 !important;
+}
 .menu {
     background: $bg-primary;
     border-radius: 4px;

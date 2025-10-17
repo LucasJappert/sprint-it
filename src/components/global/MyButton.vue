@@ -77,10 +77,15 @@ const classes = computed(() => [
     color: $primary;
     background-color: rgba($primary, 0.08);
     border-radius: 30px;
+    transition: all 0.1s ease;
     // min-width: auto !important;
     /* Variante secundaria: gris medio (no tan apagado como disabled) */
     &.v-btn {
         text-transform: none;
+    }
+
+    &:hover:not(.v-btn--disabled) {
+        box-shadow: 0 0 10px rgba($primary, 0.9);
     }
     &.secondary {
         background-color: rgba(255, 255, 255, 0.08) !important; // gris suave sobre fondo oscuro
@@ -96,6 +101,7 @@ const classes = computed(() => [
         &:hover:not(.v-btn--disabled) {
             background-color: rgba(255, 255, 255, 0.12) !important;
             border-color: rgba(255, 255, 255, 0.28) !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
         &:active:not(.v-btn--disabled) {
             background-color: rgba(255, 255, 255, 0.16) !important;

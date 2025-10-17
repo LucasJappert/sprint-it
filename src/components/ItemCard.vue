@@ -14,18 +14,19 @@
         @drop.prevent="onDrop"
     >
         <div class="cols-actions text-left">
+            <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
+                <v-icon size="24">mdi-drag</v-icon>
+            </span>
             <v-btn v-if="item.tasks.length > 0" icon size="x-small" @click.stop="showTasks = !showTasks" @mousedown.stop>
                 <v-icon size="16">{{ showTasks ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
-            <span class="drag-handle ml-1" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
-                <v-icon size="24">mdi-drag</v-icon>
-            </span>
         </div>
 
         <div class="item-col cols-order">
             {{ item.order }}
         </div>
         <div class="item-col cols-title text-left">
+            <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
             <strong>{{ item.title }}</strong>
         </div>
         <div class="item-col cols-assigned">
@@ -34,14 +35,13 @@
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(item.state || STATE_VALUES.TODO)"></span>
         </div>
-        <div class="item-col cols-effort">{{ item.estimatedEffort }}</div>
-        <div class="item-col cols-effort">{{ item.actualEffort }}</div>
+        <div class="item-col cols-effort">{{ item.estimatedEffort }}-{{ item.actualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
             <span class="priority-content" v-html="getPriorityHtml(item.priority)"></span>
         </div>
     </div>
 
-    <div v-if="showTasks">
+    <div v-if="showTasks" class="tasks-container">
         <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" @editTask="onEditTask" />
     </div>
 
@@ -296,6 +296,7 @@ const onDragOver = (e: DragEvent) => {
 
 // Evento para manejar cuando se suelta un item sobre este componente
 const onDrop = (e: DragEvent) => {
+    console.log("🎉 DROP EN ITEM");
     e.preventDefault();
 
     // Si estamos arrastrando una task
@@ -303,30 +304,58 @@ const onDrop = (e: DragEvent) => {
         const draggedTask = dragDropStore.dragTask;
         const sourceItem = dragDropStore.dragTaskParentItem;
 
+        console.log(`🔄 PROCESANDO DROP DE TASK - "${draggedTask.title}" en item "${props.item.title}"`);
+        console.log(`📍 Source item: ${sourceItem?.title || "null"}, Target item: ${props.item.title}`);
+        console.log(`🎯 Mouse position: (${e.clientX}, ${e.clientY})`);
+
         // Determinar si el mouse está en la mitad superior o inferior del item
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
         const mouseY = e.clientY;
         const isInUpperHalf = mouseY < rect.top + rect.height / 2;
 
+        // Determinar la posición de inserción basada en tasks del item destino
+        let insertIndex = 0;
+        let foundTargetTask = false;
+
+        console.log(`🔍 Buscando posición de inserción entre ${props.item.tasks.length} tasks...`);
+
+        for (let i = 0; i < props.item.tasks.length; i++) {
+            const task = props.item.tasks[i];
+            if (!task) continue;
+
+            const element = document.querySelector(`[data-task-id="${task.id}"]`) as HTMLElement | null;
+            if (element) {
+                const taskRect = element.getBoundingClientRect();
+                const taskMiddle = taskRect.top + taskRect.height / 2;
+
+                console.log(
+                    `🔍 Task "${task.title}" at index ${i}: rect(${taskRect.top.toFixed(0)}-${(taskRect.top + taskRect.height).toFixed(
+                        0,
+                    )}), middle: ${taskMiddle.toFixed(0)}, mouseY: ${mouseY.toFixed(0)}`,
+                );
+
+                if (mouseY < taskMiddle) {
+                    insertIndex = i;
+                    foundTargetTask = true;
+                    console.log(`🎯 ✅ INSERTION POINT FOUND at index ${insertIndex} (before "${task.title}")`);
+                    break;
+                }
+            } else {
+                console.log(`❌ No se encontró elemento DOM para task "${task.id}"`);
+            }
+        }
+
+        if (!foundTargetTask) {
+            insertIndex = props.item.tasks.length;
+            console.log(`🎯 📍 No specific task found, inserting at end (index ${insertIndex})`);
+        }
+
+        console.log(`🎯 Insert index calculado: ${insertIndex}, Tasks en target: ${props.item.tasks.length}`);
+        console.log(`📋 Tasks actuales en target: ${props.item.tasks.map((t) => `"${t.title}"`).join(", ")}`);
+
         // Si estamos dentro del mismo item, reordenar tasks
         if (sourceItem && sourceItem.id === props.item.id) {
-            // Determinar la posición de inserción basada en tasks
-            let insertIndex = 0;
-            for (let i = 0; i < props.item.tasks.length; i++) {
-                const task = props.item.tasks[i];
-                if (!task) continue;
-
-                const element = document.querySelector(`[data-task-id="${task.id}"]`) as HTMLElement | null;
-                if (element) {
-                    const taskRect = element.getBoundingClientRect();
-                    if (mouseY < taskRect.top + taskRect.height / 2) {
-                        insertIndex = i;
-                        break;
-                    }
-                    insertIndex = i + 1;
-                }
-            }
-
+            console.log(`🔄 Reordenando dentro del mismo item`);
             // Reordenar la task dentro del mismo item
             const currentIndex = props.item.tasks.findIndex((task) => task.id === draggedTask.id);
             if (currentIndex !== -1) {
@@ -334,6 +363,8 @@ const onDrop = (e: DragEvent) => {
                 if (currentIndex < insertIndex) {
                     insertIndex--;
                 }
+
+                console.log(`📊 Current index: ${currentIndex}, Adjusted insert index: ${insertIndex}`);
 
                 // Crear nueva lista con la task movida
                 const newList = [...props.item.tasks];
@@ -347,33 +378,36 @@ const onDrop = (e: DragEvent) => {
 
                 // Guardar cambios
                 props.item.tasks = newList;
+                console.log(`✅ Tasks reordenadas: ${newList.map((t) => t.title).join(", ")}`);
                 if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
             }
         } else {
+            console.log(`🔄 Moviendo task entre items diferentes`);
             // Moviendo task a otro item
             const targetItem = props.item;
-            const position = isInUpperHalf ? "above" : "below";
 
             // Remover la task del item fuente
             if (sourceItem) {
+                const originalCount = sourceItem.tasks.length;
                 sourceItem.tasks = sourceItem.tasks.filter((task) => task.id !== draggedTask.id);
                 // Reordenar las tasks restantes
                 sourceItem.tasks.forEach((task, idx) => {
                     task.order = idx + 1;
                 });
+                console.log(`🗑️ Removida de source item. Tasks restantes: ${sourceItem.tasks.length} (era ${originalCount})`);
             }
 
-            // Agregar la task al item destino
-            if (position === "above") {
-                targetItem.tasks.unshift(draggedTask);
-            } else {
-                targetItem.tasks.push(draggedTask);
-            }
+            // Insertar la task en la posición específica dentro del item destino
+            const originalTargetCount = targetItem.tasks.length;
+            targetItem.tasks.splice(insertIndex, 0, draggedTask);
+            console.log(`➕ Agregada a target item en posición ${insertIndex}. Tasks ahora: ${targetItem.tasks.length} (era ${originalTargetCount})`);
 
             // Reordenar las tasks en el item destino
             targetItem.tasks.forEach((task, idx) => {
                 task.order = idx + 1;
             });
+
+            console.log(`✅ Task movida exitosamente. Target tasks: ${targetItem.tasks.map((t) => t.title).join(", ")}`);
 
             // Guardar cambios
             if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);

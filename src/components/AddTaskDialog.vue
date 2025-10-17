@@ -1,7 +1,10 @@
 <template>
     <MyDialog :visible="visible" :min-width="800" @close="handleClose">
         <div class="header">
-            <h3 class="text-left">{{ isEditing ? "Editar Tarea" : "Nueva Tarea" }}</h3>
+            <h3 class="text-left">
+                <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
+                {{ isEditing ? "Editar Tarea" : "Nueva Tarea" }}
+            </h3>
         </div>
         <div class="body-scroll">
             <!-- Título ocupando 100% del ancho -->
@@ -9,7 +12,7 @@
                 <MyInput v-model="title" label="Título" @keydown.enter="handleSave" autofocus />
             </div>
 
-            <!-- Campos en una sola fila: persona asignada, estado, prioridad, esfuerzos -->
+            <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
             <div class="form-row mt-3">
                 <div class="field-group assigned-user">
                     <MySelect
@@ -23,14 +26,14 @@
                 <div class="field-group state">
                     <MySelect v-model="state" label="Estado" :options="stateOptions" @update:options="onStateChange" />
                 </div>
-                <div class="field-group priority">
-                    <MySelect v-model="priority" label="Prioridad" :options="priorityOptions" @update:options="onPriorityChange" />
-                </div>
                 <div class="field-group estimated-effort">
                     <MyInput v-model="estimatedEffort" label="Esfuerzo" type="number" />
                 </div>
                 <div class="field-group actual-effort">
                     <MyInput v-model="actualEffort" label="Esf. Real" type="number" />
+                </div>
+                <div class="field-group priority">
+                    <MySelect v-model="priority" label="Prioridad" :options="priorityOptions" @update:options="onPriorityChange" />
                 </div>
             </div>
 
@@ -327,11 +330,6 @@ watch(
     flex: 0 0 20%;
 }
 
-/* Prioridad - 20% */
-.priority {
-    flex: 0 0 20%;
-}
-
 /* Esfuerzo estimado - 15% */
 .estimated-effort {
     flex: 0 0 15%;
@@ -340,6 +338,11 @@ watch(
 /* Esfuerzo real - 15% */
 .actual-effort {
     flex: 0 0 15%;
+}
+
+/* Prioridad - 20% */
+.priority {
+    flex: 0 0 20%;
 }
 
 /* Textarea para detalle ocupando 100% del ancho */
