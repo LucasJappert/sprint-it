@@ -3,17 +3,17 @@
         <v-spacer />
         <v-menu>
             <template #activator="{ props }">
-                <v-avatar v-bind="props" size="40" class="avatar">
-                    <v-img src="https://picsum.photos/40/40" alt="Avatar" />
+                <v-avatar v-bind="props" size="40" class="avatar" color="$primary">
+                    <span class="avatar-text">{{ authStore.user?.name?.charAt(0).toUpperCase() }}</span>
                 </v-avatar>
             </template>
             <div class="menu">
                 <div class="menu-item">
-                    <span>Hola {{ authStore.user?.username }}</span>
+                    <span>Hello {{ authStore.user?.name }}!</span>
                 </div>
                 <div class="menu-item" @click="logout">
                     <v-icon>mdi-logout</v-icon>
-                    <span>Desloguearse</span>
+                    <span>Logout</span>
                 </div>
             </div>
         </v-menu>
@@ -81,5 +81,13 @@ const logout = async () => {
 
 .avatar {
     margin-right: 5px;
+    border: 2px solid $primary;
+    box-shadow: 0 0 5px $primary;
+}
+
+.avatar-text {
+    color: $primary;
+    font-size: 18px;
+    font-weight: bold;
 }
 </style>

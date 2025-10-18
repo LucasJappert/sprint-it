@@ -160,7 +160,7 @@ const contextMenuRef = ref();
 const contextMenuOptions = computed(() => [
     {
         key: "add-task",
-        label: "Agregar task",
+        label: "Add task",
         icon: "mdi-invoice-list-outline",
         color: "yellow",
         action: () => {
@@ -169,7 +169,7 @@ const contextMenuOptions = computed(() => [
     },
     {
         key: "delete",
-        label: "Eliminar",
+        label: "Delete",
         icon: "mdi-trash-can-outline",
         color: "error",
         action: async () => {

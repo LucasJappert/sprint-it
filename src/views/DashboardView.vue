@@ -5,14 +5,14 @@
         <div class="dashboard-header">
             <div class="sprint-container-1">
                 <div style="width: 150px">
-                    <MySelect :options="sprintOptions" placeholder-title="Seleccionar Sprint" @update:options="onSprintOptionsChange" density="compact" />
+                    <MySelect :options="sprintOptions" placeholder-title="Select Sprint" @update:options="onSprintOptionsChange" density="compact" />
                 </div>
 
                 <div style="width: 120px">
                     <MyInput
                         v-model="currentSprintDiasHabilesString"
                         type="number"
-                        label="Días hábiles"
+                        label="Working Days"
                         :min="1"
                         :max="10"
                         @blur="updateDiasHabiles"
@@ -27,7 +27,7 @@
             <div class="sprint-actions">
                 <MyButton @click="createNewSprint" variant="outlined">
                     <v-icon left>mdi-plus</v-icon>
-                    Nuevo Sprint
+                    New Sprint
                 </MyButton>
             </div>
         </div>
@@ -36,7 +36,7 @@
         <div class="board-header">
             <MyButton @click="showAddItemDialog = true">
                 <v-icon left>mdi-plus</v-icon>
-                Nuevo Item
+                New Item
             </MyButton>
         </div>
 
@@ -51,7 +51,7 @@
                 <div class="item-col cols-title text-left">Title</div>
                 <div class="item-col cols-assigned">Assigned</div>
                 <div class="item-col cols-state">State</div>
-                <div class="item-col cols-effort flex-center" title="Estimated/Actual">Efforts</div>
+                <div class="item-col cols-effort flex-center" title="Estimated/Real">Efforts</div>
                 <div class="item-col cols-priority">Priority</div>
             </div>
 

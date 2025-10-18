@@ -3,13 +3,13 @@
         <div class="header">
             <h3 class="text-left">
                 <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
-                {{ isEditing ? "Editar Tarea" : "Nueva Tarea" }}
+                {{ isEditing ? "Edit Task" : "New Task" }}
             </h3>
         </div>
         <div class="body-scroll">
             <!-- Título ocupando 100% del ancho -->
             <div class="full-width">
-                <MyInput v-model="title" label="Título" @keydown.enter="handleSave" autofocus />
+                <MyInput v-model="title" label="Title" @keydown.enter="handleSave" autofocus />
             </div>
 
             <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
@@ -17,34 +17,34 @@
                 <div class="field-group assigned-user">
                     <MySelect
                         v-model="assignedUser"
-                        label="Persona Asignada"
+                        label="Assigned Person"
                         :options="assignedUserOptions"
-                        placeholder="Seleccionar usuario..."
+                        placeholder="Select user..."
                         @update:options="onAssignedUserChange"
                     />
                 </div>
                 <div class="field-group state">
-                    <MySelect v-model="state" label="Estado" :options="stateOptions" @update:options="onStateChange" />
+                    <MySelect v-model="state" label="State" :options="stateOptions" @update:options="onStateChange" />
                 </div>
                 <div class="field-group estimated-effort">
-                    <MyInput v-model="estimatedEffort" label="Esfuerzo" type="number" />
+                    <MyInput v-model="estimatedEffort" label="Effort" type="number" />
                 </div>
                 <div class="field-group actual-effort">
-                    <MyInput v-model="actualEffort" label="Esf. Real" type="number" />
+                    <MyInput v-model="actualEffort" label="Real Effort" type="number" />
                 </div>
                 <div class="field-group priority">
-                    <MySelect v-model="priority" label="Prioridad" :options="priorityOptions" @update:options="onPriorityChange" />
+                    <MySelect v-model="priority" label="Priority" :options="priorityOptions" @update:options="onPriorityChange" />
                 </div>
             </div>
 
             <!-- Detalle en textarea ocupando 100% del ancho -->
             <div class="full-width mt-3">
-                <MyTextarea v-model="detail" label="Detalle" :rows="8" no-resize class="detail-textarea" />
+                <MyTextarea v-model="detail" label="Detail" :rows="8" no-resize class="detail-textarea" />
             </div>
         </div>
         <div class="footer">
-            <MyButton btn-class="px-2" secondary @click="handleClose">Cancelar</MyButton>
-            <MyButton btn-class="px-2" @click="handleSave" :disabled="!canSave">{{ isEditing ? "Guardar Cambios" : "Agregar Tarea" }}</MyButton>
+            <MyButton btn-class="px-2" secondary @click="handleClose">Cancel</MyButton>
+            <MyButton btn-class="px-2" @click="handleSave" :disabled="!canSave">{{ isEditing ? "Save Changes" : "Add Task" }}</MyButton>
         </div>
     </MyDialog>
 </template>
