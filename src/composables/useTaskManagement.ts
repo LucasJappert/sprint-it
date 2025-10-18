@@ -1,0 +1,74 @@
+import { saveSprint } from "@/services/firestore";
+import { useSprintStore } from "@/stores/sprint";
+import type { Item, Task } from "@/types";
+import { readonly, ref } from "vue";
+
+const showAddTaskDialog = ref(false);
+const showEditTaskDialog = ref(false);
+const editingTask = ref<Task | null>(null);
+const currentItem = ref<Item | null>(null);
+
+export const useTaskManagement = () => {
+    const sprintStore = useSprintStore();
+
+    const openAddTaskDialog = (item: Item) => {
+        currentItem.value = item;
+        editingTask.value = null;
+        showAddTaskDialog.value = true;
+        showEditTaskDialog.value = false;
+    };
+
+    const openEditTaskDialog = (task: Task, item: Item) => {
+        currentItem.value = item;
+        editingTask.value = task;
+        showEditTaskDialog.value = true;
+        showAddTaskDialog.value = false;
+    };
+
+    const closeDialogs = () => {
+        showAddTaskDialog.value = false;
+        showEditTaskDialog.value = false;
+        editingTask.value = null;
+        currentItem.value = null;
+    };
+
+    const saveTask = (task: Task) => {
+        if (!currentItem.value) return;
+
+        if (editingTask.value) {
+            // Editar task existente
+            const taskIndex = currentItem.value.tasks.findIndex((t) => t.id === editingTask.value!.id);
+            if (taskIndex !== -1) {
+                currentItem.value.tasks[taskIndex] = task;
+                if (sprintStore.currentSprint) {
+                    saveSprint(sprintStore.currentSprint);
+                }
+            }
+        } else {
+            // Agregar nueva task
+            task.order = currentItem.value.tasks.length + 1;
+            currentItem.value.tasks.push(task);
+            if (sprintStore.currentSprint) {
+                saveSprint(sprintStore.currentSprint);
+            }
+        }
+
+        closeDialogs();
+    };
+
+    const onSaveEditTask = (task: Task) => {
+        saveTask(task);
+    };
+
+    return {
+        showAddTaskDialog: readonly(showAddTaskDialog),
+        showEditTaskDialog: readonly(showEditTaskDialog),
+        editingTask: readonly(editingTask),
+        currentItem: readonly(currentItem),
+        openAddTaskDialog,
+        openEditTaskDialog,
+        closeDialogs,
+        saveTask,
+        onSaveEditTask,
+    };
+};

@@ -17,9 +17,10 @@
 
 ## Code Style (follow strictly)
 
--   **Functions:** prefer arrow functions always; names in camelCase; async functions end with 'Async'.
+-   **Functions:** prefer arrow functions always; names in camelCase; async functions end with 'Async'; max 20-30 lines per function.
 -   **Strings:** **double quotes** only.
--   **Control flow:** avoid `else` when posible; use early returns; single-line if without braces; prefer `if (condition) return action();` or `if (condition) continue;` over multi-line blocks. Always prefer early returns over else statements.
+-   **Control flow:** avoid `else` when posible; use early returns; single-line if without braces; prefer `if (condition) return action();` or `if (condition) continue;` over multi-line blocks. Always prefer early returns over else statements. Use `if (condition) return action();` for simple cases.
+-   **DRY Principle:** Don't Repeat Yourself - extract common logic into reusable functions; avoid code duplication.
 -   **Imports:** absolute via `@/`; no default barrels ocultando tipos.
 -   **TypeScript:** explicit types on public APIs; no `any`; enable `strict`.
 -   **Vue:** `<script setup lang="ts">`; Composition API; no Options API.
@@ -87,6 +88,13 @@ Para crear un nuevo usuario en el sistema:
 
 -   DO: prefer functional utilities; small components; usar `ContextMenu.vue` para menús contextuales reutilizables.
 -   DON'T: side effects in composables durante import; no `any`; no Options API; no implementar lógica de menú contextual directamente en componentes - usar `ContextMenu.vue`.
+
+## Component Import Rules
+
+-   **ALWAYS import ALL components used in templates**: Before using any component in a Vue template, ensure it is explicitly imported in the `<script setup>` section. Missing imports will cause runtime errors like "Failed to resolve component".
+-   **Check imports after renaming components**: When renaming or moving components, update ALL import statements across the codebase immediately.
+-   **Use absolute imports**: Always use `@/` for imports to maintain consistency and avoid path resolution issues.
+-   **Import validation**: After making changes to component usage or imports, run `npx vue-tsc --noEmit` to verify no import errors exist.
 
 ## Project-Specific Rules (Lucas)
 

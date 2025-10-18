@@ -42,19 +42,11 @@
     </div>
 
     <div v-if="showTasks" class="tasks-container">
-        <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" @editTask="onEditTask" />
+        <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" />
     </div>
 
-    <AddTaskDialog :visible="showAddTaskDialog" :item="item" @close="showAddTaskDialog = false" @save="onAddTask" />
-    <AddTaskDialog
-        v-if="showEditTaskDialog"
-        :visible="showEditTaskDialog"
-        :item="item"
-        :existing-task="editingTask"
-        @close="showEditTaskDialog = false"
-        @save="onSaveEditTask"
-    />
-    <AddItemDialog
+    <TaskDialog :visible="showAddTaskDialog" :item="item" @close="openAddTaskDialog(item)" @save="saveTask" />
+    <ItemDialog
         v-if="showEditItemDialog"
         :visible="showEditItemDialog"
         :existing-item="item"
@@ -68,18 +60,19 @@
 </template>
 
 <script setup lang="ts">
+import { useTaskManagement } from "@/composables/useTaskManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
-import type { Item, Task } from "@/types";
+import type { Item } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
-import AddItemDialog from "./AddItemDialog.vue";
-import AddTaskDialog from "./AddTaskDialog.vue";
 import ContextMenu from "./ContextMenu.vue";
+import ItemDialog from "./ItemDialog.vue";
 import TaskCard from "./TaskCard.vue";
+import TaskDialog from "./TaskDialog.vue";
 
 const props = defineProps<{
     item: Item;
@@ -93,9 +86,12 @@ const emit = defineEmits<{
     contextMenuClosed: [];
 }>();
 
+// Remover lógica de tasks ya que ahora se maneja en el composable
+
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
+const { showAddTaskDialog, openAddTaskDialog, saveTask } = useTaskManagement();
 const showTasks = ref(false);
 
 // Computed para determinar si este item debe mostrar bordes
@@ -154,10 +150,7 @@ onMounted(() => {
     // Simulación removida completamente
 });
 
-const showAddTaskDialog = ref(false);
 const showEditItemDialog = ref(false);
-const showEditTaskDialog = ref(false);
-const editingTask = ref<Task | null>(null);
 
 // Menú contextual
 const contextMenuRef = ref();
@@ -168,7 +161,7 @@ const contextMenuOptions = computed(() => [
         icon: "mdi-invoice-list-outline",
         color: "yellow",
         action: () => {
-            showAddTaskDialog.value = true;
+            openAddTaskDialog(props.item);
         },
     },
     {
@@ -195,24 +188,6 @@ const getStateHtml = (state: string | undefined) => {
 
 // Funciones de simulación removidas completamente
 
-const onAddTask = (task: Task) => {
-    // Asignar orden basado en la cantidad actual de tasks
-    task.order = props.item.tasks.length + 1;
-    props.item.tasks.push(task);
-    if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
-    showAddTaskDialog.value = false;
-};
-
-const onTaskReorder = (evt: any) => {
-    if (evt.moved) {
-        sprintStore.reorderTasks(props.item.id, evt.moved.oldIndex, evt.moved.newIndex);
-    }
-};
-
-const onTaskMove = (_evt: any, _originalEvent: any) => {
-    // Move between items (future)
-};
-
 const onSaveEditItem = async (item: Item) => {
     await sprintStore.updateItem(props.item.id, {
         title: item.title,
@@ -224,24 +199,6 @@ const onSaveEditItem = async (item: Item) => {
         assignedUser: item.assignedUser,
     });
     showEditItemDialog.value = false;
-};
-
-const onEditTask = (task: Task) => {
-    editingTask.value = task;
-    showEditTaskDialog.value = true;
-};
-
-const onSaveEditTask = (task: Task) => {
-    if (editingTask.value) {
-        // Encontrar la task en el array y actualizarla
-        const taskIndex = props.item.tasks.findIndex((t) => t.id === editingTask.value!.id);
-        if (taskIndex !== -1) {
-            props.item.tasks[taskIndex] = task;
-            if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
-        }
-    }
-    showEditTaskDialog.value = false;
-    editingTask.value = null;
 };
 
 const onRightClick = (event: MouseEvent) => {
@@ -527,9 +484,9 @@ const onDrop = (e: DragEvent) => {
 .draggable-ghost {
     transform: rotate(-2deg) !important;
     opacity: 0.95 !important;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
-    border: 3px dashed #1976d2 !important;
-    background: rgba(25, 118, 210, 0.2) !important;
+    box-shadow: 0 0 10px rgba($primary, 0.5) !important;
+    border: 2px dashed rgba($primary, 0.5) !important;
+    background: rgba($primary, 0.2) !important;
     transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
     backdrop-filter: blur(2px) !important;
     font-weight: bold !important;
@@ -552,7 +509,7 @@ const onDrop = (e: DragEvent) => {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, transparent 30%, rgba(25, 118, 210, 0.3) 50%, transparent 70%);
+    background: linear-gradient(45deg, transparent 30%, rgba($primary, 0.3) 50%, transparent 70%);
     border-radius: inherit;
     animation: shimmer 2s infinite;
 }

@@ -36,9 +36,20 @@
             <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
         </div>
     </div>
+
+    <!-- Diálogo de edición de task -->
+    <TaskDialog
+        v-if="showEditTaskDialog"
+        :visible="showEditTaskDialog"
+        :item="props.item"
+        :existing-task="editingTask"
+        @close="closeDialogs"
+        @save="onSaveEditTask"
+    />
 </template>
 
 <script setup lang="ts">
+import { useTaskManagement } from "@/composables/useTaskManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
@@ -47,6 +58,7 @@ import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
+import TaskDialog from "./TaskDialog.vue";
 
 const props = defineProps<{
     task: Task;
@@ -54,10 +66,11 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    editTask: [task: Task];
     contextMenuOpened: [taskId: string];
     contextMenuClosed: [];
 }>();
+
+const { showEditTaskDialog, editingTask, closeDialogs, openEditTaskDialog, onSaveEditTask } = useTaskManagement();
 
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
@@ -126,7 +139,7 @@ const highlightPosition = computed(() => {
 });
 
 const onEditTask = (task: Task) => {
-    emit("editTask", task);
+    openEditTaskDialog(task, props.item);
 };
 
 const onDragOver = (e: DragEvent) => {

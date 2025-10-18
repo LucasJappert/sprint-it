@@ -70,15 +70,15 @@
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
-        <AddItemDialog :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @save="onAddItem" />
+        <ItemDialog :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @save="onAddItem" />
     </div>
 </template>
 
 <script setup lang="ts">
-import AddItemDialog from "@/components/AddItemDialog.vue";
 import MyButton from "@/components/global/MyButton.vue";
 import Header from "@/components/Header.vue";
 import ItemCard from "@/components/ItemCard.vue";
+import ItemDialog from "@/components/ItemDialog.vue";
 import { saveSprint } from "@/services/firestore";
 import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";

@@ -145,74 +145,93 @@ onMounted(() => {
     loadAssignedUserOptions();
 });
 
-const resetForm = async () => {
-    if (props.existingTask) {
-        // Intentar obtener el username del usuario asignado actual
-        let assignedUserValue = "";
-        if (props.existingTask.assignedUser) {
-            try {
-                const username = await getUsernameById(props.existingTask.assignedUser);
-                if (username && SPRINT_TEAM_MEMBERS.includes(username as any)) {
-                    assignedUserValue = username;
-                }
-            } catch (error) {
-                console.warn(`Error al obtener username para ID ${props.existingTask.assignedUser}:`, error);
-            }
+const getAssignedUserValue = async (task: Task): Promise<string> => {
+    if (!task.assignedUser) return "";
+
+    try {
+        const username = await getUsernameById(task.assignedUser);
+        if (username && SPRINT_TEAM_MEMBERS.includes(username as any)) {
+            return username;
         }
-
-        title.value = props.existingTask.title;
-        detail.value = props.existingTask.detail;
-        priority.value = props.existingTask.priority as any;
-        state.value = (props.existingTask.state || STATE_VALUES.TODO) as any;
-        estimatedEffort.value = props.existingTask.estimatedEffort.toString();
-        actualEffort.value = props.existingTask.actualEffort.toString();
-        assignedUser.value = assignedUserValue;
-
-        // Esperar a que las opciones estén cargadas si no lo están
-        if (assignedUserOptions.value.length === 0) {
-            await loadAssignedUserOptions();
-        }
-
-        // Pre-seleccionar la opción correspondiente en assignedUserOptions
-        if (assignedUserValue && assignedUserOptions.value.length > 0) {
-            assignedUserOptions.value.forEach((option) => {
-                option.checked = option.id === assignedUserValue;
-            });
-        }
-
-        // Pre-seleccionar la prioridad en las opciones del select
-        priorityOptions.value.forEach((option) => {
-            option.checked = option.value.toLowerCase() === props.existingTask!.priority.toLowerCase();
-        });
-
-        // Pre-seleccionar el estado en las opciones del select
-        stateOptions.value.forEach((option) => {
-            option.checked = option.value.toLowerCase() === (props.existingTask!.state || STATE_VALUES.TODO).toLowerCase();
-        });
-    } else {
-        title.value = "";
-        detail.value = "";
-        priority.value = PRIORITY_VALUES.NORMAL;
-        state.value = STATE_VALUES.TODO;
-        estimatedEffort.value = "";
-        actualEffort.value = "";
-        assignedUser.value = "";
-
-        // Limpiar selección
-        assignedUserOptions.value.forEach((option) => {
-            option.checked = false;
-        });
-
-        // Seleccionar prioridad por defecto (NORMAL)
-        priorityOptions.value.forEach((option) => {
-            option.checked = option.value === PRIORITY_VALUES.NORMAL;
-        });
-
-        // Seleccionar estado por defecto (TODO)
-        stateOptions.value.forEach((option) => {
-            option.checked = option.value === STATE_VALUES.TODO;
-        });
+    } catch (error) {
+        console.warn(`Error al obtener username para ID ${task.assignedUser}:`, error);
     }
+
+    return "";
+};
+
+const setFormValuesFromTask = (task: Task, assignedUserValue: string) => {
+    title.value = task.title;
+    detail.value = task.detail;
+    priority.value = task.priority as any;
+    state.value = (task.state || STATE_VALUES.TODO) as any;
+    estimatedEffort.value = task.estimatedEffort.toString();
+    actualEffort.value = task.actualEffort.toString();
+    assignedUser.value = assignedUserValue;
+};
+
+const selectAssignedUserOption = (assignedUserValue: string) => {
+    if (!assignedUserValue || assignedUserOptions.value.length === 0) return;
+
+    assignedUserOptions.value.forEach((option) => {
+        option.checked = option.id === assignedUserValue;
+    });
+};
+
+const selectPriorityOption = (task: Task) => {
+    priorityOptions.value.forEach((option) => {
+        option.checked = option.value.toLowerCase() === task.priority.toLowerCase();
+    });
+};
+
+const selectStateOption = (task: Task) => {
+    stateOptions.value.forEach((option) => {
+        option.checked = option.value.toLowerCase() === (task.state || STATE_VALUES.TODO).toLowerCase();
+    });
+};
+
+const resetFormForEditing = async (task: Task) => {
+    const assignedUserValue = await getAssignedUserValue(task);
+    setFormValuesFromTask(task, assignedUserValue);
+
+    // Esperar a que las opciones estén cargadas si no lo están
+    if (assignedUserOptions.value.length === 0) {
+        await loadAssignedUserOptions();
+    }
+
+    selectAssignedUserOption(assignedUserValue);
+    selectPriorityOption(task);
+    selectStateOption(task);
+};
+
+const resetFormForNew = () => {
+    title.value = "";
+    detail.value = "";
+    priority.value = PRIORITY_VALUES.NORMAL;
+    state.value = STATE_VALUES.TODO;
+    estimatedEffort.value = "";
+    actualEffort.value = "";
+    assignedUser.value = "";
+
+    // Limpiar selección
+    assignedUserOptions.value.forEach((option) => {
+        option.checked = false;
+    });
+
+    // Seleccionar prioridad por defecto (NORMAL)
+    priorityOptions.value.forEach((option) => {
+        option.checked = option.value === PRIORITY_VALUES.NORMAL;
+    });
+
+    // Seleccionar estado por defecto (TODO)
+    stateOptions.value.forEach((option) => {
+        option.checked = option.value === STATE_VALUES.TODO;
+    });
+};
+
+const resetForm = async () => {
+    if (!props.existingTask) return resetFormForNew();
+    await resetFormForEditing(props.existingTask);
 };
 
 const onAssignedUserChange = (options: any[]) => {
