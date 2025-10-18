@@ -115,17 +115,17 @@ const loadAssignedUserName = async () => {
         return;
     }
 
-    // Si es el usuario actual, mostrar nombre completo
+    // Si es el usuario actual, mostrar solo nombre
     if (props.item.assignedUser === authStore.user?.id) {
-        assignedUserName.value = `${authStore.user.name} ${authStore.user.lastName}`;
+        assignedUserName.value = authStore.user.name;
         return;
     }
 
-    // Para otros usuarios, obtener datos desde Firestore
+    // Para otros usuarios, obtener datos desde Firestore y mostrar solo nombre
     try {
         const user = await getUser(props.item.assignedUser);
         if (user) {
-            assignedUserName.value = `${user.name} ${user.lastName}`;
+            assignedUserName.value = user.name;
             return;
         }
     } catch (error) {

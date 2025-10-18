@@ -141,8 +141,8 @@ const loadAssignedUserOptions = async () => {
         if (user) {
             options.push({
                 id: username,
-                text: `${(user as any).name} ${(user as any).lastName}`,
-                name: `${(user as any).name} ${(user as any).lastName}`,
+                text: (user as any).name,
+                name: (user as any).name,
                 checked: false,
             });
         }

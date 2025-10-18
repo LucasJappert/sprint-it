@@ -48,11 +48,11 @@
                     <!-- Espacio para drag handle y botones -->
                 </div>
                 <div class="item-col cols-order flex-center">#</div>
-                <div class="item-col cols-title text-left">Título</div>
-                <div class="item-col cols-assigned">Asignado</div>
-                <div class="item-col cols-state">Estado</div>
-                <div class="item-col cols-effort flex-center" title="Estimado/Real">Esfuerzos</div>
-                <div class="item-col cols-priority">Prioridad</div>
+                <div class="item-col cols-title text-left">Title</div>
+                <div class="item-col cols-assigned">Assigned</div>
+                <div class="item-col cols-state">State</div>
+                <div class="item-col cols-effort flex-center" title="Estimated/Actual">Efforts</div>
+                <div class="item-col cols-priority">Priority</div>
             </div>
 
             <div class="list">
