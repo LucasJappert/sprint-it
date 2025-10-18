@@ -145,6 +145,11 @@ const onEditTask = (task: Task) => {
 const onDragOver = (e: DragEvent) => {
     // Permitir el drop
     e.preventDefault();
+
+    // Actualizar bordes para tasks si estamos arrastrando una task
+    if (dragDropStore.dragTask) {
+        dragDropStore.updateTaskBorderHighlightsAsync(e.clientX, e.clientY, props.item.tasks);
+    }
 };
 
 const onDrop = (e: DragEvent) => {
@@ -279,6 +284,13 @@ const onDragEnd = (e: DragEvent) => {
         border: 1px solid rgba($gray, 0.5);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
+}
+
+.task-card.show-border-top {
+    box-shadow: inset 0 3px 0 0 lightblue;
+}
+.task-card.show-border-bottom {
+    box-shadow: inset 0 -3px 0 0 lightblue;
 }
 
 .priority-cell {

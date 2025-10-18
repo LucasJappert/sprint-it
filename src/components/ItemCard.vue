@@ -17,8 +17,8 @@
             <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
                 <v-icon size="24">mdi-drag</v-icon>
             </span>
-            <v-btn v-if="item.tasks.length > 0" icon size="x-small" @click.stop="showTasks = !showTasks" @mousedown.stop>
-                <v-icon size="16">{{ showTasks ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
+            <v-btn v-if="item.tasks.length > 0" icon size="x-small" @click.stop="onToggleTasks" @mousedown.stop>
+                <v-icon size="16">{{ showTasks || props.isExpanded ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
         </div>
 
@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <div v-if="showTasks" class="tasks-container">
+    <div v-if="showTasks || props.isExpanded" class="tasks-container">
         <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" />
     </div>
 
@@ -79,11 +79,14 @@ const props = defineProps<{
     showBorder: boolean;
     borderPosition?: "above" | "below" | null;
     isContextMenuOpen?: boolean;
+    isExpanded?: boolean;
 }>();
 
 const emit = defineEmits<{
     contextMenuOpened: [itemId: string];
     contextMenuClosed: [];
+    toggleExpanded: [itemId: string];
+    taskReceived: [itemId: string];
 }>();
 
 // Remover lógica de tasks ya que ahora se maneja en el composable
@@ -211,6 +214,10 @@ const onRightClick = (event: MouseEvent) => {
 const onContextMenuClosed = () => {
     // Emitir evento para indicar que el menú contextual se cerró
     emit("contextMenuClosed");
+};
+
+const onToggleTasks = () => {
+    emit("toggleExpanded", props.item.id);
 };
 
 const onDragStart = (e: DragEvent) => {
@@ -365,6 +372,9 @@ const onDrop = (e: DragEvent) => {
             });
 
             console.log(`✅ Task movida exitosamente. Target tasks: ${targetItem.tasks.map((t) => t.title).join(", ")}`);
+
+            // Emitir evento para expandir el item destino si no está expandido
+            emit("taskReceived", props.item.id);
 
             // Guardar cambios
             if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);

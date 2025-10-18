@@ -63,8 +63,11 @@
                     :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
                     :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
                     :isContextMenuOpen="contextMenuItemId === it.id"
+                    :isExpanded="expandedItems.has(it.id)"
                     @contextMenuOpened="onContextMenuOpened"
                     @contextMenuClosed="onContextMenuClosed"
+                    @taskReceived="onTaskReceived"
+                    @toggleExpanded="onToggleExpanded"
                 />
             </div>
         </div>
@@ -268,6 +271,29 @@ const onContextMenuOpened = (itemId: string) => {
 const onContextMenuClosed = () => {
     contextMenuItemId.value = null;
 };
+
+// Estado para controlar qué items están expandidos
+const expandedItems = ref<Set<string>>(new Set());
+
+// Manejar cuando un item recibe una task desde otro item
+const onTaskReceived = (itemId: string) => {
+    // Encontrar el item y expandir sus tasks si no está expandido
+    const item = items.value.find((it) => it.id === itemId);
+    if (item && item.tasks.length > 0) {
+        // Forzar la expansión del item destino
+        console.log(`📂 Item "${item.title}" recibió una task, expandiendo para mostrar tasks`);
+        expandedItems.value.add(itemId);
+    }
+};
+
+// Manejar la expansión/colapso manual de items
+const onToggleExpanded = (itemId: string) => {
+    if (expandedItems.value.has(itemId)) {
+        expandedItems.value.delete(itemId);
+    } else {
+        expandedItems.value.add(itemId);
+    }
+};
 </script>
 
 <style scoped lang="scss">
@@ -320,7 +346,7 @@ const onContextMenuClosed = () => {
     align-items: center;
     padding: 8px;
     background: #00000020;
-    border-bottom: 1px solid rgba($primary, 0.3);
+    // border-bottom: 1px solid rgba($primary, 0.3);
     border-radius: 8px 8px 0 0;
     font-weight: bold;
     color: $text;
