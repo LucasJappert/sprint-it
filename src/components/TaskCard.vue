@@ -26,7 +26,7 @@
             <strong>{{ task.title }}</strong>
         </div>
         <div class="item-col cols-assigned">
-            <!-- Sin asignado para tasks -->
+            {{ assignedUserName }}
         </div>
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(task.state || STATE_VALUES.TODO)"></span>
@@ -41,11 +41,12 @@
 <script setup lang="ts">
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
-import { saveSprint } from "@/services/firestore";
+import { getUser, saveSprint } from "@/services/firestore";
+import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
-import { computed } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
     task: Task;
@@ -70,7 +71,49 @@ const getStateHtml = (state: string | undefined) => {
 };
 
 const sprintStore = useSprintStore();
+const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
+
+const assignedUserName = ref("");
+
+const loadAssignedUserName = async () => {
+    if (!props.task.assignedUser) {
+        assignedUserName.value = "";
+        return;
+    }
+
+    // Si es el usuario actual, mostrar nombre completo
+    if (props.task.assignedUser === authStore.user?.id) {
+        assignedUserName.value = `${authStore.user.name} ${authStore.user.lastName}`;
+        return;
+    }
+
+    // Para otros usuarios, obtener datos desde Firestore
+    try {
+        const user = await getUser(props.task.assignedUser);
+        if (user) {
+            assignedUserName.value = `${user.name} ${user.lastName}`;
+            return;
+        }
+    } catch (error) {
+        console.warn(`Error al obtener usuario ${props.task.assignedUser}:`, error);
+    }
+
+    assignedUserName.value = props.task.assignedUser;
+};
+
+// Cargar el nombre cuando el componente se monta o cuando cambia el task
+onMounted(() => {
+    loadAssignedUserName();
+});
+
+// Watch para recargar cuando cambia el assignedUser
+watch(
+    () => props.task.assignedUser,
+    () => {
+        loadAssignedUserName();
+    },
+);
 
 // Computed para determinar si esta task debe mostrar bordes
 const isHighlighted = computed(() => {
