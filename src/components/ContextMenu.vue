@@ -87,8 +87,6 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-@import "@/styles/variables.scss";
-
 .context-menu {
     position: fixed;
     background: $bg-primary;

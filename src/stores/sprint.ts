@@ -41,6 +41,12 @@ export const useSprintStore = defineStore("sprint", () => {
             sprints.value = allSprints;
             currentSprintId.value = allSprints[0]?.id || "sprint-1";
 
+            // Log para debug: mostrar sprints y items obtenidos
+            console.log("📋 Sprints obtenidos:", allSprints.map(s => ({ id: s.id, titulo: s.titulo, itemsCount: s.items.length })));
+            allSprints.forEach(sprint => {
+                console.log(`📋 Items del sprint "${sprint.titulo}":`, sprint.items);
+            });
+
             // Subscribe to all sprint changes
             allSprints.forEach((sprint: Sprint) => {
                 subscribeToSprint(sprint.id, (updatedSprint) => {

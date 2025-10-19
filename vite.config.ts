@@ -6,6 +6,8 @@ import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 
 export default defineConfig({
+    base: '/', // O el subdirectorio correspondiente
+    publicDir: 'public',
     plugins: [
         vue(),
         vuetify({ autoImport: true }),
@@ -36,8 +38,14 @@ export default defineConfig({
     css: {
         preprocessorOptions: {
             scss: {
-                additionalData: `@use "@/styles/variables" as *;`,
+                additionalData: `@use "@/styles/variables.scss" as *;`,
             },
         },
+    },
+    optimizeDeps: {
+        exclude: ["vuetify"],
+        entries: [
+            "./src/**/*.vue",
+        ],
     },
 });

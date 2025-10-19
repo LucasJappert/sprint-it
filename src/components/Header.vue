@@ -34,8 +34,6 @@ const logout = async () => {
 </script>
 
 <style scoped lang="scss">
-@import "@/styles/variables.scss";
-
 .v-app-bar {
     box-shadow: 0 0 5px #00ffff50 !important;
 }

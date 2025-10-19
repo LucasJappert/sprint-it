@@ -56,7 +56,7 @@ const login = async () => {
 </template>
 
 <style scoped lang="scss">
-@import "@/styles/variables.scss";
+@use "@/styles/variables.scss" as *;
 
 .login-container {
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);

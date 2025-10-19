@@ -9,16 +9,20 @@
             </button>
         </div>
 
-        <div class="field-shell" @dragover.prevent @drop.prevent="handleDrop">
-            <EditorContent :editor="editor" class="editor-content" :aria-label="placeholder" :data-placeholder="placeholder" />
-        </div>
+        <EditorContent
+            @dragover.prevent
+            @drop.prevent="handleDrop"
+            :editor="editor"
+            class="editor-content"
+            :aria-label="placeholder"
+            :data-placeholder="placeholder"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
 import ResizableImage from "@/extensions/ResizableImage"; // <— el nuestro
 import { supabaseUploader as defaultUploader } from "@/utils/supabaseUploader";
-import Underline from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
 import { EditorContent, useEditor } from "@tiptap/vue-3";
 // @ts-ignore community package may not include types
@@ -64,7 +68,6 @@ const editor = useEditor({
     content: getInitialContent(),
     extensions: [
         StarterKit, // sin configure({ history })
-        Underline, // una sola vez
         ResizableImage, // usa el NodeView de Vue
     ],
     onUpdate: ({ editor }) => emit("update:modelValue", editor.getHTML()),
@@ -182,10 +185,19 @@ const handleDrop = async (e: DragEvent) => {
     }
 
     .editor-content {
-        color: var(--text);
-        outline: none;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 20px 24px;
+        min-height: 380px;
+        box-shadow: none;
+        overflow: visible;
+        margin-top: 8px; /* match MyTextarea */
+        // padding: 12px;
         line-height: 1.6;
         overflow-y: auto;
+        :deep(.ProseMirror-focused) {
+            outline: none;
+        }
     }
 
     .editor-content:empty::before {

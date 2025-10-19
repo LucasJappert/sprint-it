@@ -59,7 +59,7 @@ const handleAction = (action: { label: string; action: () => void }, id: number)
 </script>
 
 <style scoped lang="scss">
-@import "@/styles/variables.scss";
+@use "@/styles/variables.scss" as *;
 .my-notify__container {
     position: fixed;
     right: 12px;

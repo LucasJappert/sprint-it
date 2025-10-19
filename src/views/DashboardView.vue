@@ -94,7 +94,11 @@ const dragDropStore = useDragDropStore();
 const contextMenuItemId = ref<string | null>(null);
 
 // Suponiendo que currentSprint.items existe y es reactivo
-const items = computed<Item[]>(() => sprintStore.currentSprint?.items ?? []);
+const items = computed<Item[]>(() => {
+    const currentItems = sprintStore.currentSprint?.items ?? [];
+    console.log("📋 Items del sprint actual en DashboardView:", currentItems);
+    return currentItems;
+});
 
 // Logs de debug removidos para simplificar la lógica
 

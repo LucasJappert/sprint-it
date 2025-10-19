@@ -90,7 +90,7 @@ $mobile-resolution: 600px !default;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 20;
+    z-index: 9999;
 }
 
 .full-size {
@@ -134,7 +134,7 @@ $mobile-resolution: 600px !default;
 
     :deep(.header) {
         padding: 14px 16px;
-        background: rgba(255, 255, 255, 0.05);
+        background: $bg-secondary;
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px 14px 0 0;
     }
@@ -145,7 +145,7 @@ $mobile-resolution: 600px !default;
     }
     :deep(.footer) {
         padding: 12px 16px 16px;
-        background: rgba(255, 255, 255, 0.05);
+        background: $bg-secondary;
         border-top: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 0 0 14px 14px;
         display: flex;
