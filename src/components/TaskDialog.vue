@@ -39,7 +39,7 @@
 
             <!-- Detalle en textarea ocupando 100% del ancho -->
             <div class="full-width mt-3">
-                <MyTextarea v-model="detail" label="Detail" :rows="8" no-resize class="detail-textarea" />
+                <MyRichText v-model="detail" placeholder="Detail" class="detail-textarea" />
             </div>
         </div>
         <div class="footer">
@@ -50,11 +50,6 @@
 </template>
 
 <script setup lang="ts">
-import MyButton from "@/components/global/MyButton.vue";
-import MyDialog from "@/components/global/MyDialog.vue";
-import MyInput from "@/components/global/MyInput.vue";
-import MySelect from "@/components/global/MySelect.vue";
-import MyTextarea from "@/components/global/MyTextarea.vue";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";

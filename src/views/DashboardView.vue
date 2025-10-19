@@ -78,7 +78,6 @@
 </template>
 
 <script setup lang="ts">
-import MyButton from "@/components/global/MyButton.vue";
 import Header from "@/components/Header.vue";
 import ItemCard from "@/components/ItemCard.vue";
 import ItemDialog from "@/components/ItemDialog.vue";

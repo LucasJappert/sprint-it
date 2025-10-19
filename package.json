@@ -17,6 +17,11 @@
     "description": "",
     "dependencies": {
         "@mdi/font": "^7.4.47",
+        "@supabase/supabase-js": "^2.75.1",
+        "@tiptap/extension-image": "^3.7.2",
+        "@tiptap/extension-underline": "^3.7.2",
+        "@tiptap/starter-kit": "^3.7.2",
+        "@tiptap/vue-3": "^3.7.2",
         "@types/bcryptjs": "^2.4.6",
         "@vitejs/plugin-vue": "^6.0.1",
         "@vue/tsconfig": "^0.8.1",

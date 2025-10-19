@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import MyButton from "@/components/global/MyButton.vue";
-import MyInput from "@/components/global/MyInput.vue";
 import { notifyError } from "@/plugins/my-notification-helper/my-notification-helper";
 import { useAuthStore } from "@/stores/auth";
 import { onMounted, ref } from "vue";

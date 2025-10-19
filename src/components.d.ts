@@ -14,6 +14,7 @@ declare module 'vue' {
     MyDialog: typeof import('./components/global/MyDialog.vue')['default']
     MyInput: typeof import('./components/global/MyInput.vue')['default']
     MyLoading: typeof import('./components/global/MyLoading.vue')['default']
+    MyRichText: typeof import('./components/global/MyRichText.vue')['default']
     MySearch: typeof import('./components/global/MySearch.vue')['default']
     MySelect: typeof import('./components/global/MySelect.vue')['default']
     MyTextarea: typeof import('./components/global/MyTextarea.vue')['default']
