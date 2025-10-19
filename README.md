@@ -38,7 +38,6 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
 
     - Copy `.env.example` to `.env` and fill in your Firebase web app credentials
     - Copy `config.json.example` to `config.json` and fill in your Firebase service account credentials and Supabase settings
-    - Download your Firebase service account key from Firebase Console → Project Settings → Service Accounts and save as `serviceAccountKey.json` in the project root
 
     **Note**: `config.json` contains sensitive credentials and should never be committed to version control.
 
@@ -87,12 +86,6 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
     -   Fill in your actual Firebase config values
     -   **Never commit this file!**
 
--   **`serviceAccountKey.json`**: Firebase service account key for migrations (deprecated - use config.json instead)
-
-    -   Download from Firebase Console → Project Settings → Service Accounts
-    -   **Never commit this file!**
-    -   **Note**: This file is deprecated. The project now uses `config.json` for configuration.
-
 -   **`config.json`**: Configuration file for Firebase service account and Supabase settings
     -   Copy from `config.json.example`
     -   Fill in your actual Firebase service account credentials and Supabase configuration
@@ -132,7 +125,7 @@ To create additional users in the system:
 3. **Run script**: `node create-user-template.js`
 4. **Delete file**: Remove the file after execution to avoid leaving traces in the repository
 
-**Note**: Requires `config.json` in the project root (serviceAccountKey.json is deprecated).
+**Note**: Requires `config.json` in the project root.
 
 ## Scripts
 

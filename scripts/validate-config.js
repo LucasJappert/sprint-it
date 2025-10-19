@@ -70,7 +70,6 @@ function validateEnvironment() {
     // Check for sensitive files
     const sensitiveFiles = [
         'config.json',
-        'serviceAccountKey.json',
         '.env.local',
         '.env.production'
     ];

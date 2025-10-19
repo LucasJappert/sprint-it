@@ -4,5 +4,4 @@ dist
 .env.local
 .env.production
 .env.development
-serviceAccountKey.json
 config.json

@@ -76,7 +76,7 @@ Para crear un nuevo usuario en el sistema:
 3. **Ejecutar script**: `node create-user-template.js`
 4. **Eliminar archivo**: Borra el archivo después de la ejecución para no dejar rastro en el repositorio
 
-**Nota**: Requiere tener `config.json` en la raíz del proyecto (serviceAccountKey.json está deprecado).
+**Nota**: Requiere tener `config.json` en la raíz del proyecto.
 
 ## Agent Tasks (you may run)
 
