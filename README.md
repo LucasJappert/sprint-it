@@ -34,12 +34,13 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
     - Copy your Firebase configuration
     - Create a `.env` file based on `.env.example` and fill in your actual credentials
 
-4. **Service Account Key:**
+4. **Configuration Files:**
 
-    - Go to Firebase Console → Project Settings → Service Accounts
-    - Generate a new private key
-    - Download the JSON file and rename it to `serviceAccountKey.json`
-    - Place it in the project root
+    - Copy `.env.example` to `.env` and fill in your Firebase web app credentials
+    - Copy `config.json.example` to `config.json` and fill in your Firebase service account credentials and Supabase settings
+    - Download your Firebase service account key from Firebase Console → Project Settings → Service Accounts and save as `serviceAccountKey.json` in the project root
+
+    **Note**: `config.json` contains sensitive credentials and should never be committed to version control.
 
 5. **Deploy Firestore Rules:**
 
@@ -87,8 +88,15 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
     -   **Never commit this file!**
 
 -   **`serviceAccountKey.json`**: Firebase service account key for migrations
+
     -   Download from Firebase Console → Project Settings → Service Accounts
     -   **Never commit this file!**
+
+-   **`config.json`**: Configuration file for Firebase service account and Supabase settings
+    -   Copy from `config.json.example`
+    -   Fill in your actual Firebase service account credentials and Supabase configuration
+    -   **Never commit this file!**
+    -   **Security Note**: Contains sensitive credentials - keep it secure and never share
 
 ### Environment Variables:
 
