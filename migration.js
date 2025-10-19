@@ -2,9 +2,9 @@ const admin = require('firebase-admin');
 const bcrypt = require('bcryptjs');
 
 // Initialize Firebase Admin SDK
-// You need to download the service account key from Firebase Console
-// and place it in the project root as 'serviceAccountKey.json'
-const serviceAccount = require('./serviceAccountKey.json');
+// Load configuration from config.json
+const config = require('./config.json');
+const serviceAccount = config.firebase;
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
