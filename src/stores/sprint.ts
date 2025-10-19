@@ -11,6 +11,9 @@ export const useSprintStore = defineStore("sprint", () => {
     const sprints = ref<Sprint[]>([]);
     const currentSprintId = ref<string>("");
 
+    // Backup para prevenir pérdida de datos
+    const sprintItemsBackup = ref<Item[]>([]);
+
     const currentSprint = computed(() =>
         sprints.value.find((s) => s.id === currentSprintId.value)
     );
@@ -52,6 +55,10 @@ export const useSprintStore = defineStore("sprint", () => {
                 subscribeToSprint(sprint.id, (updatedSprint) => {
                     const index = sprints.value.findIndex(s => s.id === updatedSprint.id);
                     if (index !== -1) {
+                        // Actualizar backup cuando se recibe un sprint actualizado
+                        if (updatedSprint.id === currentSprintId.value) {
+                            sprintItemsBackup.value = [...updatedSprint.items];
+                        }
                         sprints.value[index] = updatedSprint;
                     }
                 });
@@ -67,7 +74,9 @@ export const useSprintStore = defineStore("sprint", () => {
             const sprint = sprints.value.find((s) => s.id === currentSprintId.value);
             if (sprint) {
                 sprint.items.push(item);
-                await saveSprint(sprint);
+                if (await validateSprintItemsBeforeSave(sprint)) {
+                    await saveSprint(sprint);
+                }
             }
         } finally {
             loadingStore.setLoading(false);
@@ -79,7 +88,9 @@ export const useSprintStore = defineStore("sprint", () => {
             const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
             if (index !== -1 && currentSprint.value.items[index]) {
                 Object.assign(currentSprint.value.items[index], updatedItem);
-                await saveSprint(currentSprint.value);
+                if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                    await saveSprint(currentSprint.value);
+                }
             }
         }
     };
@@ -205,15 +216,56 @@ export const useSprintStore = defineStore("sprint", () => {
             const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
             if (index !== -1) {
                 currentSprint.value.items.splice(index, 1);
-                await saveSprint(currentSprint.value);
+                if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                    await saveSprint(currentSprint.value);
+                }
             }
         }
+    };
+
+    // Función de validación para prevenir pérdida de datos
+    const validateSprintItemsBeforeSave = async (sprint: Sprint): Promise<boolean> => {
+        const currentItemsCount = sprintItemsBackup.value.length;
+        const newItemsCount = sprint.items.length;
+
+        // Si hay una reducción significativa de items (más del 50% o de varios a ninguno), alertar
+        if (currentItemsCount > 0 && newItemsCount === 0 && currentItemsCount >= 1) {
+            const html = `
+                <p><strong>⚠️ Advertencia de pérdida de datos</strong></p>
+                <p>El sprint "${sprint.titulo}" actualmente tiene ${currentItemsCount} items.</p>
+                <p>Estás a punto de guardar 0 items. ¿Esto es correcto?</p>
+                <p>Si es un error, puedes cancelar y verificar qué pasó.</p>
+            `;
+            const result = await MyAlerts.confirmAsync("¿Guardar cambios?", html, "warning");
+            if (!result) {
+                console.warn("🚫 Guardado cancelado por el usuario debido a posible pérdida de datos");
+                return false;
+            }
+        } else if (currentItemsCount > newItemsCount && (currentItemsCount - newItemsCount) >= 2) {
+            const lostItems = currentItemsCount - newItemsCount;
+            const html = `
+                <p><strong>⚠️ Posible pérdida de datos detectada</strong></p>
+                <p>El sprint "${sprint.titulo}" tenía ${currentItemsCount} items y ahora tiene ${newItemsCount}.</p>
+                <p>Se perderían ${lostItems} items. ¿Continuar?</p>
+            `;
+            const result = await MyAlerts.confirmAsync("¿Guardar cambios?", html, "warning");
+            if (!result) {
+                console.warn(`🚫 Guardado cancelado: posible pérdida de ${lostItems} items`);
+                return false;
+            }
+        }
+
+        // Actualizar backup después de validación exitosa
+        sprintItemsBackup.value = [...sprint.items];
+        return true;
     };
 
     const updateSprintDiasHabiles = async (diasHabiles: number) => {
         if (currentSprint.value) {
             currentSprint.value.diasHabiles = diasHabiles;
-            await saveSprint(currentSprint.value);
+            if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                await saveSprint(currentSprint.value);
+            }
         }
     };
 

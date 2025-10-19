@@ -183,7 +183,7 @@ const onItemDragOver = (e: DragEvent) => {
     dragDropStore.updateBorderHighlightsAsync(e.clientX, e.clientY, items.value);
 };
 
-const reorder = (source: Item, target: Item, position: "above" | "below") => {
+const reorder = async (source: Item, target: Item, position: "above" | "below") => {
     const list = items.value;
     const from = list.findIndex((i) => i.id === source.id);
     let to = list.findIndex((i) => i.id === target.id);
@@ -200,28 +200,34 @@ const reorder = (source: Item, target: Item, position: "above" | "below") => {
     // Reasignar order determinista
     list.forEach((it, idx) => (it.order = idx + 1));
 
-    if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+    if (sprintStore.currentSprint) {
+        // Usar la función de validación del store (accediendo internamente)
+        const isValid = await (sprintStore as any).validateSprintItemsBeforeSave(sprintStore.currentSprint);
+        if (isValid) {
+            saveSprint(sprintStore.currentSprint);
+        }
+    }
 };
 
-const onItemDrop = (target: Item) => {
+const onItemDrop = async (target: Item) => {
     if (dragDropStore.dragItem && dragDropStore.dragItem.id !== target.id) {
         // Encontrar la posición basada en el target item
         const targetIndex = items.value.findIndex((item) => item.id === target.id);
         if (targetIndex !== -1) {
-            reorder(dragDropStore.dragItem, target, "below");
+            await reorder(dragDropStore.dragItem, target, "below");
         }
     }
     dragDropStore.clearDragStateAsync();
 };
 
-const onBoardDrop = (e: DragEvent) => {
+const onBoardDrop = async (e: DragEvent) => {
     if (dragDropStore.dragItem) {
         // Calcular la posición de inserción basada en donde se soltó el mouse
         const insertIndex = calculateInsertIndex(e.clientY, items.value);
 
         if (insertIndex !== -1 && insertIndex !== items.value.findIndex((item) => item.id === dragDropStore.dragItem!.id)) {
             // Mover el item a la nueva posición
-            moveItemToPosition(dragDropStore.dragItem, insertIndex);
+            await moveItemToPosition(dragDropStore.dragItem, insertIndex);
         }
     }
 
@@ -245,7 +251,7 @@ const calculateInsertIndex = (mouseY: number, allItems: Item[]): number => {
     return allItems.length;
 };
 
-const moveItemToPosition = (item: Item, targetIndex: number) => {
+const moveItemToPosition = async (item: Item, targetIndex: number) => {
     const currentIndex = items.value.findIndex((i) => i.id === item.id);
     if (currentIndex === -1) return;
 
@@ -262,7 +268,11 @@ const moveItemToPosition = (item: Item, targetIndex: number) => {
     // Guardar cambios usando la mutación directa y saveSprint
     if (sprintStore.currentSprint) {
         sprintStore.currentSprint.items = newList;
-        saveSprint(sprintStore.currentSprint);
+        // Usar la función de validación del store (accediendo internamente)
+        const isValid = await (sprintStore as any).validateSprintItemsBeforeSave(sprintStore.currentSprint);
+        if (isValid) {
+            saveSprint(sprintStore.currentSprint);
+        }
     }
 };
 
