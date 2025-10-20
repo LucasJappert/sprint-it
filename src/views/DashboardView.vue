@@ -46,7 +46,9 @@
             <div class="header-row">
                 <div class="item-col cols-actions text-left">
                     <v-btn v-if="items.some((item) => item.tasks.length > 0)" icon size="x-small" @click="toggleAllTasks" @mousedown.stop>
-                        <v-icon size="16" class="yellow">{{ allTasksExpanded ? "mdi-collapse-all" : "mdi-expand-all" }}</v-icon>
+                        <v-icon size="16" :class="{ yellow: allTasksExpanded, text: !allTasksExpanded }">{{
+                            allTasksExpanded ? "mdi-collapse-all" : "mdi-expand-all"
+                        }}</v-icon>
                     </v-btn>
                 </div>
                 <div class="item-col cols-order flex-center">#</div>
