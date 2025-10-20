@@ -41,6 +41,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+
 const props = withDefaults(
     defineProps<{
         modelValue: boolean;
@@ -121,6 +123,26 @@ const onConfirm = (): void => {
 const uid = Math.random().toString(36).slice(2);
 const titleId = `alert-title-${uid}`;
 const bodyId = `alert-body-${uid}`;
+
+const handleKeydown = (event: KeyboardEvent) => {
+    if (!open.value) return;
+
+    if (event.key === "Enter") {
+        event.preventDefault();
+        onConfirm();
+    } else if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+    }
+};
+
+onMounted(() => {
+    document.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+    document.removeEventListener("keydown", handleKeydown);
+});
 </script>
 
 <style scoped lang="scss">
