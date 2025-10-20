@@ -130,7 +130,7 @@ export const useContextMenuOptions = () => {
             {
                 key: "add-task",
                 label: "Add task",
-                icon: "mdi-invoice-list-outline",
+                icon: "mdi-clipboard-check-outline",
                 color: "yellow",
                 action: () => {
                     openAddTaskDialogFn(item);

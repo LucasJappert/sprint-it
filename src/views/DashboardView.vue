@@ -34,8 +34,8 @@
 
         <!-- Botón para agregar nuevo item -->
         <div class="board-header">
-            <MyButton @click="showAddItemDialog = true">
-                <v-icon left>mdi-plus</v-icon>
+            <MyButton @click="showAddItemDialog = true" btn-class="px-2" accent="blue">
+                <v-icon left class="mr-2 blue">mdi-clipboard-text</v-icon>
                 New Item
             </MyButton>
         </div>
