@@ -59,11 +59,10 @@
 </template>
 
 <script setup lang="ts">
+import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
-import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
-import MyAlerts from "@/plugins/my-alerts";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
@@ -157,83 +156,23 @@ const showEditItemDialog = ref(false);
 
 // Menú contextual
 const contextMenuRef = ref();
-const contextMenuOptions = computed(() => {
-    const userOptions = SPRINT_TEAM_MEMBERS.map((member) => ({
-        key: `assign-${member}`,
-        label: member,
-        icon: "mdi-account",
-        action: async () => {
-            await sprintStore.updateItem(props.item.id, { assignedUser: member });
-        },
-    }));
+const { createItemContextMenuOptions } = useContextMenuOptions();
+const contextMenuOptions = ref<ContextMenuOption[]>([]);
 
-    const stateOptions = STATE_OPTIONS.map((state) => ({
-        key: `state-${state.value}`,
-        label: state.name,
-        icon: "mdi-circle",
-        color: state.color,
-        iconStyle: `font-size: 12px; color: ${state.color};`,
-        action: async () => {
-            await sprintStore.updateItem(props.item.id, { state: state.value });
-        },
-    }));
+const loadContextMenuOptions = async () => {
+    contextMenuOptions.value = await createItemContextMenuOptions(props.item, openAddTaskDialog);
+};
 
-    const priorityOptions = PRIORITY_OPTIONS.map((priority) => ({
-        key: `priority-${priority.value}`,
-        label: priority.name,
-        icon: "mdi-flag",
-        color: priority.color,
-        action: async () => {
-            await sprintStore.updateItem(props.item.id, { priority: priority.value });
-        },
-    }));
-
-    return [
-        {
-            key: "add-task",
-            label: "Add task",
-            icon: "mdi-invoice-list-outline",
-            color: "yellow",
-            action: () => {
-                openAddTaskDialog(props.item);
-            },
-        },
-        {
-            key: "reassign",
-            label: "Assign to",
-            icon: "mdi-account-switch",
-            submenu: userOptions,
-        },
-        {
-            key: "change-state",
-            label: "Change state",
-            icon: "mdi-swap-horizontal",
-            submenu: stateOptions,
-        },
-        {
-            key: "change-priority",
-            label: "Change priority",
-            icon: "mdi-flag-variant",
-            submenu: priorityOptions,
-        },
-        {
-            key: "delete",
-            label: "Delete",
-            icon: "mdi-trash-can-outline",
-            color: "error",
-            action: async () => {
-                const confirmed = await MyAlerts.confirmAsync(
-                    "Confirmar eliminación",
-                    `¿Estás seguro de que quieres eliminar el item "${props.item.title}" y todas sus tareas?`,
-                    "warning",
-                );
-                if (confirmed) {
-                    await sprintStore.deleteItem(props.item.id);
-                }
-            },
-        },
-    ];
+onMounted(() => {
+    loadContextMenuOptions();
 });
+
+watch(
+    () => props.item,
+    () => {
+        loadContextMenuOptions();
+    },
+);
 
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
@@ -316,6 +255,7 @@ const onDragOver = (e: DragEvent) => {
 };
 
 // Evento para manejar cuando se suelta un item sobre este componente
+// TODO: Refactorizar (la funcion quedo demasiado larga)
 const onDrop = (e: DragEvent) => {
     console.log("🎉 DROP EN ITEM");
     e.preventDefault();
