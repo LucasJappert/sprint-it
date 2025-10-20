@@ -1,7 +1,14 @@
 <template>
     <Teleport to="body">
         <div v-if="isVisible" class="context-menu" :style="{ left: positionX + 'px', top: positionY + 'px' }" @click.stop>
-            <div v-for="option in options" :key="option.key" class="context-menu-item" @click="onOptionClick(option)">
+            <div
+                v-for="option in options"
+                :key="option.key"
+                class="context-menu-item"
+                @click="onOptionClick(option)"
+                @mouseenter="onOptionMouseEnter(option)"
+                @mouseleave="onOptionMouseLeave(option)"
+            >
                 <v-icon v-if="option.icon" size="16" class="context-menu-icon" :class="option.color">{{ option.icon }}</v-icon>
                 <span class="context-menu-text">{{ option.label }}</span>
                 <v-icon v-if="option.submenu" size="16" class="context-menu-arrow">mdi-chevron-right</v-icon>
@@ -9,7 +16,14 @@
         </div>
 
         <!-- Submenu -->
-        <ContextSubmenu ref="submenuRef" :options="currentSubmenuOptions" @option-selected="onSubmenuOptionSelected" @close="onSubmenuClosed" />
+        <ContextSubmenu
+            ref="submenuRef"
+            :options="currentSubmenuOptions"
+            @option-selected="onSubmenuOptionSelected"
+            @close="onSubmenuClosed"
+            @mouse-enter="onSubmenuMouseEnter"
+            @mouse-leave="onSubmenuMouseLeave"
+        />
     </Teleport>
 </template>
 
@@ -76,13 +90,24 @@ const hide = () => {
 };
 
 const onOptionClick = (option: ContextMenuOption) => {
-    if (option.submenu) {
-        // Si tiene submenu, mostrarlo
-        showSubmenu(option);
-    } else if (option.action) {
-        // Si tiene acción, ejecutarla
+    // Solo ejecutar acciones para opciones sin submenu
+    if (!option.submenu && option.action) {
         option.action();
         hide();
+    }
+};
+
+const onOptionMouseEnter = (option: ContextMenuOption) => {
+    if (option.submenu) {
+        showSubmenu(option);
+    }
+};
+
+const onOptionMouseLeave = (option: ContextMenuOption) => {
+    // Para opciones con submenu, mantener abierto mientras el mouse esté sobre el submenu
+    if (option.submenu) {
+        // No hacer nada aquí - el submenu se controla desde onSubmenuMouseLeave
+        return;
     }
 };
 
@@ -95,6 +120,45 @@ const onSubmenuOptionSelected = (option: ContextMenuOption) => {
 
 const onSubmenuClosed = () => {
     // El submenu se cerró, no necesitamos hacer nada especial aquí
+};
+
+const onSubmenuMouseEnter = () => {
+    // El mouse entró al submenu, cancelar cualquier cierre pendiente
+};
+
+const onSubmenuMouseLeave = () => {
+    // El mouse salió del submenu, cerrar después de un pequeño delay
+    // Solo cerrar si tampoco estamos sobre el menú principal
+    setTimeout(() => {
+        if (!isMouseOverMenu() && !isMouseOverSubmenu()) {
+            closeCurrentSubmenu();
+        }
+    }, 150); // Mayor delay para permitir movimiento del mouse
+};
+
+const isMouseOverSubmenu = () => {
+    // Verificar si el mouse está sobre el submenu
+    const submenuElement = document.querySelector(".context-submenu");
+    return submenuElement && submenuElement.matches(":hover");
+};
+
+const isMouseOverMenu = () => {
+    // Verificar si el mouse está sobre el menú principal
+    const menuElement = document.querySelector(".context-menu");
+    return menuElement && menuElement.matches(":hover");
+};
+
+const isMouseOverMenuItem = (option: ContextMenuOption) => {
+    // Verificar si el mouse está sobre el item específico del menú
+    const menuItems = document.querySelectorAll(".context-menu-item");
+    for (const item of menuItems) {
+        if (item.matches(":hover")) {
+            // Verificar si este item corresponde a la opción
+            const textElement = item.querySelector(".context-menu-text");
+            return textElement && textElement.textContent === option.label;
+        }
+    }
+    return false;
 };
 
 const closeOnClickOutside = (event: MouseEvent) => {
@@ -117,11 +181,11 @@ const showSubmenu = (option: ContextMenuOption) => {
     // Cerrar submenu anterior si existe
     closeCurrentSubmenu();
 
-    // Calcular posición del submenu (a la derecha del menú actual)
+    // Calcular posición del submenu (a la derecha del menú actual, sin separación)
     const menuElement = document.querySelector(".context-menu") as HTMLElement;
     if (menuElement && submenuRef.value) {
         const rect = menuElement.getBoundingClientRect();
-        const submenuX = rect.right + 5; // 5px de separación
+        const submenuX = rect.right; // Sin separación para evitar problemas de hover
         const submenuY = rect.top;
 
         // Configurar opciones del submenu

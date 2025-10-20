@@ -1,6 +1,13 @@
 <template>
     <Teleport to="body">
-        <div v-if="isVisible" class="context-submenu" :style="{ left: positionX + 'px', top: positionY + 'px' }" @click.stop>
+        <div
+            v-if="isVisible"
+            class="context-submenu"
+            :style="{ left: positionX + 'px', top: positionY + 'px' }"
+            @click.stop
+            @mouseenter="onMouseEnter"
+            @mouseleave="onMouseLeave"
+        >
             <div v-for="option in options" :key="option.key" class="context-menu-item" @click="onOptionClick(option)">
                 <i
                     v-if="option.icon"
@@ -34,6 +41,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     optionSelected: [option: ContextMenuOption];
     close: [];
+    mouseEnter: [];
+    mouseLeave: [];
 }>();
 
 const isVisible = ref(false);
@@ -57,6 +66,14 @@ const hide = () => {
 const onOptionClick = (option: ContextMenuOption) => {
     emit("optionSelected", option);
     hide();
+};
+
+const onMouseEnter = () => {
+    emit("mouseEnter");
+};
+
+const onMouseLeave = () => {
+    emit("mouseLeave");
 };
 
 const closeOnClickOutside = (event: MouseEvent) => {
