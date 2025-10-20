@@ -176,7 +176,6 @@ const updateDropdownPosition = () => {
             left: `${rect.left}px`,
             width: `${rect.width}px`,
         };
-        console.log(dropdownStyle.value);
     }
 };
 

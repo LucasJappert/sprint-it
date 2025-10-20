@@ -45,7 +45,6 @@
         <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" />
     </div>
 
-    <TaskDialog :visible="showAddTaskDialog" :item="item" @close="openAddTaskDialog(item)" @save="saveTask" />
     <ItemDialog
         v-if="showEditItemDialog"
         :visible="showEditItemDialog"
@@ -63,6 +62,7 @@
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
+import MyAlerts from "@/plugins/my-alerts";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
@@ -72,7 +72,6 @@ import { computed, onMounted, ref, watch } from "vue";
 import ContextMenu from "./ContextMenu.vue";
 import ItemDialog from "./ItemDialog.vue";
 import TaskCard from "./TaskCard.vue";
-import TaskDialog from "./TaskDialog.vue";
 
 const props = defineProps<{
     item: Item;
@@ -94,7 +93,7 @@ const emit = defineEmits<{
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
-const { showAddTaskDialog, openAddTaskDialog, saveTask } = useTaskManagement();
+const { showAddTaskDialog, openAddTaskDialog, closeDialogs, saveTask } = useTaskManagement();
 const showTasks = ref(false);
 
 // Computed para determinar si este item debe mostrar bordes
@@ -173,7 +172,14 @@ const contextMenuOptions = computed(() => [
         icon: "mdi-trash-can-outline",
         color: "error",
         action: async () => {
-            await sprintStore.deleteItem(props.item.id);
+            const confirmed = await MyAlerts.confirmAsync(
+                "Confirmar eliminación",
+                `¿Estás seguro de que quieres eliminar el item "${props.item.title}" y todas sus tareas?`,
+                "warning",
+            );
+            if (confirmed) {
+                await sprintStore.deleteItem(props.item.id);
+            }
         },
     },
 ]);

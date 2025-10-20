@@ -55,6 +55,7 @@
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
+import MyAlerts from "@/plugins/my-alerts";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
@@ -150,8 +151,15 @@ const contextMenuOptions = computed(() => [
         label: "Delete",
         icon: "mdi-trash-can-outline",
         color: "error",
-        action: () => {
-            deleteTask(props.task.id, props.item);
+        action: async () => {
+            const confirmed = await MyAlerts.confirmAsync(
+                "Confirmar eliminación",
+                `¿Estás seguro de que quieres eliminar la tarea "${props.task.title}"?`,
+                "warning",
+            );
+            if (confirmed) {
+                deleteTask(props.task.id, props.item);
+            }
         },
     },
 ]);

@@ -45,7 +45,9 @@
             <!-- Cabecera de columnas -->
             <div class="header-row">
                 <div class="item-col cols-actions text-left">
-                    <!-- Espacio para drag handle y botones -->
+                    <v-btn v-if="items.some((item) => item.tasks.length > 0)" icon size="x-small" @click="toggleAllTasks" @mousedown.stop>
+                        <v-icon size="16" class="yellow">{{ allTasksExpanded ? "mdi-collapse-all" : "mdi-expand-all" }}</v-icon>
+                    </v-btn>
                 </div>
                 <div class="item-col cols-order flex-center">#</div>
                 <div class="item-col cols-title text-left">Title</div>
@@ -74,6 +76,15 @@
 
         <!-- Diálogo para agregar nuevo item -->
         <ItemDialog :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @save="onAddItem" />
+
+        <!-- Diálogo para agregar/editar task -->
+        <TaskDialog
+            :visible="showAddTaskDialog || showEditTaskDialog"
+            :item="currentItemForTaskDialog"
+            :existing-task="editingTask"
+            @close="closeDialogs"
+            @save="saveTask"
+        />
     </div>
 </template>
 
@@ -81,6 +92,8 @@
 import Header from "@/components/Header.vue";
 import ItemCard from "@/components/ItemCard.vue";
 import ItemDialog from "@/components/ItemDialog.vue";
+import TaskDialog from "@/components/TaskDialog.vue";
+import { useTaskManagement } from "@/composables/useTaskManagement";
 import { saveSprint } from "@/services/firestore";
 import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
@@ -90,6 +103,33 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
+
+// Estado para el diálogo de tasks
+const { showAddTaskDialog, showEditTaskDialog, editingTask, currentItem, openAddTaskDialog, openEditTaskDialog, closeDialogs, saveTask } = useTaskManagement();
+
+// Computed para el item actual del diálogo de task
+const currentItemForTaskDialog = computed((): Item => {
+    const item = currentItem.value || items.value[0];
+    if (item) {
+        return {
+            ...item,
+            tasks: [...item.tasks],
+        };
+    }
+    // Fallback item por si no hay ninguno
+    return {
+        id: "",
+        title: "",
+        detail: "",
+        priority: "Normal" as any,
+        state: "To Do" as any,
+        estimatedEffort: 0,
+        actualEffort: 0,
+        assignedUser: null,
+        tasks: [],
+        order: 1,
+    };
+});
 
 // Estado para controlar qué item tiene el menú contextual abierto
 const contextMenuItemId = ref<string | null>(null);
@@ -296,6 +336,9 @@ const onContextMenuClosed = () => {
 // Estado para controlar qué items están expandidos
 const expandedItems = ref<Set<string>>(new Set());
 
+// Estado para controlar si todas las tasks están expandidas o colapsadas
+const allTasksExpanded = ref(false);
+
 // Manejar cuando un item recibe una task desde otro item
 const onTaskReceived = (itemId: string) => {
     // Encontrar el item y expandir sus tasks si no está expandido
@@ -317,6 +360,23 @@ const onToggleExpanded = (itemId: string) => {
         expandedItems.value.delete(itemId);
     } else {
         expandedItems.value.add(itemId);
+    }
+};
+
+// Función para expandir/colapsar todas las tasks
+const toggleAllTasks = () => {
+    if (allTasksExpanded.value) {
+        // Colapsar todas las tasks
+        expandedItems.value.clear();
+        allTasksExpanded.value = false;
+    } else {
+        // Expandir todas las tasks que tienen tasks
+        items.value.forEach((item) => {
+            if (item.tasks.length > 0) {
+                expandedItems.value.add(item.id);
+            }
+        });
+        allTasksExpanded.value = true;
     }
 };
 </script>

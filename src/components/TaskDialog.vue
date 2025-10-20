@@ -9,7 +9,7 @@
         <div class="body-scroll">
             <!-- Título ocupando 100% del ancho -->
             <div class="full-width">
-                <MyInput v-model="title" label="Title" @keydown.enter="handleSave" autofocus />
+                <MyInput ref="titleInputRef" v-model="title" label="Title" density="compact" @keydown.enter="handleSave" />
             </div>
 
             <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
@@ -20,26 +20,27 @@
                         label="Assigned Person"
                         :options="assignedUserOptions"
                         placeholder="Select user..."
+                        density="compact"
                         @update:options="onAssignedUserChange"
                     />
                 </div>
                 <div class="field-group state">
-                    <MySelect v-model="state" label="State" :options="stateOptions" @update:options="onStateChange" />
+                    <MySelect v-model="state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
                 </div>
                 <div class="field-group estimated-effort">
-                    <MyInput v-model="estimatedEffort" label="Effort" type="number" />
+                    <MyInput v-model="estimatedEffort" label="Effort" type="number" density="compact" />
                 </div>
                 <div class="field-group actual-effort">
-                    <MyInput v-model="actualEffort" label="Real Effort" type="number" />
+                    <MyInput v-model="actualEffort" label="Real Effort" type="number" density="compact" />
                 </div>
                 <div class="field-group priority">
-                    <MySelect v-model="priority" label="Priority" :options="priorityOptions" @update:options="onPriorityChange" />
+                    <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
                 </div>
             </div>
 
             <!-- Detalle en textarea ocupando 100% del ancho -->
             <div class="full-width mt-3">
-                <MyRichText v-model="detail" placeholder="Detail" class="detail-textarea" />
+                <MyRichText v-model="detail" placeholder="Detail" density="compact" class="detail-textarea" />
             </div>
         </div>
         <div class="footer">
@@ -95,6 +96,7 @@ const hasChanges = computed(() => {
 });
 
 const originalAssignedUser = ref("");
+const titleInputRef = ref();
 
 const title = ref("");
 const detail = ref("");
@@ -298,9 +300,14 @@ const handleClose = () => {
 // Llamar resetForm cuando se abre el diálogo o cambia existingTask
 watch(
     () => props.visible,
-    (visible) => {
+    async (visible) => {
         if (visible) {
-            resetForm();
+            await resetForm();
+            // Usar setTimeout para asegurar que el componente esté completamente renderizado
+            // especialmente cuando se abre desde menú contextual
+            setTimeout(() => {
+                titleInputRef.value?.focus();
+            }, 10);
         }
     },
 );

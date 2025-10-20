@@ -9,7 +9,7 @@
         <div class="body-scroll">
             <!-- Título ocupando 100% del ancho -->
             <div class="full-width">
-                <MyInput v-model="newItem.title" label="Title" @keydown.enter="handleSave" autofocus />
+                <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
             </div>
 
             <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
@@ -20,26 +20,27 @@
                         label="Assigned Person"
                         :options="assignedUserOptions"
                         placeholder="Select user..."
+                        density="compact"
                         @update:options="onAssignedUserChange"
                     />
                 </div>
                 <div class="field-group state">
-                    <MySelect v-model="newItem.state" label="State" :options="stateOptions" @update:options="onStateChange" />
+                    <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
                 </div>
                 <div class="field-group estimated-effort">
-                    <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" />
+                    <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
                 </div>
                 <div class="field-group actual-effort">
-                    <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" />
+                    <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
                 </div>
                 <div class="field-group priority">
-                    <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" @update:options="onPriorityChange" />
+                    <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
                 </div>
             </div>
 
             <!-- Detalle en textarea ocupando 100% del ancho -->
             <div class="full-width mt-3">
-                <MyRichText v-model="newItem.detail" placeholder="Detail" class="detail-textarea" />
+                <MyRichText v-model="newItem.detail" placeholder="Detail" density="compact" class="detail-textarea" />
             </div>
         </div>
         <div class="footer">
@@ -88,6 +89,7 @@ const loadingStore = useLoadingStore();
 const isEditing = computed(() => !!props.existingItem);
 
 const originalAssignedUser = ref("");
+const titleInputRef = ref();
 
 const hasChanges = computed(() => {
     if (!props.existingItem) return newItem.value.title.trim() !== ""; // Para nuevos items, habilitar si hay título
@@ -248,6 +250,19 @@ watch(
         await resetForm();
     },
     { immediate: true },
+);
+
+// Watch para dar foco al input cuando se abre el diálogo
+watch(
+    () => props.visible,
+    async (visible) => {
+        if (visible) {
+            // Usar setTimeout para asegurar que el componente esté completamente renderizado
+            setTimeout(() => {
+                titleInputRef.value?.focus();
+            }, 10);
+        }
+    },
 );
 
 const onAssignedUserChange = (options: any[]) => {
