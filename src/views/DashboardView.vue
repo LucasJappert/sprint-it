@@ -85,7 +85,8 @@ import { saveSprint } from "@/services/firestore";
 import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item } from "@/types";
-import { computed, onMounted, ref } from "vue";
+import { eventBus } from "@/utils/eventBus";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
@@ -96,7 +97,6 @@ const contextMenuItemId = ref<string | null>(null);
 // Suponiendo que currentSprint.items existe y es reactivo
 const items = computed<Item[]>(() => {
     const currentItems = sprintStore.currentSprint?.items ?? [];
-    console.log("📋 Items del sprint actual en DashboardView:", currentItems);
     return currentItems;
 });
 
@@ -107,6 +107,14 @@ onMounted(async () => {
     if (sprintStore.sprints.length === 0) {
         await sprintStore.generateSprints();
     }
+
+    // Escuchar eventos del eventBus
+    eventBus.on("taskCreated", onTaskCreated);
+});
+
+// Limpiar listeners al desmontar
+onUnmounted(() => {
+    eventBus.off("taskCreated", onTaskCreated);
 });
 
 // Selector de sprint
@@ -294,9 +302,13 @@ const onTaskReceived = (itemId: string) => {
     const item = items.value.find((it) => it.id === itemId);
     if (item && item.tasks.length > 0) {
         // Forzar la expansión del item destino
-        console.log(`📂 Item "${item.title}" recibió una task, expandiendo para mostrar tasks`);
         expandedItems.value.add(itemId);
     }
+};
+
+// Manejar cuando se crea una nueva task en un item
+const onTaskCreated = (item: Item) => {
+    expandedItems.value.add(item.id);
 };
 
 // Manejar la expansión/colapso manual de items

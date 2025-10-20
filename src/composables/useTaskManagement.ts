@@ -1,6 +1,7 @@
 import { saveSprint } from "@/services/firestore";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
+import { eventBus } from "@/utils/eventBus";
 import { readonly, ref } from "vue";
 
 const showAddTaskDialog = ref(false);
@@ -51,6 +52,9 @@ export const useTaskManagement = () => {
             if (sprintStore.currentSprint) {
                 saveSprint(sprintStore.currentSprint);
             }
+
+            // Emitir evento para expandir el item
+            eventBus.newTaskCreated(currentItem.value);
         }
 
         closeDialogs();

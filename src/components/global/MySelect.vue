@@ -176,6 +176,7 @@ const updateDropdownPosition = () => {
             left: `${rect.left}px`,
             width: `${rect.width}px`,
         };
+        console.log(dropdownStyle.value);
     }
 };
 
@@ -384,7 +385,7 @@ $radius: 18px;
     max-height: 230px;
     overflow-y: auto;
     padding: 6px 0;
-    z-index: 1000; /* High z-index to ensure visibility */
+    z-index: 9999; /* High z-index to ensure visibility */
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
