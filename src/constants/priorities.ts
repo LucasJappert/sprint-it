@@ -27,18 +27,18 @@ export const PRIORITY_OPTIONS: PriorityOption[] = [
         name: NORMAL_NAME,
         value: NORMAL_NAME,
         color: LOW_COLOR,
-        html: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${LOW_COLOR}; flex-shrink: 0;"></span>${NORMAL_NAME}</span>`,
+        html: `<span style="display: flex; align-items: center; gap: 6px;"><i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${LOW_COLOR};"></i>${NORMAL_NAME}</span>`,
     },
     {
         name: MEDIUM_NAME,
         value: MEDIUM_NAME,
         color: MEDIUM_COLOR,
-        html: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${MEDIUM_COLOR}; flex-shrink: 0;"></span>${MEDIUM_NAME}</span>`,
+        html: `<span style="display: flex; align-items: center; gap: 6px;"><i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${MEDIUM_COLOR};"></i>${MEDIUM_NAME}</span>`,
     },
     {
         name: HIGH_NAME,
         value: HIGH_NAME,
         color: HIGH_COLOR,
-        html: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${HIGH_COLOR}; flex-shrink: 0;"></span>${HIGH_NAME}</span>`,
+        html: `<span style="display: flex; align-items: center; gap: 6px;"><i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${HIGH_COLOR};"></i>${HIGH_NAME}</span>`,
     },
 ];
