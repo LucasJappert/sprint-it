@@ -170,8 +170,9 @@ const contextMenuOptions = computed(() => {
     const stateOptions = STATE_OPTIONS.map((state) => ({
         key: `state-${state.value}`,
         label: state.name,
-        icon: "mdi-circle-medium",
+        icon: "mdi-circle",
         color: state.color,
+        iconStyle: `font-size: 12px; color: ${state.color};`,
         action: async () => {
             await sprintStore.updateItem(props.item.id, { state: state.value });
         },
@@ -199,7 +200,7 @@ const contextMenuOptions = computed(() => {
         },
         {
             key: "reassign",
-            label: "Reassign to",
+            label: "Assign to",
             icon: "mdi-account-switch",
             submenu: userOptions,
         },

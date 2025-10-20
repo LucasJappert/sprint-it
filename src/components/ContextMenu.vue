@@ -36,6 +36,7 @@ export interface ContextMenuOption {
     label: string;
     icon?: string;
     color?: string;
+    iconStyle?: string;
     action?: () => void;
     submenu?: ContextMenuOption[];
 }
@@ -100,6 +101,9 @@ const onOptionClick = (option: ContextMenuOption) => {
 const onOptionMouseEnter = (option: ContextMenuOption) => {
     if (option.submenu) {
         showSubmenu(option);
+    } else {
+        // Si la opción no tiene submenu, cerrar cualquier submenu abierto
+        closeCurrentSubmenu();
     }
 };
 
@@ -181,12 +185,27 @@ const showSubmenu = (option: ContextMenuOption) => {
     // Cerrar submenu anterior si existe
     closeCurrentSubmenu();
 
-    // Calcular posición del submenu (a la derecha del menú actual, sin separación)
+    // Calcular posición del submenu centrado verticalmente con la opción
     const menuElement = document.querySelector(".context-menu") as HTMLElement;
-    if (menuElement && submenuRef.value) {
+    const menuItems = document.querySelectorAll(".context-menu-item");
+
+    if (menuElement && submenuRef.value && menuItems.length > 0) {
         const rect = menuElement.getBoundingClientRect();
         const submenuX = rect.right; // Sin separación para evitar problemas de hover
-        const submenuY = rect.top;
+
+        // Encontrar el índice de la opción actual para calcular la posición vertical
+        let optionIndex = -1;
+        menuItems.forEach((item, index) => {
+            const textElement = item.querySelector(".context-menu-text");
+            if (textElement && textElement.textContent === option.label) {
+                optionIndex = index;
+            }
+        });
+
+        // Calcular la posición Y centrada con la opción
+        // Cada item del menú mide aproximadamente 40px de alto
+        const itemHeight = 40;
+        const submenuY = rect.top + optionIndex * itemHeight;
 
         // Configurar opciones del submenu
         currentSubmenuOptions.value = option.submenu;

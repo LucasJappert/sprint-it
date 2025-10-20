@@ -13,7 +13,7 @@
                     v-if="option.icon"
                     class="v-icon notranslate mdi context-menu-icon"
                     :class="option.icon.startsWith('mdi-') ? option.icon : ''"
-                    :style="{ color: option.color || 'var(--text)' }"
+                    :style="option.iconStyle || { color: option.color || 'var(--text)' }"
                 >
                     {{ !option.icon.startsWith("mdi-") ? option.icon : "" }}
                 </i>
@@ -31,6 +31,7 @@ export interface ContextMenuOption {
     label: string;
     icon?: string;
     color?: string;
+    iconStyle?: string;
     action?: () => void;
 }
 
