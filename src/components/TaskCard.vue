@@ -46,6 +46,9 @@
         @close="closeDialogs"
         @save="onSaveEditTask"
     />
+
+    <!-- Menú contextual -->
+    <ContextMenu :options="contextMenuOptions" ref="contextMenuRef" @close="onContextMenuClosed" />
 </template>
 
 <script setup lang="ts">
@@ -58,6 +61,7 @@ import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
+import ContextMenu from "./ContextMenu.vue";
 import TaskDialog from "./TaskDialog.vue";
 
 const props = defineProps<{
@@ -70,7 +74,7 @@ const emit = defineEmits<{
     contextMenuClosed: [];
 }>();
 
-const { showEditTaskDialog, editingTask, closeDialogs, openEditTaskDialog, onSaveEditTask } = useTaskManagement();
+const { showEditTaskDialog, editingTask, closeDialogs, openEditTaskDialog, onSaveEditTask, deleteTask } = useTaskManagement();
 
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
@@ -137,6 +141,20 @@ const highlightPosition = computed(() => {
     const highlight = dragDropStore.highlightedTasks.find((h) => h.taskId === props.task.id);
     return highlight?.position || null;
 });
+
+// Menú contextual
+const contextMenuRef = ref();
+const contextMenuOptions = computed(() => [
+    {
+        key: "delete",
+        label: "Delete",
+        icon: "mdi-trash-can-outline",
+        color: "error",
+        action: () => {
+            deleteTask(props.task.id, props.item);
+        },
+    },
+]);
 
 const onEditTask = (task: Task) => {
     openEditTaskDialog(task, props.item);
@@ -232,8 +250,14 @@ const moveTask = (draggedTask: Task, sourceItem: Item | null, insertIndex: numbe
 
 const onRightClick = (event: MouseEvent) => {
     event.preventDefault();
-    // TODO: Implementar menú contextual para tasks
+    contextMenuRef.value?.show(event.clientX, event.clientY);
+    // Emitir evento para indicar que esta task tiene el menú contextual abierto
     emit("contextMenuOpened", props.task.id);
+};
+
+const onContextMenuClosed = () => {
+    // Emitir evento para indicar que el menú contextual se cerró
+    emit("contextMenuClosed");
 };
 
 const onDragStart = (e: DragEvent) => {

@@ -64,6 +64,17 @@ export const useTaskManagement = () => {
         saveTask(task);
     };
 
+    const deleteTask = (taskId: string, item: Item) => {
+        item.tasks = item.tasks.filter((task) => task.id !== taskId);
+        // Reordenar las tasks restantes
+        item.tasks.forEach((task, idx) => {
+            task.order = idx + 1;
+        });
+        if (sprintStore.currentSprint) {
+            saveSprint(sprintStore.currentSprint);
+        }
+    };
+
     return {
         showAddTaskDialog: readonly(showAddTaskDialog),
         showEditTaskDialog: readonly(showEditTaskDialog),
@@ -74,5 +85,6 @@ export const useTaskManagement = () => {
         closeDialogs,
         saveTask,
         onSaveEditTask,
+        deleteTask,
     };
 };
