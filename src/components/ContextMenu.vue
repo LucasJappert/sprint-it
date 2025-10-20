@@ -4,6 +4,7 @@
             <div v-for="option in options" :key="option.key" class="context-menu-item" @click="onOptionClick(option)">
                 <v-icon v-if="option.icon" size="16" class="context-menu-icon" :class="option.color">{{ option.icon }}</v-icon>
                 <span class="context-menu-text">{{ option.label }}</span>
+                <v-icon v-if="option.submenu" size="16" class="context-menu-arrow">mdi-chevron-right</v-icon>
             </div>
         </div>
     </Teleport>
@@ -17,7 +18,8 @@ export interface ContextMenuOption {
     label: string;
     icon?: string;
     color?: string;
-    action: () => void;
+    action?: () => void;
+    submenu?: ContextMenuOption[];
 }
 
 const props = defineProps<{
@@ -31,6 +33,7 @@ const emit = defineEmits<{
 const isVisible = ref(false);
 const positionX = ref(0);
 const positionY = ref(0);
+const currentSubmenu = ref<HTMLElement | null>(null);
 
 const show = async (x: number, y: number) => {
     // Calcular posición ajustada para mantener el menú dentro de la pantalla
@@ -61,21 +64,124 @@ const show = async (x: number, y: number) => {
 
 const hide = () => {
     isVisible.value = false;
+    closeCurrentSubmenu();
     emit("close");
     // Limpiar el estado del item con menú contextual abierto
     // Esto se maneja desde el componente padre
 };
 
 const onOptionClick = (option: ContextMenuOption) => {
-    option.action();
-    hide();
+    if (option.submenu) {
+        // Si tiene submenu, mostrarlo
+        showSubmenu(option);
+    } else if (option.action) {
+        // Si tiene acción, ejecutarla
+        option.action();
+        hide();
+    }
 };
 
 const closeOnClickOutside = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     // Solo cerrar si el click no fue dentro del menú
-    if (!target.closest(".context-menu")) {
+    if (!target.closest(".context-menu") && !target.closest(".context-submenu")) {
         hide();
+    }
+};
+
+const closeCurrentSubmenu = () => {
+    if (currentSubmenu.value && document.body.contains(currentSubmenu.value)) {
+        document.body.removeChild(currentSubmenu.value);
+        currentSubmenu.value = null;
+    }
+};
+
+const showSubmenu = (option: ContextMenuOption) => {
+    if (!option.submenu) return;
+
+    // Calcular posición del submenu (a la derecha del menú actual)
+    const menuElement = document.querySelector(".context-menu") as HTMLElement;
+    if (menuElement) {
+        const rect = menuElement.getBoundingClientRect();
+        const submenuX = rect.right + 5; // 5px de separación
+        const submenuY = rect.top;
+
+        // Crear instancia temporal del submenu
+        const submenu = document.createElement("div");
+        submenu.className = "context-submenu";
+        submenu.style.position = "fixed";
+        submenu.style.left = submenuX + "px";
+        submenu.style.top = submenuY + "px";
+        submenu.style.background = "var(--bg-primary)";
+        submenu.style.borderRadius = "4px";
+        submenu.style.boxShadow = "0 4px 16px rgba(0, 0, 0, 0.3)";
+        submenu.style.minWidth = "120px";
+        submenu.style.padding = "4px 0";
+        submenu.style.border = "1px solid rgba(255, 255, 255, 0.1)";
+        submenu.style.zIndex = "1001";
+
+        option.submenu.forEach((subOption) => {
+            const item = document.createElement("div");
+            item.className = "context-menu-item";
+            item.style.display = "flex";
+            item.style.alignItems = "center";
+            item.style.padding = "8px 16px";
+            item.style.cursor = "pointer";
+            item.style.transition = "background-color 0.2s";
+            item.style.borderBottom = "1px solid rgba(255, 255, 255, 0.1)";
+
+            if (subOption.icon) {
+                const icon = document.createElement("i");
+                icon.className = "v-icon notranslate mdi";
+                icon.style.fontSize = "16px";
+                icon.style.marginRight = "12px";
+                icon.style.color = subOption.color || "var(--text)";
+                // Para iconos de Material Design, necesitamos usar el formato correcto
+                if (subOption.icon.startsWith("mdi-")) {
+                    icon.classList.add(subOption.icon);
+                } else {
+                    icon.textContent = subOption.icon;
+                }
+                item.appendChild(icon);
+            }
+
+            const span = document.createElement("span");
+            span.style.fontSize = "14px";
+            span.style.color = "var(--text)";
+            span.textContent = subOption.label;
+            item.appendChild(span);
+
+            item.addEventListener("click", () => {
+                if (subOption.action) {
+                    subOption.action();
+                    hide();
+                }
+            });
+
+            item.addEventListener("mouseenter", () => {
+                item.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
+            });
+
+            item.addEventListener("mouseleave", () => {
+                item.style.backgroundColor = "";
+            });
+
+            submenu.appendChild(item);
+        });
+
+        // Agregar al body
+        document.body.appendChild(submenu);
+        currentSubmenu.value = submenu;
+
+        // Cerrar submenu al hacer click fuera
+        const handleClickOutside = (e: MouseEvent) => {
+            if (!submenu.contains(e.target as Node)) {
+                closeCurrentSubmenu();
+                document.removeEventListener("mousedown", handleClickOutside);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
     }
 };
 
@@ -127,5 +233,12 @@ defineExpose({
 .context-menu-text {
     font-size: 14px;
     color: $text;
+    flex: 1;
+}
+
+.context-menu-arrow {
+    margin-left: auto;
+    color: $text;
+    opacity: 0.6;
 }
 </style>

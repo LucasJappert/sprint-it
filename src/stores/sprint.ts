@@ -95,6 +95,27 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    const updateTask = async (taskId: string, itemId: string, updatedTask: Partial<Item['tasks'][0]>) => {
+        if (currentSprint.value) {
+            const itemIndex = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (itemIndex !== -1) {
+                const item = currentSprint.value.items[itemIndex];
+                if (item) {
+                    const taskIndex = item.tasks.findIndex((t) => t.id === taskId);
+                    if (taskIndex !== -1) {
+                        const task = item.tasks[taskIndex];
+                        if (task) {
+                            Object.assign(task, updatedTask);
+                            if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                                await saveSprint(currentSprint.value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     const moveTask = (fromItemId: string, toItemId: string, taskId: string, newIndex: number) => {
         const fromItem = currentSprint.value?.items.find((i) => i.id === fromItemId);
         const toItem = currentSprint.value?.items.find((i) => i.id === toItemId);
@@ -282,5 +303,6 @@ export const useSprintStore = defineStore("sprint", () => {
         createNewSprint,
         recalculateSprintDates,
         updateSprintDiasHabiles,
+        updateTask,
     };
 });
