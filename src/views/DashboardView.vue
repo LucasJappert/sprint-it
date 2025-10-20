@@ -310,7 +310,7 @@ const onToggleExpanded = (itemId: string) => {
 </script>
 
 <style scoped lang="scss">
-@import "@/styles/dashboard-columns.scss";
+@use "@/styles/dashboard-columns.scss" as *;
 .dashboard {
     padding: 6px;
     padding-top: 66px; /* Adjusted for 50px header + 16px padding */

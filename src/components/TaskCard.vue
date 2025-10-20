@@ -261,7 +261,7 @@ const onDragEnd = (e: DragEvent) => {
 </script>
 
 <style scoped lang="scss">
-@import "@/styles/dashboard-columns.scss";
+@use "@/styles/dashboard-columns.scss" as *;
 
 .task-card {
     color: $text;
