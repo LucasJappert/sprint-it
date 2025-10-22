@@ -1,5 +1,16 @@
 <template>
     <div :class="['my-richtext', accentClass, densityClass, { disabled }]">
+        <div class="editor-container relative">
+            <span class="floating-label" :class="{ 'is-active': hasContent || isFocused }">
+                {{ placeholder }}
+            </span>
+            <EditorContent @dragover.prevent @drop.prevent="handleDrop" :editor="editor" class="editor-content" :aria-label="placeholder" />
+            <MyButton class="expand-btn" @click="toggleExpanded" :class="{ expanded: isExpanded }" secondary>
+                <v-icon v-if="!isExpanded" size="16">mdi-unfold-more-horizontal</v-icon>
+                <v-icon v-else size="16">mdi-unfold-less-horizontal</v-icon>
+            </MyButton>
+        </div>
+
         <div class="toolbar" v-if="showToolbar">
             <button type="button" class="btn" @click="cmd('bold')" :class="{ active: isActive('bold') }">
                 <strong>B</strong>
@@ -8,15 +19,6 @@
                 <u>U</u>
             </button>
         </div>
-
-        <EditorContent
-            @dragover.prevent
-            @drop.prevent="handleDrop"
-            :editor="editor"
-            class="editor-content"
-            :aria-label="placeholder"
-            :data-placeholder="placeholder"
-        />
     </div>
 </template>
 
@@ -26,7 +28,7 @@ import { supabaseUploader as defaultUploader } from "@/utils/supabaseUploader";
 import StarterKit from "@tiptap/starter-kit";
 import { EditorContent, useEditor } from "@tiptap/vue-3";
 // @ts-ignore community package may not include types
-import { computed, onBeforeUnmount, onMounted, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 type Accent = "primary" | "success" | "warning" | "danger" | "info";
 type Density = "default" | "comfortable" | "compact";
@@ -40,6 +42,7 @@ interface Props {
     accent?: Accent;
     uploader?: (file: File) => Promise<string>;
     maxImageSizeMB?: number;
+    height?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -50,6 +53,7 @@ const props = withDefaults(defineProps<Props>(), {
     showToolbar: true,
     accent: "primary",
     maxImageSizeMB: 10,
+    height: "100px",
 });
 
 const emit = defineEmits<{
@@ -61,6 +65,22 @@ const emit = defineEmits<{
 const accentClass = computed(() => `accent-${props.accent}`);
 const densityClass = computed(() => `density-${props.density}`);
 
+const isExpanded = ref(false);
+const isFocused = ref(false);
+const hasContent = computed(() => {
+    if (!editor.value) return false;
+    const html = editor.value.getHTML();
+    return html && html !== "<p></p>" && html !== "";
+});
+
+const toggleExpanded = () => {
+    isExpanded.value = !isExpanded.value;
+};
+
+const currentHeight = computed(() => {
+    return isExpanded.value ? "300px" : props.height;
+});
+
 const getInitialContent = (): string => props.modelValue || "";
 
 const editor = useEditor({
@@ -71,8 +91,14 @@ const editor = useEditor({
         ResizableImage, // usa el NodeView de Vue
     ],
     onUpdate: ({ editor }) => emit("update:modelValue", editor.getHTML()),
-    onFocus: () => emit("focus"),
-    onBlur: () => emit("blur"),
+    onFocus: () => {
+        isFocused.value = true;
+        emit("focus");
+    },
+    onBlur: () => {
+        isFocused.value = false;
+        emit("blur");
+    },
 });
 
 watch(
@@ -151,6 +177,7 @@ const handleDrop = async (e: DragEvent) => {
     flex-direction: column;
     text-align: left;
     gap: 8px;
+    color: $text;
 
     &.disabled {
         opacity: 0.6;
@@ -177,33 +204,99 @@ const handleDrop = async (e: DragEvent) => {
     .field-shell {
         border: 1px solid var(--border);
         border-radius: 20px;
-        padding: 20px 24px;
+        padding: 12px;
         min-height: 380px;
         box-shadow: none;
         overflow: visible;
         margin-top: 8px; /* match MyTextarea */
+    }
+
+    .editor-container {
+        position: relative;
+        margin-top: 8px; /* match MyTextarea */
+    }
+
+    .floating-label {
+        position: absolute;
+        left: 14px;
+        top: 10px;
+        pointer-events: none;
+        transition: all 0.18s ease;
+        opacity: 1;
+        font-weight: 300;
+        font-size: 1rem;
+        color: rgba($text, 0.8);
+        z-index: 1;
+
+        &.is-active {
+            transform: none;
+            top: -10px;
+            border-radius: 20px;
+            background-color: $bg-primary;
+            padding: 0 6px;
+            font-size: 0.6rem;
+            color: $text;
+        }
     }
 
     .editor-content {
         border: 1px solid var(--border);
         border-radius: 20px;
-        padding: 20px 24px;
-        min-height: 380px;
+        padding: 12px;
+        // height: v-bind(currentHeight);
+        transition: height 0.3s ease;
         box-shadow: none;
-        overflow: visible;
-        margin-top: 8px; /* match MyTextarea */
-        // padding: 12px;
         line-height: 1.6;
         overflow-y: auto;
+        height: v-bind(currentHeight);
+        max-height: v-bind(currentHeight);
+        :deep(.ProseMirror) {
+            height: 100%;
+        }
         :deep(.ProseMirror-focused) {
             outline: none;
         }
+
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: rgba($primary, 0.5);
+            border-radius: 4px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
     }
 
-    .editor-content:empty::before {
-        content: attr(data-placeholder);
-        color: rgba(255, 255, 255, 0.3);
-        pointer-events: none;
+    .expand-btn {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.8);
+        color: var(--text);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        transition: all 0.2s ease;
+        z-index: 10;
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        &.expanded {
+            background: var(--sel);
+        }
     }
 
     /* resize handles (from ResizableImage) */

@@ -40,7 +40,7 @@
 
             <!-- Detalle en textarea ocupando 100% del ancho -->
             <div class="full-width mt-3">
-                <MyRichText v-model="detail" placeholder="Detail" density="compact" class="detail-textarea" />
+                <MyRichText v-model="detail" placeholder="Description" density="compact" class="detail-textarea" />
             </div>
         </div>
         <div class="footer">
