@@ -42,6 +42,9 @@
             <div class="full-width mt-3">
                 <MyRichText v-model="newItem.detail" placeholder="Description" density="compact" class="detail-textarea" />
             </div>
+
+            <!-- Comments section -->
+            <CommentSection :comments="newItem.comments || []" @add-comment="handleAddComment" />
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancel</MyButton>
@@ -57,7 +60,7 @@ import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
-import type { Item } from "@/types";
+import type { Comment, Item } from "@/types";
 import { computed, ref, watch } from "vue";
 
 interface Props {
@@ -74,6 +77,7 @@ interface NewItemForm {
     estimatedEffort: string;
     actualEffort: string;
     assignedUser: string;
+    comments?: Comment[];
 }
 
 const props = defineProps<Props>();
@@ -186,6 +190,7 @@ const resetForm = async () => {
                 estimatedEffort: props.existingItem.estimatedEffort.toString(),
                 actualEffort: props.existingItem.actualEffort.toString(),
                 assignedUser: assignedUserValue,
+                comments: [...(props.existingItem.comments || [])],
             };
 
             // Guardar el valor original del assignedUser para comparación
@@ -221,6 +226,7 @@ const resetForm = async () => {
                 estimatedEffort: "",
                 actualEffort: "",
                 assignedUser: "",
+                comments: [],
             };
 
             // Limpiar selección
@@ -295,6 +301,16 @@ const onStateChange = (options: any[]) => {
     }
 };
 
+const handleAddComment = (content: string) => {
+    const newComment: Comment = {
+        id: `comment-${Date.now()}`,
+        content,
+        author: authStore.user?.id || "",
+        createdAt: new Date(),
+    };
+    newItem.value.comments = [...(newItem.value.comments || []), newComment];
+};
+
 const handleSave = async () => {
     if (newItem.value.title.trim()) {
         let assignedUserId = null;
@@ -321,6 +337,7 @@ const handleSave = async () => {
             assignedUser: assignedUserId,
             tasks: props.existingItem?.tasks || [],
             order: props.existingItem?.order || props.nextOrder,
+            comments: newItem.value.comments || [],
         };
         emit("save", item);
         emit("close");

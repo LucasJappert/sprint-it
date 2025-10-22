@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CommentSection: typeof import('./components/global/CommentSection.vue')['default']
     MyButton: typeof import('./components/global/MyButton.vue')['default']
     MyCard: typeof import('./components/global/MyCard.vue')['default']
     MyDatePicker: typeof import('./components/global/MyDatePicker.vue')['default']
@@ -17,6 +18,7 @@ declare module 'vue' {
     MyRichText: typeof import('./components/global/MyRichText.vue')['default']
     MySearch: typeof import('./components/global/MySearch.vue')['default']
     MySelect: typeof import('./components/global/MySelect.vue')['default']
+    MySeparator: typeof import('./components/global/MySeparator.vue')['default']
     MyTextarea: typeof import('./components/global/MyTextarea.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

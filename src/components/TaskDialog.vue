@@ -42,6 +42,9 @@
             <div class="full-width mt-3">
                 <MyRichText v-model="detail" placeholder="Description" density="compact" class="detail-textarea" />
             </div>
+
+            <!-- Comments section -->
+            <CommentSection :comments="taskComments" @add-comment="handleAddComment" />
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="handleClose">Cancel</MyButton>
@@ -55,7 +58,8 @@ import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { getUserByUsername, getUsernameById } from "@/services/firestore";
-import type { Item, Task } from "@/types";
+import { useAuthStore } from "@/stores/auth";
+import type { Comment, Item, Task } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
@@ -97,6 +101,7 @@ const hasChanges = computed(() => {
 
 const originalAssignedUser = ref("");
 const titleInputRef = ref();
+const taskComments = ref<Comment[]>([]);
 
 const title = ref("");
 const detail = ref("");
@@ -165,6 +170,7 @@ const setFormValuesFromTask = (task: Task, assignedUserValue: string) => {
     estimatedEffort.value = task.estimatedEffort.toString();
     actualEffort.value = task.actualEffort.toString();
     assignedUser.value = assignedUserValue;
+    taskComments.value = [...(task.comments || [])];
 };
 
 const selectAssignedUserOption = (assignedUserValue: string) => {
@@ -209,6 +215,7 @@ const resetFormForNew = () => {
     estimatedEffort.value = "";
     actualEffort.value = "";
     assignedUser.value = "";
+    taskComments.value = [];
 
     // Limpiar selección
     assignedUserOptions.value.forEach((option) => {
@@ -261,6 +268,18 @@ const onStateChange = (options: any[]) => {
     }
 };
 
+const authStore = useAuthStore();
+
+const handleAddComment = (content: string) => {
+    const newComment: Comment = {
+        id: `comment-${Date.now()}`,
+        content,
+        author: authStore.user?.id || "",
+        createdAt: new Date(),
+    };
+    taskComments.value = [...taskComments.value, newComment];
+};
+
 const handleSave = async () => {
     if (title.value.trim()) {
         let assignedUserId = null;
@@ -286,6 +305,7 @@ const handleSave = async () => {
             actualEffort: parseInt(actualEffort.value) || 0,
             assignedUser: assignedUserId,
             order: props.existingTask?.order || 0,
+            comments: taskComments.value,
         };
         emit("save", task);
         resetForm();
