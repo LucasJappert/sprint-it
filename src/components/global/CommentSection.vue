@@ -13,7 +13,7 @@
                 @keydown.enter.exact.prevent="addComment"
             />
             <div class="add-comment-actions">
-                <MyButton @click="addComment" :disabled="!newCommentContent.trim()" secondary> Add Comment </MyButton>
+                <MyButton @click="addCommentAsync" :disabled="!newCommentContent.trim()" secondary> Add Comment </MyButton>
             </div>
         </div>
 
@@ -21,10 +21,10 @@
         <div class="comments-list" v-if="comments.length > 0">
             <div v-for="comment in sortedComments" :key="comment.id" class="comment-item">
                 <div class="comment-header">
-                    <span class="comment-author">{{ authorNames[comment.author] || "Loading..." }}</span>
+                    <span class="comment-author">{{ authorNames[comment.userId] || "Loading..." }}</span>
                     <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
                 </div>
-                <div class="comment-content" v-html="comment.content"></div>
+                <div class="comment-content" v-html="comment.description"></div>
             </div>
         </div>
 
@@ -34,16 +34,15 @@
 </template>
 
 <script setup lang="ts">
-import { addCommentToItemOrTask, getUser } from "@/services/firestore";
+import { addComment, getCommentsByAssociatedId, getUser } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import type { Comment } from "@/types";
 import { computed, ref, watch } from "vue";
 
 interface Props {
-    comments: Comment[];
-    itemId: string;
-    taskId?: string;
+    associatedId: string;
+    associatedType: "task" | "item";
 }
 
 interface Emits {
@@ -57,22 +56,47 @@ const authStore = useAuthStore();
 const sprintStore = useSprintStore();
 const newCommentContent = ref("");
 const authorNames = ref<Record<string, string>>({});
+const comments = ref<Comment[]>([]);
 
 const sortedComments = computed(() => {
-    const comments = [...props.comments];
+    const commentsList = [...comments.value];
     // Ordenar por fecha descendente (más recientes primero)
-    return comments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return commentsList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 });
 
 // Función para agregar comentario al inicio de la lista
-const addCommentToStart = (comment: Comment) => {
+const addCommentToStart = async (comment: Comment) => {
+    comments.value.unshift(comment);
+    // Cargar el nombre del autor para este comentario específico
+    if (comment.userId && !authorNames.value[comment.userId]) {
+        try {
+            const user = await getUser(comment.userId);
+            authorNames.value[comment.userId] = user ? `${user.name} ${user.lastName}` : "Unknown User";
+        } catch (error) {
+            console.warn(`Error getting author name for ${comment.userId}:`, error);
+            authorNames.value[comment.userId] = "Unknown User";
+        }
+    }
     // Emitir evento para que el padre actualice su estado
     emit("comment-added", comment);
 };
 
+// Load comments from Firestore
+const loadComments = async () => {
+    try {
+        const fetchedComments = await getCommentsByAssociatedId(props.associatedId);
+        comments.value = fetchedComments;
+        if (fetchedComments.length > 0) {
+            await loadAuthorNames();
+        }
+    } catch (error) {
+        console.error("Error loading comments:", error);
+    }
+};
+
 // Load author names for all comments
 const loadAuthorNames = async () => {
-    const uniqueAuthorIds = [...new Set(props.comments.map((c) => c.author))];
+    const uniqueAuthorIds = [...new Set(comments.value.map((c) => c.userId))];
     const names: Record<string, string> = {};
 
     for (const authorId of uniqueAuthorIds) {
@@ -90,33 +114,40 @@ const loadAuthorNames = async () => {
     authorNames.value = names;
 };
 
-// Watch for changes in comments to reload author names
+// Watch for changes in associatedId to reload comments
 watch(
-    () => props.comments,
-    async (newComments) => {
-        if (newComments.length > 0) {
-            await loadAuthorNames();
+    () => props.associatedId,
+    async (newAssociatedId) => {
+        if (newAssociatedId) {
+            await loadComments();
         }
     },
     { immediate: true },
 );
 
-const addComment = async () => {
+const addCommentAsync = async () => {
     if (newCommentContent.value.trim()) {
-        const content = newCommentContent.value.trim();
-        const newComment: Comment = {
-            id: `comment-${Date.now()}`,
-            content,
-            author: authStore.user?.id || "",
-            createdAt: new Date(),
+        const description = newCommentContent.value.trim();
+        const now = new Date();
+        const newCommentData = {
+            associatedId: props.associatedId,
+            associatedType: props.associatedType,
+            userId: authStore.user?.id || "",
+            createdAt: now,
+            updatedAt: now,
+            description,
         };
 
         try {
-            // Guardar directamente en Firestore usando la nueva función unificada
-            await addCommentToItemOrTask(sprintStore.currentSprint?.id || "", props.itemId, props.taskId || null, newComment);
+            // Guardar directamente en Firestore usando la nueva función
+            const commentId = await addComment(newCommentData);
+            const newComment: Comment = {
+                id: commentId,
+                ...newCommentData,
+            };
 
             // Agregar al inicio de la lista para que aparezca primero
-            addCommentToStart(newComment);
+            await addCommentToStart(newComment);
             newCommentContent.value = "";
         } catch (error) {
             console.error("Error adding comment:", error);

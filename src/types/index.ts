@@ -13,10 +13,13 @@ export interface User {
 export type AccentColor = "primary" | "blue" | "gray" | "green" | "light-green" | "light-yellow";
 
 export interface Comment {
-    readonly id: string;
-    readonly content: string;
-    readonly author: string; // user id
-    readonly createdAt: Date;
+    id: string;
+    associatedId: string; // id of the task or item
+    associatedType: "task" | "item";
+    userId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    description: string;
 }
 
 export interface Task {
@@ -29,7 +32,6 @@ export interface Task {
     actualEffort: number;
     assignedUser: string | null; // user id (nullable)
     order: number;
-    comments: Comment[];
 }
 
 export interface Item {
@@ -43,7 +45,6 @@ export interface Item {
     assignedUser: string | null; // user id (nullable)
     tasks: Task[];
     order: number;
-    comments: Comment[];
 }
 
 export interface Sprint {

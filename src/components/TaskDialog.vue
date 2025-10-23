@@ -44,13 +44,7 @@
             </div>
 
             <!-- Comments section -->
-            <CommentSection
-                v-if="existingTask"
-                :comments="taskComments"
-                :item-id="props.item.id"
-                :task-id="props.existingTask?.id"
-                @comment-added="handleCommentAdded"
-            />
+            <CommentSection v-if="existingTask" :associated-id="props.existingTask?.id || ''" associated-type="task" @comment-added="handleCommentAdded" />
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="handleClose">Cancel</MyButton>
@@ -100,15 +94,13 @@ const hasChanges = computed(() => {
         state.value !== (props.existingTask.state || STATE_VALUES.TODO) ||
         parseInt(estimatedEffort.value) !== props.existingTask.estimatedEffort ||
         parseInt(actualEffort.value) !== props.existingTask.actualEffort ||
-        assignedUser.value !== originalAssignedUser.value ||
-        JSON.stringify(taskComments.value) !== JSON.stringify(props.existingTask.comments || []);
+        assignedUser.value !== originalAssignedUser.value;
 
     return changes;
 });
 
 const originalAssignedUser = ref("");
 const titleInputRef = ref();
-const taskComments = ref<Comment[]>([]);
 
 const title = ref("");
 const detail = ref("");
@@ -177,7 +169,6 @@ const setFormValuesFromTask = (task: Task, assignedUserValue: string) => {
     estimatedEffort.value = task.estimatedEffort.toString();
     actualEffort.value = task.actualEffort.toString();
     assignedUser.value = assignedUserValue;
-    taskComments.value = [...(task.comments || [])];
 };
 
 const selectAssignedUserOption = (assignedUserValue: string) => {
@@ -222,7 +213,6 @@ const resetFormForNew = () => {
     estimatedEffort.value = "";
     actualEffort.value = "";
     assignedUser.value = "";
-    taskComments.value = [];
 
     // Limpiar selección
     assignedUserOptions.value.forEach((option) => {
@@ -278,8 +268,8 @@ const onStateChange = (options: any[]) => {
 const authStore = useAuthStore();
 
 const handleCommentAdded = (comment: Comment) => {
-    // El comentario ya se guardó en Firestore, solo actualizar la UI local agregándolo al inicio
-    taskComments.value = [comment, ...taskComments.value];
+    // El comentario ya se guardó en Firestore, no necesitamos actualizar el task local
+    // ya que los comentarios ahora se manejan independientemente
 };
 
 const handleSave = async () => {
@@ -307,7 +297,6 @@ const handleSave = async () => {
             actualEffort: parseInt(actualEffort.value) || 0,
             assignedUser: assignedUserId,
             order: props.existingTask?.order || 0,
-            comments: taskComments.value,
         };
         emit("save", task);
         resetForm();

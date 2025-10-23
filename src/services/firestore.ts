@@ -1,9 +1,10 @@
 import type { Comment, Sprint } from "@/types";
-import { arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
 import { db } from "./firebase";
 
 const sprintsCollection = collection(db, "sprints");
 const usersCollection = collection(db, "users");
+const commentsCollection = collection(db, "comments");
 
 export const saveSprint = async (sprint: Sprint) => {
     const docRef = doc(sprintsCollection, sprint.id);
@@ -125,24 +126,36 @@ export const addCommentToTask = async (sprintId: string, itemId: string, taskId:
     });
 };
 
-export const addCommentToItemOrTask = async (sprintId: string, itemId: string, taskId: string | null, comment: Comment) => {
-    const sprintRef = doc(sprintsCollection, sprintId);
+export const addComment = async (comment: Omit<Comment, "id">): Promise<string> => {
     const commentData = {
         ...comment,
-        createdAt: comment.createdAt, // Firestore handles Date serialization
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
     };
+    const docRef = await addDoc(commentsCollection, commentData);
+    return docRef.id;
+};
 
-    const fieldPath = taskId
-        ? `items.${itemId}.tasks.${taskId}.comments`
-        : `items.${itemId}.comments`;
+export const getCommentsByAssociatedId = async (associatedId: string): Promise<Comment[]> => {
+    const q = query(commentsCollection, where("associatedId", "==", associatedId));
+    const querySnapshot = await getDocs(q);
+    const comments = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    })) as Comment[];
 
-    // Use setDoc with merge: true to only update the comments field without overwriting the entire document
-    try {
-        await setDoc(sprintRef, {
-            [fieldPath]: arrayUnion(commentData)
-        }, { merge: true });
-    } catch (error) {
-        console.error("Error adding comment:", error);
-        throw error;
-    }
+    // Ordenar por createdAt en el cliente para evitar necesidad de índice compuesto
+    return comments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+};
+
+export const updateComment = async (commentId: string, updates: Partial<Pick<Comment, "description" | "updatedAt">>) => {
+    const docRef = doc(commentsCollection, commentId);
+    await updateDoc(docRef, updates);
+};
+
+export const deleteComment = async (commentId: string) => {
+    const docRef = doc(commentsCollection, commentId);
+    await deleteDoc(docRef);
 };

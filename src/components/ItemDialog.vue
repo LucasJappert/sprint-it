@@ -44,12 +44,7 @@
             </div>
 
             <!-- Comments section -->
-            <CommentSection
-                v-if="existingItem"
-                :comments="newItem.comments || []"
-                :item-id="props.existingItem?.id || ''"
-                @comment-added="handleCommentAdded"
-            />
+            <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" @comment-added="handleCommentAdded" />
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancel</MyButton>
@@ -82,7 +77,6 @@ interface NewItemForm {
     estimatedEffort: string;
     actualEffort: string;
     assignedUser: string;
-    comments?: Comment[];
 }
 
 const props = defineProps<Props>();
@@ -110,8 +104,7 @@ const hasChanges = computed(() => {
         newItem.value.state !== (props.existingItem.state || STATE_VALUES.TODO) ||
         parseInt(newItem.value.estimatedEffort) !== props.existingItem.estimatedEffort ||
         parseInt(newItem.value.actualEffort) !== props.existingItem.actualEffort ||
-        newItem.value.assignedUser !== originalAssignedUser.value ||
-        JSON.stringify(newItem.value.comments || []) !== JSON.stringify(props.existingItem.comments || []);
+        newItem.value.assignedUser !== originalAssignedUser.value;
 
     return changes;
 });
@@ -196,7 +189,6 @@ const resetForm = async () => {
                 estimatedEffort: props.existingItem.estimatedEffort.toString(),
                 actualEffort: props.existingItem.actualEffort.toString(),
                 assignedUser: assignedUserValue,
-                comments: [...(props.existingItem.comments || [])],
             };
 
             // Guardar el valor original del assignedUser para comparación
@@ -232,7 +224,6 @@ const resetForm = async () => {
                 estimatedEffort: "",
                 actualEffort: "",
                 assignedUser: "",
-                comments: [],
             };
 
             // Limpiar selección
@@ -308,8 +299,8 @@ const onStateChange = (options: any[]) => {
 };
 
 const handleCommentAdded = (comment: Comment) => {
-    // El comentario ya se guardó en Firestore, solo actualizar la UI local
-    newItem.value.comments = [...(newItem.value.comments || []), comment];
+    // El comentario ya se guardó en Firestore, no necesitamos actualizar el item local
+    // ya que los comentarios ahora se manejan independientemente
 };
 
 const handleSave = async () => {
@@ -338,7 +329,6 @@ const handleSave = async () => {
             assignedUser: assignedUserId,
             tasks: props.existingItem?.tasks || [],
             order: props.existingItem?.order || props.nextOrder,
-            comments: newItem.value.comments || [],
         };
         emit("save", item);
         emit("close");
