@@ -4,7 +4,7 @@
         <MySeparator class="my-2" />
 
         <!-- Add comment section -->
-        <div class="add-comment">
+        <div class="add-comment relative">
             <MyRichText
                 v-model="newCommentContent"
                 placeholder="Write a comment..."
@@ -13,7 +13,7 @@
                 @keydown.enter.exact.prevent="addComment"
             />
             <div class="add-comment-actions">
-                <MyButton @click="addCommentAsync" :disabled="!newCommentContent.trim()" secondary> Add Comment </MyButton>
+                <MyButton @click="addCommentAsync" :disabled="!newCommentContent.trim()" class="custom-button"> Add Comment </MyButton>
             </div>
         </div>
 
@@ -23,8 +23,33 @@
                 <div class="comment-header">
                     <span class="comment-author">{{ authorNames[comment.userId] || "Loading..." }}</span>
                     <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                    <!-- Edit/Delete buttons for comment author -->
+                    <div v-if="comment.userId === authStore.user?.id" class="comment-actions">
+                        <v-btn icon size="x-small" @click="startEditComment(comment)" @mousedown.stop>
+                            <v-icon size="14" class="green">mdi-pencil</v-icon>
+                        </v-btn>
+                        <v-btn icon size="x-small" @click="deleteCommentAsync(comment.id)" @mousedown.stop>
+                            <v-icon size="14" class="danger">mdi-trash-can-outline</v-icon>
+                        </v-btn>
+                    </div>
                 </div>
-                <div class="comment-content" v-html="comment.description"></div>
+                <!-- Edit mode -->
+                <div v-if="editingCommentId === comment.id" class="edit-comment relative">
+                    <MyRichText
+                        v-model="editCommentContent"
+                        :height="'80px'"
+                        density="compact"
+                        @keydown.enter.exact.prevent="saveCommentEdit"
+                        @keydown.escape="cancelCommentEdit"
+                        placeholder="Write a comment"
+                    />
+                    <div class="edit-actions">
+                        <MyButton @click="cancelCommentEdit" btn-class="px-2 custom-button" secondary>Cancel</MyButton>
+                        <MyButton @click="saveCommentEdit" btn-class="px-2 custom-button">Save</MyButton>
+                    </div>
+                </div>
+                <!-- Display mode -->
+                <div v-else class="comment-content" v-html="comment.description"></div>
             </div>
         </div>
 
@@ -34,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { addComment, getCommentsByAssociatedId, getUser } from "@/services/firestore";
+import { addComment, deleteComment, getCommentsByAssociatedId, getUser, updateComment } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import type { Comment } from "@/types";
@@ -57,6 +82,8 @@ const sprintStore = useSprintStore();
 const newCommentContent = ref("");
 const authorNames = ref<Record<string, string>>({});
 const comments = ref<Comment[]>([]);
+const editingCommentId = ref<string | null>(null);
+const editCommentContent = ref("");
 
 const sortedComments = computed(() => {
     const commentsList = [...comments.value];
@@ -185,6 +212,51 @@ const formatDate = (date: Date): string => {
         return commentDate.toLocaleDateString();
     }
 };
+
+const startEditComment = (comment: Comment) => {
+    editingCommentId.value = comment.id;
+    editCommentContent.value = comment.description;
+};
+
+const cancelCommentEdit = () => {
+    editingCommentId.value = null;
+    editCommentContent.value = "";
+};
+
+const saveCommentEdit = async () => {
+    if (!editingCommentId.value || !editCommentContent.value.trim()) return;
+
+    try {
+        await updateComment(editingCommentId.value, {
+            description: editCommentContent.value.trim(),
+            updatedAt: new Date(),
+        });
+
+        // Update local comment
+        const commentIndex = comments.value.findIndex((c) => c.id === editingCommentId.value);
+        if (commentIndex !== -1) {
+            comments.value[commentIndex]!.description = editCommentContent.value.trim();
+            comments.value[commentIndex]!.updatedAt = new Date();
+        }
+
+        editingCommentId.value = null;
+        editCommentContent.value = "";
+    } catch (error) {
+        console.error("Error updating comment:", error);
+    }
+};
+
+const deleteCommentAsync = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+
+    try {
+        await deleteComment(commentId);
+        // Remove from local list
+        comments.value = comments.value.filter((c) => c.id !== commentId);
+    } catch (error) {
+        console.error("Error deleting comment:", error);
+    }
+};
 </script>
 
 <style scoped lang="scss">
@@ -205,8 +277,14 @@ const formatDate = (date: Date): string => {
 }
 
 .add-comment-actions {
-    margin-top: 8px;
+    position: absolute;
+    right: 0;
+    bottom: 0;
     text-align: right;
+}
+.custom-button {
+    padding: 2px 5px !important;
+    height: 30px !important;
 }
 
 .comments-list {
@@ -228,6 +306,25 @@ const formatDate = (date: Date): string => {
     align-items: center;
     margin-bottom: 8px;
     font-size: 0.9rem;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.edit-comment {
+    margin-top: 8px;
+}
+
+.edit-actions {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    // margin-top: 8px;
+    display: flex;
+    gap: 20px;
+    justify-content: flex-end;
 }
 
 .comment-author {
