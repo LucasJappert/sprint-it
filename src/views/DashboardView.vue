@@ -130,6 +130,7 @@ const currentItemForTaskDialog = computed((): Item => {
         assignedUser: null,
         tasks: [],
         order: 1,
+        comments: [],
     };
 });
 
@@ -139,7 +140,8 @@ const contextMenuItemId = ref<string | null>(null);
 // Suponiendo que currentSprint.items existe y es reactivo
 const items = computed<Item[]>(() => {
     const currentItems = sprintStore.currentSprint?.items ?? [];
-    return currentItems;
+    // Convertir de objeto a array si es necesario (compatibilidad con Firestore)
+    return Array.isArray(currentItems) ? currentItems : Object.values(currentItems || {});
 });
 
 // Logs de debug removidos para simplificar la lógica

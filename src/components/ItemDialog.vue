@@ -44,7 +44,12 @@
             </div>
 
             <!-- Comments section -->
-            <CommentSection :comments="newItem.comments || []" @add-comment="handleAddComment" />
+            <CommentSection
+                v-if="existingItem"
+                :comments="newItem.comments || []"
+                :item-id="props.existingItem?.id || ''"
+                @comment-added="handleCommentAdded"
+            />
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancel</MyButton>
@@ -105,7 +110,8 @@ const hasChanges = computed(() => {
         newItem.value.state !== (props.existingItem.state || STATE_VALUES.TODO) ||
         parseInt(newItem.value.estimatedEffort) !== props.existingItem.estimatedEffort ||
         parseInt(newItem.value.actualEffort) !== props.existingItem.actualEffort ||
-        newItem.value.assignedUser !== originalAssignedUser.value;
+        newItem.value.assignedUser !== originalAssignedUser.value ||
+        JSON.stringify(newItem.value.comments || []) !== JSON.stringify(props.existingItem.comments || []);
 
     return changes;
 });
@@ -301,14 +307,9 @@ const onStateChange = (options: any[]) => {
     }
 };
 
-const handleAddComment = (content: string) => {
-    const newComment: Comment = {
-        id: `comment-${Date.now()}`,
-        content,
-        author: authStore.user?.id || "",
-        createdAt: new Date(),
-    };
-    newItem.value.comments = [...(newItem.value.comments || []), newComment];
+const handleCommentAdded = (comment: Comment) => {
+    // El comentario ya se guardó en Firestore, solo actualizar la UI local
+    newItem.value.comments = [...(newItem.value.comments || []), comment];
 };
 
 const handleSave = async () => {

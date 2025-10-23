@@ -44,7 +44,13 @@
             </div>
 
             <!-- Comments section -->
-            <CommentSection :comments="taskComments" @add-comment="handleAddComment" />
+            <CommentSection
+                v-if="existingTask"
+                :comments="taskComments"
+                :item-id="props.item.id"
+                :task-id="props.existingTask?.id"
+                @comment-added="handleCommentAdded"
+            />
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="handleClose">Cancel</MyButton>
@@ -94,7 +100,8 @@ const hasChanges = computed(() => {
         state.value !== (props.existingTask.state || STATE_VALUES.TODO) ||
         parseInt(estimatedEffort.value) !== props.existingTask.estimatedEffort ||
         parseInt(actualEffort.value) !== props.existingTask.actualEffort ||
-        assignedUser.value !== originalAssignedUser.value;
+        assignedUser.value !== originalAssignedUser.value ||
+        JSON.stringify(taskComments.value) !== JSON.stringify(props.existingTask.comments || []);
 
     return changes;
 });
@@ -270,14 +277,9 @@ const onStateChange = (options: any[]) => {
 
 const authStore = useAuthStore();
 
-const handleAddComment = (content: string) => {
-    const newComment: Comment = {
-        id: `comment-${Date.now()}`,
-        content,
-        author: authStore.user?.id || "",
-        createdAt: new Date(),
-    };
-    taskComments.value = [...taskComments.value, newComment];
+const handleCommentAdded = (comment: Comment) => {
+    // El comentario ya se guardó en Firestore, solo actualizar la UI local agregándolo al inicio
+    taskComments.value = [comment, ...taskComments.value];
 };
 
 const handleSave = async () => {

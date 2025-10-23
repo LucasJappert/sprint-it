@@ -29,7 +29,7 @@ export interface Task {
     actualEffort: number;
     assignedUser: string | null; // user id (nullable)
     order: number;
-    comments?: readonly Comment[];
+    comments: Comment[];
 }
 
 export interface Item {
@@ -43,7 +43,7 @@ export interface Item {
     assignedUser: string | null; // user id (nullable)
     tasks: Task[];
     order: number;
-    comments?: readonly Comment[];
+    comments: Comment[];
 }
 
 export interface Sprint {

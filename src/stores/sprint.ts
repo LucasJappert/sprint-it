@@ -47,7 +47,7 @@ export const useSprintStore = defineStore("sprint", () => {
             // Log para debug: mostrar sprints y items obtenidos
             console.log("📋 Sprints obtenidos:", allSprints.map(s => ({ id: s.id, titulo: s.titulo, itemsCount: s.items.length })));
             allSprints.forEach(sprint => {
-                console.log(`📋 Items del sprint "${sprint.titulo}":`, sprint.items);
+                console.log(`📋 Items del sprint "${sprint.titulo}":`, Array.isArray(sprint.items) ? sprint.items : Object.values(sprint.items || {}));
             });
 
             // Subscribe to all sprint changes
@@ -55,11 +55,17 @@ export const useSprintStore = defineStore("sprint", () => {
                 subscribeToSprint(sprint.id, (updatedSprint) => {
                     const index = sprints.value.findIndex(s => s.id === updatedSprint.id);
                     if (index !== -1) {
+                        // Asegurar que items sea un array
+                        const safeUpdatedSprint = {
+                            ...updatedSprint,
+                            items: Array.isArray(updatedSprint.items) ? updatedSprint.items : []
+                        };
+
                         // Actualizar backup cuando se recibe un sprint actualizado
-                        if (updatedSprint.id === currentSprintId.value) {
-                            sprintItemsBackup.value = [...updatedSprint.items];
+                        if (safeUpdatedSprint.id === currentSprintId.value) {
+                            sprintItemsBackup.value = [...safeUpdatedSprint.items];
                         }
-                        sprints.value[index] = updatedSprint;
+                        sprints.value[index] = safeUpdatedSprint;
                     }
                 });
             });

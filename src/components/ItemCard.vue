@@ -196,6 +196,7 @@ const onSaveEditItem = async (item: Item) => {
         estimatedEffort: item.estimatedEffort,
         actualEffort: item.actualEffort,
         assignedUser: item.assignedUser,
+        comments: item.comments,
     });
     showEditItemDialog.value = false;
 };

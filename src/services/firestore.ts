@@ -1,5 +1,5 @@
-import type { Sprint } from "@/types";
-import { collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, where, type DocumentData } from "firebase/firestore";
+import type { Comment, Sprint } from "@/types";
+import { arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
 import { db } from "./firebase";
 
 const sprintsCollection = collection(db, "sprints");
@@ -99,4 +99,50 @@ export const getAllSprints = async (): Promise<Sprint[]> => {
             fechaHasta: data.fechaHasta?.toDate() || new Date(),
         } as Sprint;
     });
+};
+
+export const addCommentToItem = async (sprintId: string, itemId: string, comment: Comment) => {
+    const sprintRef = doc(sprintsCollection, sprintId);
+    const commentData = {
+        ...comment,
+        createdAt: comment.createdAt, // Firestore handles Date serialization
+    };
+
+    await updateDoc(sprintRef, {
+        [`items.${itemId}.comments`]: arrayUnion(commentData)
+    });
+};
+
+export const addCommentToTask = async (sprintId: string, itemId: string, taskId: string, comment: Comment) => {
+    const sprintRef = doc(sprintsCollection, sprintId);
+    const commentData = {
+        ...comment,
+        createdAt: comment.createdAt, // Firestore handles Date serialization
+    };
+
+    await updateDoc(sprintRef, {
+        [`items.${itemId}.tasks.${taskId}.comments`]: arrayUnion(commentData)
+    });
+};
+
+export const addCommentToItemOrTask = async (sprintId: string, itemId: string, taskId: string | null, comment: Comment) => {
+    const sprintRef = doc(sprintsCollection, sprintId);
+    const commentData = {
+        ...comment,
+        createdAt: comment.createdAt, // Firestore handles Date serialization
+    };
+
+    const fieldPath = taskId
+        ? `items.${itemId}.tasks.${taskId}.comments`
+        : `items.${itemId}.comments`;
+
+    // Use setDoc with merge: true to only update the comments field without overwriting the entire document
+    try {
+        await setDoc(sprintRef, {
+            [fieldPath]: arrayUnion(commentData)
+        }, { merge: true });
+    } catch (error) {
+        console.error("Error adding comment:", error);
+        throw error;
+    }
 };
