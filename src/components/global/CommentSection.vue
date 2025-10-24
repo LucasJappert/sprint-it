@@ -45,7 +45,7 @@
                     />
                     <div class="edit-actions">
                         <MyButton @click="cancelCommentEdit" btn-class="px-2 custom-button" secondary>Cancel</MyButton>
-                        <MyButton @click="saveCommentEdit" btn-class="px-2 custom-button">Save</MyButton>
+                        <MyButton @click="saveCommentEdit" btn-class="px-2 custom-button" :disabled="!hasChanges">Save</MyButton>
                     </div>
                 </div>
                 <!-- Display mode -->
@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+import MyAlerts from "@/plugins/my-alerts";
 import { addComment, deleteComment, getCommentsByAssociatedId, getUser, updateComment } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
@@ -84,12 +85,15 @@ const authorNames = ref<Record<string, string>>({});
 const comments = ref<Comment[]>([]);
 const editingCommentId = ref<string | null>(null);
 const editCommentContent = ref("");
+const originalContent = ref("");
 
 const sortedComments = computed(() => {
     const commentsList = [...comments.value];
     // Ordenar por fecha descendente (más recientes primero)
     return commentsList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 });
+
+const hasChanges = computed(() => editCommentContent.value.trim() !== originalContent.value.trim());
 
 // Función para agregar comentario al inicio de la lista
 const addCommentToStart = async (comment: Comment) => {
@@ -182,16 +186,6 @@ const addCommentAsync = async () => {
     }
 };
 
-const getAuthorName = async (authorId: string): Promise<string> => {
-    try {
-        const user = await getUser(authorId);
-        return user ? `${user.name} ${user.lastName}` : "Unknown User";
-    } catch (error) {
-        console.warn(`Error getting author name for ${authorId}:`, error);
-        return "Unknown User";
-    }
-};
-
 const formatDate = (date: Date): string => {
     const now = new Date();
     const commentDate = new Date(date);
@@ -216,11 +210,13 @@ const formatDate = (date: Date): string => {
 const startEditComment = (comment: Comment) => {
     editingCommentId.value = comment.id;
     editCommentContent.value = comment.description;
+    originalContent.value = comment.description;
 };
 
 const cancelCommentEdit = () => {
     editingCommentId.value = null;
     editCommentContent.value = "";
+    originalContent.value = "";
 };
 
 const saveCommentEdit = async () => {
@@ -241,13 +237,15 @@ const saveCommentEdit = async () => {
 
         editingCommentId.value = null;
         editCommentContent.value = "";
+        originalContent.value = "";
     } catch (error) {
         console.error("Error updating comment:", error);
     }
 };
 
 const deleteCommentAsync = async (commentId: string) => {
-    if (!confirm("Are you sure you want to delete this comment?")) return;
+    const confirmed = await MyAlerts.confirmAsync("Eliminar comentario", "¿Estás seguro de que quieres eliminar este comentario?", "warning");
+    if (!confirmed) return;
 
     try {
         await deleteComment(commentId);

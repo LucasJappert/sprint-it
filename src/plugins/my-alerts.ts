@@ -166,7 +166,6 @@ const MyAlerts: MyAlertsApi = {
     install: (app: App): void => {
         appContextRef = app._context;
         mountHost();
-        (app.config.globalProperties as any).$alerts = MyAlerts;
     },
     openDialog,
     closeCurrent,

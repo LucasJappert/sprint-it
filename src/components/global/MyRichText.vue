@@ -4,7 +4,13 @@
             <span class="floating-label" :class="{ 'is-active': hasContent || isFocused }">
                 {{ placeholder }}
             </span>
-            <EditorContent @dragover.prevent @drop.prevent="handleDrop" :editor="editor" class="editor-content" :aria-label="placeholder" />
+            <EditorContent
+                @dragover.prevent
+                @drop.prevent="handleDrop"
+                :editor="editor"
+                :class="['editor-content', { focused: isFocused }]"
+                :aria-label="placeholder"
+            />
             <MyButton class="expand-btn" @click="toggleExpanded" :class="{ expanded: isExpanded }" secondary>
                 <v-icon v-if="!isExpanded" size="16">mdi-unfold-more-horizontal</v-icon>
                 <v-icon v-else size="16">mdi-unfold-less-horizontal</v-icon>
@@ -244,7 +250,7 @@ const handleDrop = async (e: DragEvent) => {
         border-radius: 20px;
         padding: 12px;
         // height: v-bind(currentHeight);
-        transition: height 0.3s ease;
+        transition: height 0.3s ease, border-color 0.2s ease;
         box-shadow: none;
         line-height: 1.6;
         overflow-y: auto;
@@ -255,6 +261,10 @@ const handleDrop = async (e: DragEvent) => {
         }
         :deep(.ProseMirror-focused) {
             outline: none;
+        }
+
+        &.focused {
+            border-color: $primary;
         }
 
         &::-webkit-scrollbar {
