@@ -1,6 +1,9 @@
 <template>
-    <div class="comments-section text-left">
-        <div class="comments-title">Comments</div>
+    <MyCard class="comments-section text-left" accent="gray">
+        <div class="comments-title">
+            <v-icon>mdi-chat-outline</v-icon>
+            Comments
+        </div>
         <MySeparator class="my-2" />
 
         <!-- Add comment section -->
@@ -21,8 +24,11 @@
         <div class="comments-list" v-if="comments.length > 0">
             <div v-for="comment in sortedComments" :key="comment.id" class="comment-item">
                 <div class="comment-header">
-                    <span class="comment-author">{{ authorNames[comment.userId] || "Loading..." }}</span>
-                    <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                    <span class="comment-author">
+                        {{ authorNames[comment.userId] || "Loading..." }}
+                        <span class="comment-date"> | {{ formatDate(comment.createdAt) }}</span>
+                    </span>
+
                     <!-- Edit/Delete buttons for comment author -->
                     <div v-if="comment.userId === authStore.user?.id" class="comment-actions">
                         <v-btn icon size="x-small" @click="startEditComment(comment)" @mousedown.stop>
@@ -55,7 +61,7 @@
 
         <!-- No comments message -->
         <div v-else class="no-comments">No comments yet.</div>
-    </div>
+    </MyCard>
 </template>
 
 <script setup lang="ts">
@@ -196,15 +202,16 @@ const formatDate = (date: Date): string => {
     if (diffInHours < 1) {
         const minutes = Math.floor(diffInMs / (1000 * 60));
         return minutes <= 1 ? "Just now" : `${minutes} minutes ago`;
-    } else if (diffInDays < 1) {
+    }
+    if (diffInDays < 1) {
         const hours = Math.floor(diffInHours);
         return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
-    } else if (diffInDays < 7) {
+    }
+    if (diffInDays < 7) {
         const days = Math.floor(diffInDays);
         return days === 1 ? "1 day ago" : `${days} days ago`;
-    } else {
-        return commentDate.toLocaleDateString();
     }
+    return commentDate.toLocaleDateString();
 };
 
 const startEditComment = (comment: Comment) => {
@@ -268,6 +275,7 @@ const deleteCommentAsync = async (commentId: string) => {
 .comments-title {
     margin: 0;
     color: $text;
+    font-size: 1rem;
 }
 
 .add-comment {

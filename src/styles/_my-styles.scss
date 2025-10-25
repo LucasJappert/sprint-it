@@ -275,14 +275,14 @@ a {
 
 /* Barra en sí */
 ::-webkit-scrollbar-thumb {
-    background-color: $primary; /* color del thumb */
+    background-color: rgba($primary, 0.6); /* color del thumb con transparencia */
     border-radius: 4px;
     border: 1px solid #000000; /* opcional: borde */
 }
 
 /* Al hacer hover */
 ::-webkit-scrollbar-thumb:hover {
-    background-color: $primary; /* color del thumb */
+    background-color: rgba($primary, 0.8); /* color del thumb con menos transparencia en hover */
     cursor: grab;
 }
 

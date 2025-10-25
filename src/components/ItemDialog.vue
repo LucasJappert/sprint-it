@@ -1,5 +1,5 @@
 <template>
-    <MyDialog :visible="visible" :min-width="800" @close="$emit('close')">
+    <MyDialog :visible="visible" @close="$emit('close')">
         <div class="header">
             <h3 class="text-left flex-center justify-start">
                 <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
@@ -7,41 +7,42 @@
             </h3>
         </div>
         <div class="body-scroll">
-            <!-- Título ocupando 100% del ancho -->
-            <div class="full-width">
-                <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
-            </div>
+            <MyCard>
+                <!-- Título ocupando 100% del ancho -->
+                <div class="full-width mt-2">
+                    <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
+                </div>
+                <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
+                <div class="form-row mt-3">
+                    <div class="field-group assigned-user">
+                        <MySelect
+                            v-model="newItem.assignedUser"
+                            label="Assigned Person"
+                            :options="assignedUserOptions"
+                            placeholder="Select user..."
+                            density="compact"
+                            @update:options="onAssignedUserChange"
+                        />
+                    </div>
+                    <div class="field-group state">
+                        <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
+                    </div>
+                    <div class="field-group estimated-effort">
+                        <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
+                    </div>
+                    <div class="field-group actual-effort">
+                        <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
+                    </div>
+                    <div class="field-group priority">
+                        <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
+                    </div>
+                </div>
 
-            <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
-            <div class="form-row mt-3">
-                <div class="field-group assigned-user">
-                    <MySelect
-                        v-model="newItem.assignedUser"
-                        label="Assigned Person"
-                        :options="assignedUserOptions"
-                        placeholder="Select user..."
-                        density="compact"
-                        @update:options="onAssignedUserChange"
-                    />
+                <!-- Detalle en textarea ocupando 100% del ancho -->
+                <div class="full-width mt-3">
+                    <MyRichText v-model="newItem.detail" placeholder="Description" density="compact" class="detail-textarea" />
                 </div>
-                <div class="field-group state">
-                    <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
-                </div>
-                <div class="field-group estimated-effort">
-                    <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
-                </div>
-                <div class="field-group actual-effort">
-                    <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
-                </div>
-                <div class="field-group priority">
-                    <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
-                </div>
-            </div>
-
-            <!-- Detalle en textarea ocupando 100% del ancho -->
-            <div class="full-width mt-3">
-                <MyRichText v-model="newItem.detail" placeholder="Description" density="compact" class="detail-textarea" />
-            </div>
+            </MyCard>
 
             <!-- Comments section -->
             <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" @comment-added="handleCommentAdded" />
@@ -338,10 +339,6 @@ const handleSave = async () => {
 </script>
 
 <style scoped>
-.body-scroll {
-    padding: 16px;
-}
-
 /* Título ocupando 100% del ancho */
 .full-width {
     width: 100%;

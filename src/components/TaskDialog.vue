@@ -335,10 +335,6 @@ watch(
 </script>
 
 <style scoped>
-.body-scroll {
-    padding: 16px;
-}
-
 /* Título ocupando 100% del ancho */
 .full-width {
     width: 100%;

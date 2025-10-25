@@ -26,7 +26,7 @@ const props = withDefaults(
     }>(),
     {
         myDialogStyles: "",
-        minWidth: "600px",
+        minWidth: "900px",
         fullSize: false,
         bgTransparent: false,
         persistent: false,
@@ -103,6 +103,7 @@ $mobile-resolution: 600px !default;
 .my-dialog {
     background-color: $bg-primary;
     border-radius: 8px;
+    width: 1000px;
     min-width: v-bind("formattedMinWidth");
     max-width: 90%;
     box-shadow: 0 2px 10px #000000cc;
@@ -139,8 +140,8 @@ $mobile-resolution: 600px !default;
         border-radius: 14px 14px 0 0;
     }
     :deep(.body-scroll) {
-        padding: 20px 24px;
-        max-height: 85vh;
+        padding: 16px;
+        max-height: 80vh;
         overflow-y: auto;
     }
     :deep(.footer) {
