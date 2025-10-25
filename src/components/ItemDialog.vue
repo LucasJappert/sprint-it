@@ -7,7 +7,7 @@
             </h3>
         </div>
         <div class="body-scroll">
-            <MyCard>
+            <MyCard accent="gray">
                 <!-- Título ocupando 100% del ancho -->
                 <div class="full-width mt-2">
                     <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
