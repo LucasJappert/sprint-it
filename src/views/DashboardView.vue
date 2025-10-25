@@ -1,37 +1,6 @@
 <template>
     <Header />
     <div class="dashboard">
-        <!-- Header con selector de sprint y controles -->
-        <div class="dashboard-header">
-            <div class="sprint-container-1">
-                <div style="width: 150px">
-                    <MySelect :options="sprintOptions" placeholder-title="Select Sprint" @update:options="onSprintOptionsChange" density="compact" />
-                </div>
-
-                <div style="width: 120px">
-                    <MyInput
-                        v-model="currentSprintDiasHabilesString"
-                        type="number"
-                        label="Working Days"
-                        :min="1"
-                        :max="10"
-                        @blur="updateDiasHabiles"
-                        centered
-                        density="compact"
-                    />
-                </div>
-
-                <div class="sprint-dates">({{ currentSprintDates }})</div>
-            </div>
-
-            <div class="sprint-actions">
-                <MyButton @click="createNewSprint" variant="outlined" density="comfortable">
-                    <v-icon left>mdi-plus</v-icon>
-                    New Sprint
-                </MyButton>
-            </div>
-        </div>
-
         <!-- Botón para agregar nuevo item -->
         <div class="board-header">
             <MyButton class="ml-2" @click="showAddItemDialog = true" btn-class="px-2" accent="blue" density="comfortable">
@@ -390,33 +359,6 @@ const toggleAllTasks = () => {
     padding: 6px;
     padding-top: 66px; /* Adjusted for 50px header + 16px padding */
     font-size: 12px;
-}
-
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    gap: 16px;
-}
-
-.sprint-container-1 {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.sprint-dates {
-    font-size: 0.9rem;
-    color: $text;
-    opacity: 0.8;
-    white-space: nowrap;
-}
-
-.sprint-actions {
-    display: flex;
-    gap: 8px;
-    margin-left: auto;
 }
 
 .board-header {

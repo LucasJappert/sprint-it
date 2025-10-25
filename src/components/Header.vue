@@ -1,5 +1,34 @@
 <template>
     <v-app-bar color="rgba(0, 0, 0, 0.2)" dark height="50">
+        <div class="dashboard-header">
+            <div class="sprint-container-1">
+                <div style="width: 150px">
+                    <MySelect :options="sprintOptions" placeholder-title="Select Sprint" @update:options="onSprintOptionsChange" density="compact" />
+                </div>
+
+                <div style="width: 120px">
+                    <MyInput
+                        v-model="currentSprintDiasHabilesString"
+                        type="number"
+                        label="Working Days"
+                        :min="1"
+                        :max="10"
+                        @blur="updateDiasHabiles"
+                        centered
+                        density="compact"
+                    />
+                </div>
+
+                <div class="sprint-dates">({{ currentSprintDates }})</div>
+            </div>
+
+            <div class="sprint-actions">
+                <MyButton @click="createNewSprint" variant="outlined" density="comfortable">
+                    <v-icon left>mdi-plus</v-icon>
+                    New Sprint
+                </MyButton>
+            </div>
+        </div>
         <v-spacer />
         <v-menu>
             <template #activator="{ props }">
@@ -27,10 +56,65 @@
 <script setup lang="ts">
 import { exportAllData } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
+import { useSprintStore } from "@/stores/sprint";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
+const sprintStore = useSprintStore();
 const router = useRouter();
+
+// Selector de sprint
+const sprintOptions = computed(() =>
+    sprintStore.sprints.map((sprint) => ({
+        name: sprint.titulo,
+        checked: sprint.id === sprintStore.currentSprintId,
+        value: sprint.id,
+    })),
+);
+
+// Días hábiles del sprint actual
+const currentSprintDiasHabiles = computed({
+    get: () => sprintStore.currentSprint?.diasHabiles || 10,
+    set: (value: number) => {
+        if (sprintStore.currentSprint) {
+            sprintStore.currentSprint.diasHabiles = value;
+        }
+    },
+});
+
+// Fechas del sprint actual formateadas
+const currentSprintDates = computed(() => {
+    if (!sprintStore.currentSprint) return "";
+    const desde = sprintStore.currentSprint.fechaDesde.toLocaleDateString("es-ES");
+    const hasta = sprintStore.currentSprint.fechaHasta.toLocaleDateString("es-ES");
+    return `${desde} - ${hasta}`;
+});
+
+const currentSprintDiasHabilesString = computed({
+    get: () => currentSprintDiasHabiles.value.toString(),
+    set: (value: string) => {
+        const num = parseInt(value);
+        if (!isNaN(num)) {
+            currentSprintDiasHabiles.value = num;
+        }
+    },
+});
+
+const updateDiasHabiles = async () => {
+    await sprintStore.updateSprintDiasHabiles(currentSprintDiasHabiles.value);
+};
+
+const onSprintOptionsChange = (options: any[]) => {
+    const selectedOption = options.find((opt) => opt.checked);
+    if (selectedOption) {
+        sprintStore.currentSprintId = selectedOption.value;
+    }
+};
+
+const createNewSprint = async () => {
+    await sprintStore.createNewSprint();
+};
 
 const logout = async () => {
     await authStore.logout();
@@ -59,6 +143,32 @@ const exportData = async () => {
 <style scoped lang="scss">
 .v-app-bar {
     box-shadow: 0 0 5px #00ffff50 !important;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.sprint-container-1 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.sprint-dates {
+    font-size: 0.9rem;
+    color: $text;
+    opacity: 0.8;
+    white-space: nowrap;
+}
+
+.sprint-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
 }
 .menu {
     background: $bg-primary;
