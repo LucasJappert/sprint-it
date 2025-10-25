@@ -25,7 +25,7 @@
             </div>
 
             <div class="sprint-actions">
-                <MyButton @click="createNewSprint" variant="outlined">
+                <MyButton @click="createNewSprint" variant="outlined" density="comfortable">
                     <v-icon left>mdi-plus</v-icon>
                     New Sprint
                 </MyButton>
@@ -34,7 +34,7 @@
 
         <!-- Botón para agregar nuevo item -->
         <div class="board-header">
-            <MyButton @click="showAddItemDialog = true" btn-class="px-2" accent="blue">
+            <MyButton class="ml-2" @click="showAddItemDialog = true" btn-class="px-2" accent="blue" density="comfortable">
                 <v-icon left class="mr-2 blue">mdi-clipboard-text</v-icon>
                 New Item
             </MyButton>
@@ -420,7 +420,6 @@ const toggleAllTasks = () => {
 }
 
 .board-header {
-    margin-bottom: 16px;
     display: flex;
     justify-content: flex-start;
 }

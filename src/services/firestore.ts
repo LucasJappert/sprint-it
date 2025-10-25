@@ -159,3 +159,37 @@ export const deleteComment = async (commentId: string) => {
     const docRef = doc(commentsCollection, commentId);
     await deleteDoc(docRef);
 };
+
+export const exportAllData = async () => {
+    const [sprintsSnapshot, usersSnapshot, commentsSnapshot] = await Promise.all([
+        getDocs(sprintsCollection),
+        getDocs(usersCollection),
+        getDocs(commentsCollection),
+    ]);
+
+    const sprints = sprintsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        fechaDesde: doc.data().fechaDesde?.toDate() || new Date(),
+        fechaHasta: doc.data().fechaHasta?.toDate() || new Date(),
+    }));
+
+    const users = usersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+    }));
+
+    const comments = commentsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    }));
+
+    return {
+        sprints,
+        users,
+        comments,
+        exportedAt: new Date().toISOString(),
+    };
+};

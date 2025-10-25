@@ -11,6 +11,10 @@
                 <div class="menu-item">
                     <span>Hello {{ authStore.user?.name }}!</span>
                 </div>
+                <div class="menu-item" @click="exportData">
+                    <v-icon>mdi-download</v-icon>
+                    <span>Export Data</span>
+                </div>
                 <div class="menu-item" @click="logout">
                     <v-icon>mdi-logout</v-icon>
                     <span>Logout</span>
@@ -21,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+import { exportAllData } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
 
@@ -30,6 +35,24 @@ const router = useRouter();
 const logout = async () => {
     await authStore.logout();
     router.push("/");
+};
+
+const exportData = async () => {
+    try {
+        const data = await exportAllData();
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+        const exportFileDefaultName = `sprint-data-${new Date().toISOString().split("T")[0]}.json`;
+
+        const linkElement = document.createElement("a");
+        linkElement.setAttribute("href", dataUri);
+        linkElement.setAttribute("download", exportFileDefaultName);
+        linkElement.click();
+    } catch (error) {
+        console.error("Error exporting data:", error);
+        alert("Error exporting data. Please try again.");
+    }
 };
 </script>
 

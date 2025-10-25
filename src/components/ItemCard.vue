@@ -35,7 +35,7 @@
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(item.state || STATE_VALUES.TODO)"></span>
         </div>
-        <div class="item-col cols-effort">{{ item.estimatedEffort }}-{{ item.actualEffort }}</div>
+        <div class="item-col cols-effort">{{ item.estimatedEffort }} - {{ item.actualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
             <span class="priority-content" v-html="getPriorityHtml(item.priority)"></span>
         </div>
