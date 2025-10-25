@@ -101,7 +101,7 @@ const props = withDefaults(
         maxFieldHeight: 50,
         minSelected: 0,
         density: "default",
-        accent: "primary",
+        accent: "gray",
     },
 );
 
@@ -258,12 +258,12 @@ $radius: 18px;
 /* Wrapper anchors the absolute dropdown */
 .my-select-wrapper {
     /* Default accent (primary) via CSS variables */
-    --sel: #{$primary};
-    --sel-01: #{rgba($primary, 0.1)};
-    --sel-02: #{rgba($primary, 0.2)};
-    --sel-03: #{rgba($primary, 0.3)};
-    --sel-035: #{rgba($primary, 0.35)};
-    --sel-038: #{rgba($primary, 0.38)};
+    --sel: #{$gray};
+    --sel-01: #{rgba($gray, 0.1)};
+    --sel-02: #{rgba($gray, 0.2)};
+    --sel-03: #{rgba($gray, 0.3)};
+    --sel-035: #{rgba($gray, 0.35)};
+    --sel-038: #{rgba($gray, 0.38)};
     position: relative;
     width: 100%;
     max-width: 600px;
@@ -277,7 +277,7 @@ $radius: 18px;
     position: relative;
     display: flex;
     align-items: center;
-    border: 1px solid rgba($primary, 0.3) !important;
+    border: 1px solid rgba($gray, 0.3) !important;
     border-radius: $radius;
     padding: 6px 40px 6px 14px;
     color: var(--sel);
@@ -421,12 +421,12 @@ $radius: 18px;
 
 /* Provide accent variables for teleported dropdown as well */
 .dropdown-body.accent-primary {
-    --sel: #{$primary};
-    --sel-01: #{rgba($primary, 0.1)};
-    --sel-02: #{rgba($primary, 0.2)};
-    --sel-03: #{rgba($primary, 0.3)};
-    --sel-035: #{rgba($primary, 0.35)};
-    --sel-038: #{rgba($primary, 0.38)};
+    --sel: #{$gray};
+    --sel-01: #{rgba($gray, 0.1)};
+    --sel-02: #{rgba($gray, 0.2)};
+    --sel-03: #{rgba($gray, 0.3)};
+    --sel-035: #{rgba($gray, 0.35)};
+    --sel-038: #{rgba($gray, 0.38)};
 }
 .dropdown-body.accent-blue {
     --sel: #{$blue};
@@ -471,12 +471,12 @@ $radius: 18px;
 
 /* Accent variants: set CSS variables using SCSS colors */
 .my-select-wrapper.accent-primary {
-    --sel: #{$primary};
-    --sel-01: #{rgba($primary, 0.1)};
-    --sel-02: #{rgba($primary, 0.2)};
-    --sel-03: #{rgba($primary, 0.3)};
-    --sel-035: #{rgba($primary, 0.35)};
-    --sel-038: #{rgba($primary, 0.38)};
+    --sel: #{$gray};
+    --sel-01: #{rgba($gray, 0.1)};
+    --sel-02: #{rgba($gray, 0.2)};
+    --sel-03: #{rgba($gray, 0.3)};
+    --sel-035: #{rgba($gray, 0.35)};
+    --sel-038: #{rgba($gray, 0.38)};
 }
 .my-select-wrapper.accent-blue {
     --sel: #{$blue};

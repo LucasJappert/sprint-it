@@ -132,9 +132,9 @@ const classes = computed(() => [
 
     /* 👇 Dejamos el estado disabled al final para que gane si coincide con .secondary */
     &.v-btn--disabled {
-        background-color: rgba($primary, 0.15) !important;
-        border: 1px solid rgba($primary, 0.15) !important;
-        color: rgba($primary, 0.35) !important;
+        background-color: rgba($gray, 0.15) !important;
+        border: 1px solid rgba($gray, 0.15) !important;
+        color: rgba($gray, 0.35) !important;
     }
 }
 

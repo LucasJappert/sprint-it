@@ -107,8 +107,6 @@ $mobile-resolution: 600px !default;
     min-width: v-bind("formattedMinWidth");
     max-width: 90%;
     box-shadow: 0 2px 10px #000000cc;
-    overflow: hidden;
-    overflow-x: auto;
 
     &.bg-transparent {
         background: transparent !important;

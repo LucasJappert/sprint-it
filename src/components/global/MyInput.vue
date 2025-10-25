@@ -77,7 +77,7 @@ const props = withDefaults(
         numberFormatThousands: true,
 
         centered: false,
-        accent: "primary",
+        accent: "gray",
     },
 );
 

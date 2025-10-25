@@ -1,8 +1,10 @@
 <template>
     <MyDialog :visible="visible" bg-transparent persistent>
-        <div class="loading-container">
-            <v-progress-linear indeterminate color="primary" />
-            <p>{{ message || "Cargando..." }}</p>
+        <div class="full-size flex-center">
+            <div class="loading-container">
+                <v-progress-linear indeterminate class="primary-light" />
+                <p class="text">{{ message || "Cargando..." }}</p>
+            </div>
         </div>
     </MyDialog>
 </template>
@@ -22,7 +24,9 @@ defineProps<{
     padding: 20px;
     background: var(--panel);
     border-radius: 8px;
-    min-width: 200px;
+    min-width: 600px;
+    border: 1px solid rgba($primary, 0.4);
+    box-shadow: 0 0 15px rgba($primary, 0.4);
 }
 
 p {

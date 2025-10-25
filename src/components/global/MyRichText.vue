@@ -264,7 +264,8 @@ const handleDrop = async (e: DragEvent) => {
         }
 
         &.focused {
-            border-color: $primary;
+            border-color: $gray;
+            box-shadow: inset 0 0 2px $gray;
         }
 
         &::-webkit-scrollbar {
@@ -272,7 +273,7 @@ const handleDrop = async (e: DragEvent) => {
         }
 
         &::-webkit-scrollbar-thumb {
-            background: rgba($primary, 0.5);
+            background: rgba($gray, 0.5);
             border-radius: 4px;
         }
 
