@@ -3,7 +3,13 @@
         <div class="dashboard-header">
             <div class="sprint-container-1">
                 <div style="width: 150px">
-                    <MySelect :options="sprintOptions" placeholder-title="Select Sprint" @update:options="onSprintOptionsChange" density="compact" />
+                    <MySelect
+                        :options="sprintOptions"
+                        placeholder-title="Select Sprint"
+                        @update:options="onSprintOptionsChange"
+                        @action="onSprintAction"
+                        density="compact"
+                    />
                 </div>
 
                 <div style="width: 120px">
@@ -20,13 +26,6 @@
                 </div>
 
                 <div class="sprint-dates">({{ currentSprintDates }})</div>
-            </div>
-
-            <div class="sprint-actions">
-                <MyButton @click="createNewSprint" variant="outlined" density="comfortable">
-                    <v-icon left>mdi-plus</v-icon>
-                    New Sprint
-                </MyButton>
             </div>
         </div>
         <v-spacer />
@@ -65,13 +64,18 @@ const sprintStore = useSprintStore();
 const router = useRouter();
 
 // Selector de sprint
-const sprintOptions = computed(() =>
-    sprintStore.sprints.map((sprint) => ({
+const sprintOptions = computed(() => [
+    ...sprintStore.sprints.map((sprint) => ({
         name: sprint.titulo,
         checked: sprint.id === sprintStore.currentSprintId,
         value: sprint.id,
     })),
-);
+    {
+        name: "+ New Sprint",
+        checked: false,
+        isAction: true,
+    },
+]);
 
 // Días hábiles del sprint actual
 const currentSprintDiasHabiles = computed({
@@ -109,6 +113,12 @@ const onSprintOptionsChange = (options: any[]) => {
     const selectedOption = options.find((opt) => opt.checked);
     if (selectedOption) {
         sprintStore.currentSprintId = selectedOption.value;
+    }
+};
+
+const onSprintAction = (option: any) => {
+    if (option.name === "+ New Sprint") {
+        createNewSprint();
     }
 };
 

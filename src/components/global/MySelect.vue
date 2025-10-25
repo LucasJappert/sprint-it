@@ -48,7 +48,7 @@
                         v-for="(option, index) in internalOptions"
                         :key="option.name || index"
                         class="dropdown-item"
-                        :class="{ selected: option.checked }"
+                        :class="{ selected: option.checked, action: option.isAction }"
                         @click="onOptionClick(index)"
                         :title="option.name"
                     >
@@ -75,6 +75,7 @@ export interface ISelectOption {
     checked: boolean;
     color?: string;
     html?: string;
+    isAction?: boolean;
     [key: string]: any;
 }
 
@@ -107,6 +108,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
     (e: "update:options", value: ISelectOption[]): void;
+    (e: "action", option: ISelectOption): void;
 }>();
 
 const rootRef = ref<HTMLElement | null>(null);
@@ -202,13 +204,19 @@ const toggle = () => {
 };
 
 const onOptionClick = (index: number) => {
+    const opt = internalOptions.value[index];
+    if (!opt) return; // Safety check
+
+    if (opt.isAction) {
+        emit("action", opt);
+        expanded.value = false;
+        return;
+    }
+
     if (!props.multiselect) {
         expanded.value = false;
         internalOptions.value.forEach((opt, i) => (opt.checked = i === index));
     } else {
-        const opt = internalOptions.value[index];
-        if (!opt) return; // Safety check
-
         const selectedCount = internalOptions.value.filter((o) => o.checked).length;
 
         // No permitir apagar la última requerida
@@ -403,6 +411,10 @@ $radius: 18px;
     }
     &.selected {
         background-color: var(--sel-038);
+    }
+    &.action {
+        color: $primary;
+        font-weight: 500;
     }
 }
 
