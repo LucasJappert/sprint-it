@@ -2,13 +2,14 @@
     <v-app-bar color="rgba(0, 0, 0, 0.2)" dark height="50">
         <div class="dashboard-header">
             <div class="sprint-container-1">
-                <div style="width: 150px">
+                <div style="width: 280px">
                     <MySelect
                         :options="sprintOptions"
                         placeholder-title="Select Sprint"
                         @update:options="onSprintOptionsChange"
                         @action="onSprintAction"
                         density="compact"
+                        :show-clear-selection="false"
                     />
                 </div>
 
@@ -24,8 +25,6 @@
                         density="compact"
                     />
                 </div>
-
-                <div class="sprint-dates">({{ currentSprintDates }})</div>
             </div>
         </div>
         <v-spacer />
@@ -64,18 +63,30 @@ const sprintStore = useSprintStore();
 const router = useRouter();
 
 // Selector de sprint
-const sprintOptions = computed(() => [
-    ...sprintStore.sprints.map((sprint) => ({
-        name: sprint.titulo,
-        checked: sprint.id === sprintStore.currentSprintId,
-        value: sprint.id,
-    })),
-    {
-        name: "+ New Sprint",
-        checked: false,
-        isAction: true,
-    },
-]);
+const sprintOptions = computed(() => {
+    const now = new Date();
+    return [
+        {
+            name: "+ New Sprint",
+            checked: false,
+            isAction: true,
+        },
+        ...sprintStore.sprints.map((sprint) => {
+            const desde = sprint.fechaDesde.toLocaleDateString("es-ES");
+            const hasta = sprint.fechaHasta.toLocaleDateString("es-ES");
+            const isCurrent = now >= sprint.fechaDesde && now <= sprint.fechaHasta;
+            const datePart = `<span style="font-size: 0.8rem; font-weight: 500; opacity: 0.4;" class="text"> (${desde}-${hasta})</span>`;
+            const name = isCurrent
+                ? `<span style="font-weight: 500;" class="primary-light">${sprint.titulo}</span> ${datePart}`
+                : `${sprint.titulo} ${datePart}`;
+            return {
+                name,
+                checked: sprint.id === sprintStore.currentSprintId,
+                value: sprint.id,
+            };
+        }),
+    ];
+});
 
 // Días hábiles del sprint actual
 const currentSprintDiasHabiles = computed({
@@ -85,14 +96,6 @@ const currentSprintDiasHabiles = computed({
             sprintStore.currentSprint.diasHabiles = value;
         }
     },
-});
-
-// Fechas del sprint actual formateadas
-const currentSprintDates = computed(() => {
-    if (!sprintStore.currentSprint) return "";
-    const desde = sprintStore.currentSprint.fechaDesde.toLocaleDateString("es-ES");
-    const hasta = sprintStore.currentSprint.fechaHasta.toLocaleDateString("es-ES");
-    return `${desde} - ${hasta}`;
 });
 
 const currentSprintDiasHabilesString = computed({

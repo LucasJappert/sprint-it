@@ -79,13 +79,13 @@ const { showEditTaskDialog, editingTask, closeDialogs, openEditTaskDialog, onSav
 
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
-    return option ? option.html : priority;
+    return option ? option.name : priority;
 };
 
 const getStateHtml = (state: string | undefined) => {
     if (!state) return "To Do"; // Default fallback
     const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
-    return option ? option.html : state;
+    return option ? option.name : state;
 };
 
 const sprintStore = useSprintStore();

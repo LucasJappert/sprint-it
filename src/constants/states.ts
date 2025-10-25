@@ -25,38 +25,32 @@ export interface StateOption {
     name: string;
     value: StateValue;
     color: string;
-    html: string;
 }
 
 export const STATE_OPTIONS: StateOption[] = [
     {
-        name: TODO_NAME,
+        name: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${TODO_COLOR}; flex-shrink: 0;"></span>${TODO_NAME}</span>`,
         value: TODO_NAME,
         color: TODO_COLOR,
-        html: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${TODO_COLOR}; flex-shrink: 0;"></span>${TODO_NAME}</span>`,
     },
     {
-        name: IN_PROGRESS_NAME,
+        name: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${IN_PROGRESS_COLOR}; flex-shrink: 0;"></span>${IN_PROGRESS_NAME}</span>`,
         value: IN_PROGRESS_NAME,
         color: IN_PROGRESS_COLOR,
-        html: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${IN_PROGRESS_COLOR}; flex-shrink: 0;"></span>${IN_PROGRESS_NAME}</span>`,
     },
     {
-        name: WAITING_NAME,
+        name: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${WAITING_COLOR}; flex-shrink: 0;"></span>${WAITING_NAME}</span>`,
         value: WAITING_NAME,
         color: WAITING_COLOR,
-        html: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${WAITING_COLOR}; flex-shrink: 0;"></span>${WAITING_NAME}</span>`,
     },
     {
-        name: READY_FOR_TEST_NAME,
+        name: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${READY_FOR_TEST_COLOR}; flex-shrink: 0;"></span>${READY_FOR_TEST_NAME}</span>`,
         value: READY_FOR_TEST_NAME,
         color: READY_FOR_TEST_COLOR,
-        html: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${READY_FOR_TEST_COLOR}; flex-shrink: 0;"></span>${READY_FOR_TEST_NAME}</span>`,
     },
     {
-        name: DONE_NAME,
+        name: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${DONE_COLOR}; flex-shrink: 0;"></span>${DONE_NAME}</span>`,
         value: DONE_NAME,
         color: DONE_COLOR,
-        html: `<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${DONE_COLOR}; flex-shrink: 0;"></span>${DONE_NAME}</span>`,
     },
 ];
