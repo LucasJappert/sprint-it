@@ -1,10 +1,11 @@
 <template>
-    <MyDialog :visible="visible" :min-width="800" @close="handleClose">
-        <div class="header">
+    <MyDialog :visible="visible" :min-width="800" @close="handleClose" persistent>
+        <div class="header flex-center justify-space-between">
             <h3 class="text-left">
                 <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
                 {{ isEditing ? "Edit Task" : "New Task" }}
             </h3>
+            <v-icon class="close-btn" @click="$emit('close')" :size="24">mdi-close</v-icon>
         </div>
         <div class="body-scroll">
             <!-- Título ocupando 100% del ancho -->
@@ -334,10 +335,16 @@ watch(
 );
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* Título ocupando 100% del ancho */
 .full-width {
     width: 100%;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Distribución en fila para persona asignada, prioridad y esfuerzos */

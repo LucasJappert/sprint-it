@@ -1,5 +1,5 @@
 <template>
-    <div v-if="visible" class="my-dialog-overlay" @click.self="closeDialog">
+    <div v-if="visible" class="my-dialog-overlay" @mousedown.self="closeDialog">
         <div class="my-dialog" :class="{ 'full-size': fullSize, 'bg-transparent': bgTransparent }" :style="myDialogStyles">
             <div :class="{ 'slot-container': hasMinWidth }">
                 <slot />

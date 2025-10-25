@@ -1,10 +1,11 @@
 <template>
-    <MyDialog :visible="visible" @close="$emit('close')">
-        <div class="header">
+    <MyDialog :visible="visible" :min-width="800" @close="handleClose" persistent>
+        <div class="header flex-center justify-space-between">
             <h3 class="text-left flex-center justify-start">
                 <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
                 {{ isEditing ? "Edit Item" : "New Item" }}
             </h3>
+            <v-icon class="close-btn" @click="$emit('close')" :size="24">mdi-close</v-icon>
         </div>
         <div class="body-scroll">
             <MyCard accent="gray">
@@ -332,9 +333,12 @@ const handleSave = async () => {
             order: props.existingItem?.order || props.nextOrder,
         };
         emit("save", item);
-        emit("close");
         resetForm();
     }
+};
+const handleClose = () => {
+    emit("close");
+    resetForm();
 };
 </script>
 
@@ -342,6 +346,12 @@ const handleSave = async () => {
 /* Título ocupando 100% del ancho */
 .full-width {
     width: 100%;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Distribución en fila para persona asignada, prioridad y esfuerzos */
