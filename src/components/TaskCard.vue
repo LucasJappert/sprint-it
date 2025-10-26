@@ -309,6 +309,7 @@ const onDragEnd = (e: DragEvent) => {
     box-sizing: border-box;
     position: relative;
     cursor: pointer;
+    user-select: none;
 
     &:hover {
         background: rgba($bg-secondary, 0.3);

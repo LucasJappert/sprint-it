@@ -27,7 +27,7 @@
         </div>
         <div class="item-col cols-title text-left">
             <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
-            <strong>{{ item.title }}</strong>
+            <span v-if="item.tasks.length">({{ item.tasks.length }})</span> <strong>{{ item.title }}</strong>
         </div>
         <div class="item-col cols-assigned">
             {{ assignedUserName }}
@@ -384,6 +384,7 @@ const onDrop = (e: DragEvent) => {
     box-sizing: border-box;
     position: relative;
     cursor: pointer;
+    user-select: none;
 
     &:hover,
     &.context-menu-open {

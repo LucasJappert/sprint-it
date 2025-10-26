@@ -24,6 +24,7 @@ const props = withDefaults(
         secondary?: boolean;
         danger?: boolean;
         accent?: AccentColor;
+        opacity?: number;
     }>(),
     {
         text: "",
@@ -34,6 +35,7 @@ const props = withDefaults(
         secondary: false,
         danger: false,
         accent: "primary",
+        opacity: 1,
     },
 );
 
@@ -50,7 +52,10 @@ const toUnit = (v?: number | string) => {
 
 const btnStyle = computed(() => {
     const mw = toUnit(props.minWidth);
-    return mw ? { minWidth: mw } : undefined;
+    const styles: Record<string, any> = {};
+    if (mw) styles.minWidth = mw;
+    if (props.opacity !== 1) styles.opacity = props.opacity;
+    return Object.keys(styles).length > 0 ? styles : undefined;
 });
 
 // Aplica colorClass, btnClass y flags condicionales
@@ -85,7 +90,7 @@ const classes = computed(() => [
     }
 
     &:hover:not(.v-btn--disabled) {
-        box-shadow: 0 0 10px rgba($primary, 0.9);
+        box-shadow: 0 0 5px rgba($primary, 0.9);
     }
     &.secondary {
         background-color: rgba(255, 255, 255, 0.08) !important; // gris suave sobre fondo oscuro

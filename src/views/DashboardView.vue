@@ -3,7 +3,7 @@
     <div class="dashboard">
         <!-- Botón para agregar nuevo item -->
         <div class="board-header">
-            <MyButton class="ml-2" @click="showAddItemDialog = true" btn-class="px-2" accent="blue" density="comfortable">
+            <MyButton class="ml-2" @click="showAddItemDialog = true" btn-class="px-2" accent="blue" density="comfortable" :opacity="0.8">
                 <v-icon left class="mr-2 blue">mdi-clipboard-text</v-icon>
                 New Item
             </MyButton>

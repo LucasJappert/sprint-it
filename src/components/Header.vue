@@ -5,7 +5,6 @@
                 <div style="width: 280px">
                     <MySelect
                         :options="sprintOptions"
-                        placeholder-title="Select Sprint"
                         @update:options="onSprintOptionsChange"
                         @action="onSprintAction"
                         density="compact"
@@ -30,7 +29,7 @@
         <v-spacer />
         <v-menu>
             <template #activator="{ props }">
-                <v-avatar v-bind="props" size="40" class="avatar" color="$primary">
+                <v-avatar v-bind="props" size="40" class="avatar primary">
                     <span class="avatar-text">{{ authStore.user?.name?.charAt(0).toUpperCase() }}</span>
                 </v-avatar>
             </template>
@@ -155,7 +154,7 @@ const exportData = async () => {
 
 <style scoped lang="scss">
 .v-app-bar {
-    box-shadow: 0 0 5px #00ffff50 !important;
+    box-shadow: 0 0 5px #222 !important;
 }
 
 .dashboard-header {
@@ -225,8 +224,8 @@ const exportData = async () => {
 
 .avatar {
     margin-right: 5px;
-    border: 2px solid $primary;
-    box-shadow: 0 0 5px $primary;
+    border: 2px solid rgba($primary, 0.5);
+    box-shadow: 0 0 5px rgba($primary, 0.5);
 }
 
 .avatar-text {
