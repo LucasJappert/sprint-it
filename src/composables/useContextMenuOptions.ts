@@ -121,6 +121,23 @@ export const useContextMenuOptions = () => {
             await sprintStore.updateItem(item.id, { priority: priority as any });
         };
 
+        const moveItemToSprint = async (targetSprintId: string) => {
+            await sprintStore.moveItemToSprint(item.id, targetSprintId);
+        };
+
+        const createSprintOptions = () => {
+            return sprintStore.sprints
+                .filter(sprint => sprint.id !== sprintStore.currentSprintId)
+                .map(sprint => ({
+                    key: `move-to-${sprint.id}`,
+                    label: sprint.titulo,
+                    icon: "mdi-swap-horizontal",
+                    action: async () => {
+                        await moveItemToSprint(sprint.id);
+                    },
+                }));
+        };
+
         return [
             {
                 key: "add-task",
@@ -148,6 +165,12 @@ export const useContextMenuOptions = () => {
                 label: "Change priority",
                 icon: "mdi-flag-variant",
                 submenu: createPriorityOptions(updateItemPriority),
+            },
+            {
+                key: "move-to-sprint",
+                label: "Move to sprint",
+                icon: "mdi-arrow-right-bold",
+                submenu: createSprintOptions(),
             },
             {
                 key: "delete",

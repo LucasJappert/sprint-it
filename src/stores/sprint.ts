@@ -250,6 +250,44 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    const moveItemToSprint = async (itemId: string, targetSprintId: string) => {
+        loadingStore.setLoading(true);
+        try {
+            const currentSprint = sprints.value.find((s) => s.id === currentSprintId.value);
+            const targetSprint = sprints.value.find((s) => s.id === targetSprintId);
+
+            if (!currentSprint || !targetSprint) {
+                throw new Error("Sprint actual o destino no encontrado");
+            }
+
+            const itemIndex = currentSprint.items.findIndex((i) => i.id === itemId);
+            if (itemIndex === -1) {
+                throw new Error("Item no encontrado en el sprint actual");
+            }
+
+            const item = currentSprint.items[itemIndex];
+            if (!item) {
+                throw new Error("Item no encontrado");
+            }
+
+            // Remover del sprint actual
+            currentSprint.items.splice(itemIndex, 1);
+            if (await validateSprintItemsBeforeSave(currentSprint)) {
+                await saveSprint(currentSprint);
+            }
+
+            // Agregar al sprint destino
+            targetSprint.items.push(item);
+            if (await validateSprintItemsBeforeSave(targetSprint)) {
+                await saveSprint(targetSprint);
+            }
+
+            notifyOk("Item movido", `El item "${item.title}" ha sido movido a ${targetSprint.titulo}`);
+        } finally {
+            loadingStore.setLoading(false);
+        }
+    };
+
     // Función de validación para prevenir pérdida de datos
     const validateSprintItemsBeforeSave = async (sprint: Sprint): Promise<boolean> => {
         const currentItemsCount = sprintItemsBackup.value.length;
@@ -310,5 +348,6 @@ export const useSprintStore = defineStore("sprint", () => {
         recalculateSprintDates,
         updateSprintDiasHabiles,
         updateTask,
+        moveItemToSprint,
     };
 });
