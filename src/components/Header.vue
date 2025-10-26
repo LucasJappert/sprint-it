@@ -41,6 +41,10 @@
                     <v-icon>mdi-download</v-icon>
                     <span>Export Data</span>
                 </div>
+                <div class="menu-item" @click="importItems">
+                    <v-icon>mdi-upload</v-icon>
+                    <span>Importar items</span>
+                </div>
                 <div class="menu-item" @click="logout">
                     <v-icon>mdi-logout</v-icon>
                     <span>Logout</span>
@@ -51,9 +55,11 @@
 </template>
 
 <script setup lang="ts">
+import MyAlerts from "@/plugins/my-alerts";
 import { exportAllData } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
+import { createFileInput, processImportedItems } from "@/utils/itemImport";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 
@@ -148,6 +154,63 @@ const exportData = async () => {
     } catch (error) {
         console.error("Error exporting data:", error);
         alert("Error exporting data. Please try again.");
+    }
+};
+
+const importItems = async () => {
+    try {
+        // Seleccionar archivo
+        const file = await createFileInput();
+        if (!file) return;
+
+        // Leer y procesar archivo
+        const text = await file.text();
+        const rawItems: any[] = JSON.parse(text);
+        const result = processImportedItems(rawItems);
+
+        // Obtener info del sprint actual
+        const currentSprint = sprintStore.currentSprint;
+        const currentItemsCount = currentSprint?.items?.length || 0;
+
+        // Mostrar confirmación
+        const html = `
+            <p><strong>Importar items al sprint actual</strong></p>
+            <p><strong>Sprint actual:</strong> ${currentSprint?.titulo || "N/A"}</p>
+            <p><strong>Items actuales:</strong> ${currentItemsCount}</p>
+            <br>
+            <p><strong>Items a importar:</strong> ${result.totalItems}</p>
+            <p><strong>Tasks a importar:</strong> ${result.totalTasks}</p>
+            <br>
+            <p><strong>⚠️ Importante:</strong> Esta acción <strong>eliminará todos los items actuales</strong> del sprint antes de importar los nuevos.</p>
+            <br>
+            <p>¿Estás seguro de que deseas continuar?</p>
+            <p><em>Los IDs serán regenerados y los valores inválidos serán corregidos.</em></p>
+        `;
+
+        const confirmed = await MyAlerts.confirmAsync("Confirmar importación", html, "warning");
+        if (!confirmed) return;
+
+        // Limpiar todos los items actuales del sprint
+        if (currentSprint?.items) {
+            const itemsToDelete = [...currentSprint.items];
+            for (const item of itemsToDelete) {
+                await sprintStore.deleteItem(item.id);
+            }
+        }
+
+        // Importar items
+        for (const item of result.items) {
+            await sprintStore.addItem(item);
+        }
+
+        // Mostrar mensaje de éxito
+        await MyAlerts.okMessageAsync("Importación exitosa", `Se importaron ${result.totalItems} items con ${result.totalTasks} tasks exitosamente.`);
+    } catch (error) {
+        console.error("Error importing items:", error);
+        await MyAlerts.okMessageAsync(
+            "Error de importación",
+            `Hubo un error al importar los items: ${error instanceof Error ? error.message : "Error desconocido"}`,
+        );
     }
 };
 </script>

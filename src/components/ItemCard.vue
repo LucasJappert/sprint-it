@@ -22,7 +22,7 @@
             </v-btn>
         </div>
 
-        <div class="item-col cols-order">
+        <div class="item-col cols-order" :title="item.order.toString()">
             {{ item.order }}
         </div>
         <div class="item-col cols-title text-left">
