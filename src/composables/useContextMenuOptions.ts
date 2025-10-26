@@ -41,9 +41,6 @@ export const useContextMenuOptions = () => {
         return STATE_OPTIONS.map(state => ({
             key: `state-${state.value}`,
             label: state.name,
-            icon: "mdi-circle",
-            color: state.color,
-            iconStyle: `font-size: 12px; color: ${state.color};`,
             action: async () => {
                 await updateFunction(state.value);
             },
@@ -54,8 +51,6 @@ export const useContextMenuOptions = () => {
         return PRIORITY_OPTIONS.map(priority => ({
             key: `priority-${priority.value}`,
             label: priority.name,
-            icon: "mdi-flag",
-            color: priority.color,
             action: async () => {
                 await updateFunction(priority.value);
             },

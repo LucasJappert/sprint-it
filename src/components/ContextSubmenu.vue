@@ -17,7 +17,7 @@
                 >
                     {{ !option.icon.startsWith("mdi-") ? option.icon : "" }}
                 </i>
-                <span class="context-menu-text">{{ option.label }}</span>
+                <span class="context-menu-text" v-html="option.label"></span>
             </div>
         </div>
     </Teleport>
