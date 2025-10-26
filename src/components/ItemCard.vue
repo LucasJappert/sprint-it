@@ -35,7 +35,7 @@
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(item.state || STATE_VALUES.TODO)"></span>
         </div>
-        <div class="item-col cols-effort">{{ item.estimatedEffort }} - {{ item.actualEffort }}</div>
+        <div class="item-col cols-effort">{{ calculatedEstimatedEffort }} - {{ calculatedActualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
             <span class="priority-content" v-html="getPriorityHtml(item.priority)"></span>
         </div>
@@ -107,6 +107,16 @@ const highlightPosition = computed(() => {
 });
 
 const assignedUserName = ref("");
+
+const calculatedEstimatedEffort = computed(() => {
+    if (props.item.tasks.length === 0) return props.item.estimatedEffort;
+    return props.item.tasks.reduce((sum, task) => sum + task.estimatedEffort, 0);
+});
+
+const calculatedActualEffort = computed(() => {
+    if (props.item.tasks.length === 0) return props.item.actualEffort;
+    return props.item.tasks.reduce((sum, task) => sum + task.actualEffort, 0);
+});
 
 const loadAssignedUserName = async () => {
     if (!props.item.assignedUser) {
@@ -298,12 +308,24 @@ const moveTaskToDifferentItem = (draggedTask: any, sourceItem: any, insertIndex:
         sourceItem.tasks.forEach((task: any, idx: number) => {
             task.order = idx + 1;
         });
+
+        // Recalcular esfuerzos del item fuente si tiene tasks restantes
+        if (sourceItem.tasks.length > 0) {
+            sourceItem.estimatedEffort = sourceItem.tasks.reduce((sum: number, task: any) => sum + task.estimatedEffort, 0);
+            sourceItem.actualEffort = sourceItem.tasks.reduce((sum: number, task: any) => sum + task.actualEffort, 0);
+        }
     }
 
     targetItem.tasks.splice(insertIndex, 0, draggedTask);
     targetItem.tasks.forEach((task: any, idx: number) => {
         task.order = idx + 1;
     });
+
+    // Recalcular esfuerzos del item destino
+    if (targetItem.tasks.length > 0) {
+        targetItem.estimatedEffort = targetItem.tasks.reduce((sum: number, task: any) => sum + task.estimatedEffort, 0);
+        targetItem.actualEffort = targetItem.tasks.reduce((sum: number, task: any) => sum + task.actualEffort, 0);
+    }
 
     emit("taskReceived", props.item.id);
     if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);

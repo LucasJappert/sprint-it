@@ -112,6 +112,13 @@ export const useSprintStore = defineStore("sprint", () => {
                         const task = item.tasks[taskIndex];
                         if (task) {
                             Object.assign(task, updatedTask);
+
+                            // Recalcular esfuerzos del item padre si tiene tasks
+                            if (item.tasks.length > 0) {
+                                item.estimatedEffort = item.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
+                                item.actualEffort = item.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
+                            }
+
                             if (await validateSprintItemsBeforeSave(currentSprint.value)) {
                                 await saveSprint(currentSprint.value);
                             }

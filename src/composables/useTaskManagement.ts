@@ -43,6 +43,13 @@ export const useTaskManagement = () => {
                 currentItem.value.tasks[taskIndex] = task;
                 // Actualizar editingTask para refrescar el diálogo
                 editingTask.value = task;
+
+                // Recalcular esfuerzos del item padre si tiene tasks
+                if (currentItem.value.tasks.length > 0) {
+                    currentItem.value.estimatedEffort = currentItem.value.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
+                    currentItem.value.actualEffort = currentItem.value.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
+                }
+
                 if (sprintStore.currentSprint) {
                     saveSprint(sprintStore.currentSprint);
                 }
@@ -51,6 +58,13 @@ export const useTaskManagement = () => {
             // Agregar nueva task
             task.order = currentItem.value.tasks.length + 1;
             currentItem.value.tasks.push(task);
+
+            // Recalcular esfuerzos del item padre si tiene tasks
+            if (currentItem.value.tasks.length > 0) {
+                currentItem.value.estimatedEffort = currentItem.value.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
+                currentItem.value.actualEffort = currentItem.value.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
+            }
+
             if (sprintStore.currentSprint) {
                 saveSprint(sprintStore.currentSprint);
             }
@@ -72,6 +86,13 @@ export const useTaskManagement = () => {
         item.tasks.forEach((task, idx) => {
             task.order = idx + 1;
         });
+
+        // Recalcular esfuerzos del item si tiene tasks restantes
+        if (item.tasks.length > 0) {
+            item.estimatedEffort = item.tasks.reduce((sum, task) => sum + task.estimatedEffort, 0);
+            item.actualEffort = item.tasks.reduce((sum, task) => sum + task.actualEffort, 0);
+        }
+
         if (sprintStore.currentSprint) {
             saveSprint(sprintStore.currentSprint);
         }
