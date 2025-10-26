@@ -1,6 +1,7 @@
 import "@mdi/font/css/materialdesignicons.css";
 import { createPinia } from "pinia";
 import { createApp } from "vue";
+import VueApexCharts from "vue3-apexcharts";
 import { createVuetify } from "vuetify";
 import { aliases, mdi } from "vuetify/iconsets/mdi";
 import "vuetify/styles";
@@ -35,6 +36,7 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(vuetify);
+app.use(VueApexCharts);
 app.use(MyAlerts);
 
 // Initialize auth after Pinia is set up

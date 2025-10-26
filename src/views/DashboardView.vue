@@ -56,6 +56,9 @@
             @close="closeDialogs"
             @save="saveTask"
         />
+
+        <!-- Gráfico de progreso de usuarios -->
+        <UserProgressChart v-if="chartReady" />
     </div>
 </template>
 
@@ -64,9 +67,11 @@ import Header from "@/components/Header.vue";
 import ItemCard from "@/components/ItemCard.vue";
 import ItemDialog from "@/components/ItemDialog.vue";
 import TaskDialog from "@/components/TaskDialog.vue";
+import UserProgressChart from "@/components/UserProgressChart.vue";
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { saveSprint } from "@/services/firestore";
 import { useDragDropStore } from "@/stores/dragDrop";
+import { useLoadingStore } from "@/stores/loading";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item } from "@/types";
 import { eventBus } from "@/utils/eventBus";
@@ -74,6 +79,10 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
+const loadingStore = useLoadingStore();
+
+// Estado para controlar cuándo mostrar el gráfico (solo después de carga inicial)
+const chartReady = ref(false);
 
 // Estado para el diálogo de tasks
 const { showAddTaskDialog, showEditTaskDialog, editingTask, currentItem, openAddTaskDialog, openEditTaskDialog, closeDialogs, saveTask } = useTaskManagement();
@@ -119,6 +128,9 @@ onMounted(async () => {
     if (sprintStore.sprints.length === 0) {
         await sprintStore.generateSprints();
     }
+
+    // Marcar el gráfico como listo después de la carga inicial
+    chartReady.value = true;
 
     // Escuchar eventos del eventBus
     eventBus.on("taskCreated", onTaskCreated);
