@@ -41,6 +41,8 @@ export const useTaskManagement = () => {
             const taskIndex = currentItem.value.tasks.findIndex((t) => t.id === editingTask.value!.id);
             if (taskIndex !== -1) {
                 currentItem.value.tasks[taskIndex] = task;
+                // Actualizar editingTask para refrescar el diálogo
+                editingTask.value = task;
                 if (sprintStore.currentSprint) {
                     saveSprint(sprintStore.currentSprint);
                 }

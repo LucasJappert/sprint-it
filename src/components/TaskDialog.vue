@@ -89,12 +89,12 @@ const hasChanges = computed(() => {
     if (!props.existingTask) return title.value.trim() !== ""; // Para nuevas tasks, habilitar si hay título
 
     const changes =
-        title.value !== props.existingTask.title ||
-        detail.value !== props.existingTask.detail ||
-        priority.value !== props.existingTask.priority ||
-        state.value !== (props.existingTask.state || STATE_VALUES.TODO) ||
-        parseInt(estimatedEffort.value) !== props.existingTask.estimatedEffort ||
-        parseInt(actualEffort.value) !== props.existingTask.actualEffort ||
+        title.value !== originalTitle.value ||
+        detail.value !== originalDetail.value ||
+        priority.value !== originalPriority.value ||
+        state.value !== originalState.value ||
+        parseInt(estimatedEffort.value) !== parseInt(originalEstimatedEffort.value) ||
+        parseInt(actualEffort.value) !== parseInt(originalActualEffort.value) ||
         assignedUser.value !== originalAssignedUser.value;
 
     return changes;
@@ -110,6 +110,14 @@ const state = ref(STATE_VALUES.TODO);
 const estimatedEffort = ref("");
 const actualEffort = ref("");
 const assignedUser = ref("");
+
+// Guardar el estado original para comparación
+const originalTitle = ref("");
+const originalDetail = ref("");
+const originalPriority = ref(PRIORITY_VALUES.NORMAL);
+const originalState = ref(STATE_VALUES.TODO);
+const originalEstimatedEffort = ref("");
+const originalActualEffort = ref("");
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
 
@@ -187,6 +195,15 @@ const setFormValuesFromTask = (task: Task, assignedUserValue: string) => {
     estimatedEffort.value = task.estimatedEffort.toString();
     actualEffort.value = task.actualEffort.toString();
     assignedUser.value = assignedUserValue;
+
+    // Guardar valores originales para comparación
+    originalTitle.value = task.title;
+    originalDetail.value = task.detail;
+    originalPriority.value = task.priority as any;
+    originalState.value = (task.state || STATE_VALUES.TODO) as any;
+    originalEstimatedEffort.value = task.estimatedEffort.toString();
+    originalActualEffort.value = task.actualEffort.toString();
+    originalAssignedUser.value = assignedUserValue;
 };
 
 const selectAssignedUserOption = (assignedUserValue: string) => {
@@ -231,6 +248,15 @@ const resetFormForNew = () => {
     estimatedEffort.value = "";
     actualEffort.value = "";
     assignedUser.value = "";
+
+    // Limpiar valores originales
+    originalTitle.value = "";
+    originalDetail.value = "";
+    originalPriority.value = PRIORITY_VALUES.NORMAL;
+    originalState.value = STATE_VALUES.TODO;
+    originalEstimatedEffort.value = "";
+    originalActualEffort.value = "";
+    originalAssignedUser.value = "";
 
     // Limpiar selección
     assignedUserOptions.value.forEach((option) => {

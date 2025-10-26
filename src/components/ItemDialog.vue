@@ -96,16 +96,24 @@ const isEditing = computed(() => !!props.existingItem);
 const originalAssignedUser = ref("");
 const titleInputRef = ref();
 
+// Guardar el estado original para comparación
+const originalTitle = ref("");
+const originalDetail = ref("");
+const originalPriority = ref(PRIORITY_VALUES.NORMAL as PriorityValue);
+const originalState = ref(STATE_VALUES.TODO as StateValue);
+const originalEstimatedEffort = ref("");
+const originalActualEffort = ref("");
+
 const hasChanges = computed(() => {
     if (!props.existingItem) return newItem.value.title.trim() !== ""; // Para nuevos items, habilitar si hay título
 
     const changes =
-        newItem.value.title !== props.existingItem.title ||
-        newItem.value.detail !== props.existingItem.detail ||
-        newItem.value.priority !== props.existingItem.priority ||
-        newItem.value.state !== (props.existingItem.state || STATE_VALUES.TODO) ||
-        parseInt(newItem.value.estimatedEffort) !== props.existingItem.estimatedEffort ||
-        parseInt(newItem.value.actualEffort) !== props.existingItem.actualEffort ||
+        newItem.value.title !== originalTitle.value ||
+        newItem.value.detail !== originalDetail.value ||
+        newItem.value.priority !== originalPriority.value ||
+        newItem.value.state !== originalState.value ||
+        parseInt(newItem.value.estimatedEffort) !== parseInt(originalEstimatedEffort.value) ||
+        parseInt(newItem.value.actualEffort) !== parseInt(originalActualEffort.value) ||
         newItem.value.assignedUser !== originalAssignedUser.value;
 
     return changes;
@@ -208,7 +216,13 @@ const resetForm = async () => {
                 assignedUser: assignedUserValue,
             };
 
-            // Guardar el valor original del assignedUser para comparación
+            // Guardar valores originales para comparación
+            originalTitle.value = props.existingItem.title;
+            originalDetail.value = props.existingItem.detail;
+            originalPriority.value = props.existingItem.priority as PriorityValue;
+            originalState.value = (props.existingItem.state || STATE_VALUES.TODO) as StateValue;
+            originalEstimatedEffort.value = props.existingItem.estimatedEffort.toString();
+            originalActualEffort.value = props.existingItem.actualEffort.toString();
             originalAssignedUser.value = assignedUserValue;
 
             // Esperar a que las opciones estén cargadas si no lo están
@@ -242,6 +256,15 @@ const resetForm = async () => {
                 actualEffort: "",
                 assignedUser: "",
             };
+
+            // Limpiar valores originales
+            originalTitle.value = "";
+            originalDetail.value = "";
+            originalPriority.value = PRIORITY_VALUES.NORMAL;
+            originalState.value = STATE_VALUES.TODO;
+            originalEstimatedEffort.value = "";
+            originalActualEffort.value = "";
+            originalAssignedUser.value = "";
 
             // Limpiar selección
             assignedUserOptions.value.forEach((option) => {
