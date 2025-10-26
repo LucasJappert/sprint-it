@@ -28,7 +28,7 @@
                         <span class="comment-author" :style="{ color: getAuthorColor(comment.userId) }">
                             {{ authorNames[comment.userId] || "Loading..." }}
                         </span>
-                        <span class="comment-date"> | {{ formatDate(comment.createdAt) }}</span>
+                        <span class="comment-date"> | {{ formatDate(comment.createdAt) }} | {{ formatISODate(comment.createdAt) }}</span>
                     </div>
 
                     <!-- Edit/Delete buttons for comment author -->
@@ -245,6 +245,13 @@ const formatDate = (date: Date): string => {
         return days === 1 ? "1 day ago" : `${days} days ago`;
     }
     return commentDate.toLocaleDateString();
+};
+
+const formatISODate = (date: Date): string => {
+    return new Date(date)
+        .toISOString()
+        .replace("T", " ")
+        .replace(/\.\d{3}Z$/, "");
 };
 
 const startEditComment = (comment: Comment) => {

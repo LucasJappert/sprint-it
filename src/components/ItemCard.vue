@@ -197,7 +197,7 @@ const onSaveEditItem = async (item: Item) => {
         actualEffort: item.actualEffort,
         assignedUser: item.assignedUser,
     });
-    showEditItemDialog.value = false;
+    // No cerrar el diálogo para que persista visible después de guardar
 };
 
 const onRightClick = (event: MouseEvent) => {

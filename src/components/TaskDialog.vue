@@ -147,6 +147,23 @@ onMounted(() => {
     loadAssignedUserOptions();
 });
 
+const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.ctrlKey && event.key === "s") {
+        event.preventDefault();
+        if (canSave.value) {
+            handleSave();
+        }
+    }
+};
+
+onMounted(() => {
+    document.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+    document.removeEventListener("keydown", handleKeyDown);
+});
+
 const getAssignedUserValue = async (task: Task): Promise<string> => {
     if (!task.assignedUser) return "";
 
@@ -300,7 +317,7 @@ const handleSave = async () => {
             order: props.existingTask?.order || 0,
         };
         emit("save", task);
-        resetForm();
+        // No resetForm() para que el diálogo persista visible
     }
 };
 

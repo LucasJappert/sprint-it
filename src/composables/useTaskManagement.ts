@@ -57,7 +57,7 @@ export const useTaskManagement = () => {
             eventBus.newTaskCreated(currentItem.value);
         }
 
-        closeDialogs();
+        // No cerrar diálogos para que persistan visibles después de guardar
     };
 
     const onSaveEditTask = (task: Task) => {

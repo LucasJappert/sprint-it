@@ -63,7 +63,7 @@ import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { Comment, Item } from "@/types";
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 interface Props {
     visible: boolean;
@@ -154,6 +154,21 @@ const loadAssignedUserOptions = async () => {
 
 onMounted(() => {
     loadAssignedUserOptions();
+});
+
+const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.ctrlKey && event.key === "s") {
+        event.preventDefault();
+        if (canSave.value) return handleSave();
+    }
+};
+
+onMounted(() => {
+    document.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+    document.removeEventListener("keydown", handleKeyDown);
 });
 
 const newItem = ref<NewItemForm>({
@@ -333,7 +348,7 @@ const handleSave = async () => {
             order: props.existingItem?.order || props.nextOrder,
         };
         emit("save", item);
-        resetForm();
+        // No resetForm() para que el diálogo persista visible
     }
 };
 const handleClose = () => {
