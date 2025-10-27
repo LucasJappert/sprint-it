@@ -36,8 +36,8 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
 
 4. **Configuration Files:**
 
-    - Copy `.env.example` to `.env` and fill in your Firebase web app credentials
-    - Copy `config.json.example` to `config.json` and fill in your Firebase service account credentials and Supabase settings
+    - Copy `.env.example` to `.env` and fill in your Firebase web app credentials and Supabase settings
+    - Copy `config.json.example` to `config.json` and fill in your Firebase service account credentials
 
     **Note**: `config.json` contains sensitive credentials and should never be committed to version control.
 
@@ -65,7 +65,7 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
     # Copy the template file
     cp .env.example .env
 
-    # Edit .env with your actual Firebase credentials
+    # Edit .env with your actual Firebase and Supabase credentials
     # IMPORTANT: Never commit your .env file with real credentials!
     ```
 
@@ -80,15 +80,15 @@ A Vue 3 application for managing sprints, items, and tasks with custom authentic
 
 ### Required Files (Not Included in Repository):
 
--   **`.env`**: Your Firebase project credentials
+-   **`.env`**: Your Firebase project credentials and Supabase settings
 
     -   Copy from `.env.example`
-    -   Fill in your actual Firebase config values
+    -   Fill in your actual Firebase config values and Supabase settings
     -   **Never commit this file!**
 
--   **`config.json`**: Configuration file for Firebase service account and Supabase settings
+-   **`config.json`**: Configuration file for Firebase service account
     -   Copy from `config.json.example`
-    -   Fill in your actual Firebase service account credentials and Supabase configuration
+    -   Fill in your actual Firebase service account credentials
     -   **Never commit this file!**
     -   **Security Note**: Contains sensitive credentials - keep it secure and never share
 
@@ -101,9 +101,14 @@ VITE_FIREBASE_PROJECT_ID=your-project-id
 VITE_FIREBASE_STORAGE_BUCKET=your-project-id.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
+
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 ```
 
-**Get these values from:** Firebase Console → Project Settings → General → Your apps → Web app
+**Get Firebase values from:** Firebase Console → Project Settings → General → Your apps → Web app
+
+**Get Supabase values from:** Supabase Dashboard → Settings → API
 
 ## Default User
 
