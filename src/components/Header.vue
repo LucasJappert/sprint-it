@@ -60,7 +60,7 @@ import { exportAllData } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import { createFileInput, processImportedItems } from "@/utils/itemImport";
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();

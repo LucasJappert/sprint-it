@@ -158,7 +158,7 @@ const push = (variant: NotifyVariant, opts: NotifyOptions) => {
 export const dismiss = (id: number) => {
     let idx = notificationsState.items.findIndex(n => n.id === id);
     if (idx !== -1) {
-        const it = notificationsState.items[idx];
+        const it = notificationsState.items[idx]!;
         if (it.raf) cancelAnimationFrame(it.raf);
         notificationsState.items.splice(idx, 1);
         maybeDequeueNext();

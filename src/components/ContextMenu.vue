@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 import ContextSubmenu from "./ContextSubmenu.vue";
 
 export interface ContextMenuOption {

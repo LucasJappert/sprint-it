@@ -30,7 +30,7 @@
                 <v-divider class="my-divider" />
                 <div class="actions-row">
                     <MyButton secondary icon="mdi-broom" text="Limpiar" @click="onClear" />
-          <MyButton :accent="accent" icon="mdi-check" text="Aceptar" @click="onDone" />
+                    <MyButton :accent="accent" icon="mdi-check" text="Aceptar" @click="onDone" />
                 </div>
             </v-card>
         </v-menu>
@@ -39,11 +39,11 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import type { AccentColor } from "../../types";
 
 type Mode = "single" | "range";
 type Dateish = string | Date;
 type ModelValue = string | string[];
-import type { AccentColor } from "../../types";
 
 const props = withDefaults(
     defineProps<{
@@ -58,7 +58,7 @@ const props = withDefaults(
         emitPartialOnDone?: boolean;
         required?: boolean;
         density?: "default" | "compact";
-    accent?: AccentColor;
+        accent?: AccentColor;
     }>(),
     {
         mode: "single",
@@ -95,10 +95,10 @@ const normalizeISO = (input?: string | null): string => {
     if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
         const [d, m, y] = s.split("/").map(Number);
-        const dt = new Date(y, m - 1, d);
+        const dt = new Date(y ?? 0, (m ?? 0) - 1, d ?? 0);
         if (Number.isNaN(dt.getTime())) return "";
-        const mm = String(m).padStart(2, "0");
-        const dd = String(d).padStart(2, "0");
+        const mm = String(m ?? 0).padStart(2, "0");
+        const dd = String(d ?? 0).padStart(2, "0");
         return `${y}-${mm}-${dd}`;
     }
     return "";
@@ -113,7 +113,7 @@ const endpointsFromVal = (val: Dateish | Dateish[] | null): string[] => {
     const iso = [...new Set(arr.map(toISO))].filter(Boolean) as string[];
     if (iso.length <= 1) return iso;
     const sorted = [...iso].sort();
-    return [sorted[0], sorted[sorted.length - 1]];
+    return [sorted[0]!, sorted[sorted.length - 1]!];
 };
 const expandRangeInclusive = (startISO: string, endISO: string): string[] => {
     const a = normalizeISO(startISO);
@@ -131,7 +131,7 @@ const toLocal = (isoRaw: string): string => {
     const iso = normalizeISO(isoRaw);
     if (!iso) return "";
     const [y, m, d] = iso.split("-").map(Number);
-    return fmt.value.format(new Date(y, m - 1, d));
+    return fmt.value.format(new Date(y ?? 0, (m ?? 0) - 1, d ?? 0));
 };
 const updateDisplay = () => {
     const [aRaw, bRaw] = isoEndpoints.value;
@@ -166,8 +166,8 @@ const onPick = (val: Dateish | Dateish[] | null) => {
     const endpoints = endpointsFromVal(val);
     isoEndpoints.value = endpoints;
     let expanded: string[] = [];
-    if (endpoints.length === 2) expanded = expandRangeInclusive(endpoints[0], endpoints[1]);
-    else if (endpoints.length === 1) expanded = [endpoints[0]];
+    if (endpoints.length === 2) expanded = expandRangeInclusive(endpoints[0]!, endpoints[1]!);
+    else if (endpoints.length === 1) expanded = [endpoints[0]!];
     pickerValue.value = expanded;
     emit("update:modelValue", [...expanded]);
     updateDisplay();
@@ -184,8 +184,8 @@ const onDone = () => {
         menu.value = false;
         return;
     }
-    if (isoEndpoints.value.length === 2) emit("selected", expandRangeInclusive(isoEndpoints.value[0], isoEndpoints.value[1]));
-    else if (props.emitPartialOnDone && isoEndpoints.value.length === 1) emit("selected", [isoEndpoints.value[0]]);
+    if (isoEndpoints.value.length === 2) emit("selected", expandRangeInclusive(isoEndpoints.value[0]!, isoEndpoints.value[1]!));
+    else if (props.emitPartialOnDone && isoEndpoints.value.length === 1) emit("selected", [isoEndpoints.value[0]!]);
     else emit("selected", []);
     menu.value = false;
 };
@@ -205,8 +205,8 @@ watch(
         const endpoints = endpointsFromVal(arr);
         isoEndpoints.value = endpoints;
         let expanded: string[] = [];
-        if (endpoints.length === 2) expanded = expandRangeInclusive(endpoints[0], endpoints[1]);
-        else if (endpoints.length === 1) expanded = [endpoints[0]];
+        if (endpoints.length === 2) expanded = expandRangeInclusive(endpoints[0]!, endpoints[1]!);
+        else if (endpoints.length === 1) expanded = [endpoints[0]!];
         pickerValue.value = expanded;
         updateDisplay();
     },

@@ -61,7 +61,7 @@ import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import type { Comment, Item, Task } from "@/types";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 const props = defineProps<{
     visible: boolean;
