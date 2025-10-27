@@ -1,6 +1,7 @@
 import { PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_VALUES } from "@/constants/states";
-import type { Item, Task } from "@/types";
+import { getAllUsers } from "@/services/firestore";
+import type { Item, Task, User } from "@/types";
 
 /**
  * Utilidad para importar items desde archivos JSON
@@ -21,9 +22,42 @@ export interface ImportValidationError {
 }
 
 /**
+ * Busca el ID de usuario por username en una cadena de texto que puede contener nombre completo y email
+ */
+const findUserIdByText = (text: string, users: User[]): string | null => {
+    if (!text || typeof text !== "string") return null;
+
+    const lowerText = text.toLowerCase();
+
+    // Primero buscar por username exacto
+    for (const user of users) {
+        if (user.username && lowerText.includes(user.username.toLowerCase())) {
+            return user.id;
+        }
+    }
+
+    // Si no se encuentra por username, buscar por email
+    for (const user of users) {
+        if (user.email && lowerText.includes(user.email.toLowerCase())) {
+            return user.id;
+        }
+    }
+
+    // Si no se encuentra por email, buscar por nombre completo
+    for (const user of users) {
+        const fullName = `${user.name} ${user.lastName}`.toLowerCase();
+        if (lowerText.includes(fullName)) {
+            return user.id;
+        }
+    }
+
+    return null;
+};
+
+/**
  * Valida y sanitiza un item importado desde JSON
  */
-export const sanitizeImportedItem = (rawItem: any, index: number): Item => {
+export const sanitizeImportedItem = async (rawItem: any, index: number, users: User[]): Promise<Item> => {
     // Validar campos requeridos
     if (!rawItem.title || typeof rawItem.title !== "string") {
         throw new Error(`Item ${index + 1}: El campo 'title' es requerido y debe ser un string`);
@@ -40,7 +74,7 @@ export const sanitizeImportedItem = (rawItem: any, index: number): Item => {
     // Sanitizar tasks si existen
     const sanitizedTasks: Task[] = [];
     if (Array.isArray(rawItem.tasks)) {
-        rawItem.tasks.forEach((rawTask: any, taskIndex: number) => {
+        for (const [taskIndex, rawTask] of rawItem.tasks.entries()) {
             if (!rawTask.title || typeof rawTask.title !== "string") {
                 throw new Error(`Item ${index + 1}, Task ${taskIndex + 1}: El campo 'title' es requerido y debe ser un string`);
             }
@@ -51,6 +85,9 @@ export const sanitizeImportedItem = (rawItem: any, index: number): Item => {
             // Validar y sanitizar priority de task
             const taskPriority = validPriorities.includes(rawTask.priority) ? rawTask.priority : PRIORITY_VALUES.NORMAL;
 
+            // Buscar assignedUser para task
+            const taskAssignedUser = rawTask.assignedUser ? findUserIdByText(rawTask.assignedUser, users) : null;
+
             const sanitizedTask: Task = {
                 id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Nuevo ID
                 title: rawTask.title,
@@ -59,12 +96,15 @@ export const sanitizeImportedItem = (rawItem: any, index: number): Item => {
                 state: taskState,
                 estimatedEffort: typeof rawTask.estimatedEffort === "number" ? rawTask.estimatedEffort : 0,
                 actualEffort: typeof rawTask.actualEffort === "number" ? rawTask.actualEffort : 0,
-                assignedUser: rawTask.assignedUser || null,
+                assignedUser: taskAssignedUser,
                 order: typeof rawTask.order === "number" ? rawTask.order : taskIndex + 1,
             };
             sanitizedTasks.push(sanitizedTask);
-        });
+        }
     }
+
+    // Buscar assignedUser para item
+    const itemAssignedUser = rawItem.assignedUser ? findUserIdByText(rawItem.assignedUser, users) : null;
 
     // Crear item sanitizado con nuevo ID
     const sanitizedItem: Item = {
@@ -75,7 +115,7 @@ export const sanitizeImportedItem = (rawItem: any, index: number): Item => {
         state: itemState,
         estimatedEffort: typeof rawItem.estimatedEffort === "number" ? rawItem.estimatedEffort : 0,
         actualEffort: typeof rawItem.actualEffort === "number" ? rawItem.actualEffort : 0,
-        assignedUser: rawItem.assignedUser || null,
+        assignedUser: itemAssignedUser,
         tasks: sanitizedTasks,
         order: typeof rawItem.order === "number" ? rawItem.order : index + 1,
     };
@@ -86,15 +126,20 @@ export const sanitizeImportedItem = (rawItem: any, index: number): Item => {
 /**
  * Procesa un array de items crudos y devuelve items sanitizados
  */
-export const processImportedItems = (rawItems: any[]): ImportResult => {
+export const processImportedItems = async (rawItems: any[]): Promise<ImportResult> => {
     if (!Array.isArray(rawItems)) {
         throw new Error("El archivo debe contener un array de items");
     }
 
+    // Obtener todos los usuarios para buscar assignedUser
+    const users = await getAllUsers();
+
     // Sanitizar todos los items con orden correcto
-    const sanitizedItems: Item[] = rawItems.map((rawItem, index) =>
-        sanitizeImportedItem(rawItem, index)
-    );
+    const sanitizedItems: Item[] = [];
+    for (const [index, rawItem] of rawItems.entries()) {
+        const sanitizedItem = await sanitizeImportedItem(rawItem, index, users);
+        sanitizedItems.push(sanitizedItem);
+    }
 
     // Reordenar items y tasks con números consecutivos
     sanitizedItems.forEach((item, itemIndex) => {

@@ -1,4 +1,4 @@
-import type { Comment, Sprint } from "@/types";
+import type { Comment, Sprint, User } from "@/types";
 import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -158,6 +158,14 @@ export const updateComment = async (commentId: string, updates: Partial<Pick<Com
 export const deleteComment = async (commentId: string) => {
     const docRef = doc(commentsCollection, commentId);
     await deleteDoc(docRef);
+};
+
+export const getAllUsers = async (): Promise<User[]> => {
+    const querySnapshot = await getDocs(usersCollection);
+    return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+    })) as User[];
 };
 
 export const exportAllData = async () => {

@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar color="rgba(0, 0, 0, 0.2)" dark height="50">
+    <v-app-bar color="rgba(0, 0, 0, 0.2)" dark height="50" :class="{ 'header-hidden': !isVisible }" class="header-transition">
         <div class="dashboard-header">
             <div class="sprint-container-1">
                 <div style="width: 280px">
@@ -67,6 +67,27 @@ const authStore = useAuthStore();
 const sprintStore = useSprintStore();
 const router = useRouter();
 
+const isVisible = ref(true);
+let lastScrollY = 0;
+
+const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+    if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        isVisible.value = false;
+    } else {
+        isVisible.value = true;
+    }
+    lastScrollY = currentScrollY;
+};
+
+onMounted(() => {
+    window.addEventListener("scroll", handleScroll);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("scroll", handleScroll);
+});
+
 // Selector de sprint
 const sprintOptions = computed(() => {
     const now = new Date();
@@ -81,9 +102,7 @@ const sprintOptions = computed(() => {
             const hasta = sprint.fechaHasta.toLocaleDateString("es-ES");
             const isCurrent = now >= sprint.fechaDesde && now <= sprint.fechaHasta;
             const datePart = `<span style="font-size: 0.8rem; font-weight: 500; opacity: 0.4;" class="text"> (${desde}-${hasta})</span>`;
-            const name = isCurrent
-                ? `<span style="font-weight: 500;" class="primary-light">${sprint.titulo}</span> ${datePart}`
-                : `${sprint.titulo} ${datePart}`;
+            const name = isCurrent ? `<span style="font-weight: 500;" class="primary">${sprint.titulo}</span> ${datePart}` : `${sprint.titulo} ${datePart}`;
             return {
                 name,
                 checked: sprint.id === sprintStore.currentSprintId,
@@ -166,7 +185,7 @@ const importItems = async () => {
         // Leer y procesar archivo
         const text = await file.text();
         const rawItems: any[] = JSON.parse(text);
-        const result = processImportedItems(rawItems);
+        const result = await processImportedItems(rawItems);
 
         // Obtener info del sprint actual
         const currentSprint = sprintStore.currentSprint;
@@ -218,6 +237,16 @@ const importItems = async () => {
 <style scoped lang="scss">
 .v-app-bar {
     box-shadow: 0 0 5px #222 !important;
+    transition: transform 0.3s ease-in-out;
+}
+
+.header-hidden {
+    transform: translateY(-100%);
+    display: none;
+}
+
+.header-transition {
+    transition: transform 0.3s ease-in-out;
 }
 
 .dashboard-header {
