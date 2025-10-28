@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import ResizableImage from "@/extensions/ResizableImage"; // <— el nuestro
+import ImageLink from "@/extensions/ImageLink"; // <— el nuestro
 import { supabaseUploader as defaultUploader } from "@/utils/supabaseUploader";
 import StarterKit from "@tiptap/starter-kit";
 import { EditorContent, useEditor } from "@tiptap/vue-3";
@@ -94,7 +94,7 @@ const editor = useEditor({
     content: getInitialContent(),
     extensions: [
         StarterKit, // sin configure({ history })
-        ResizableImage, // usa el NodeView de Vue
+        ImageLink, // usa el NodeView de Vue
     ],
     onUpdate: ({ editor }) => emit("update:modelValue", editor.getHTML()),
     onFocus: () => {
@@ -140,7 +140,6 @@ const cmd = (action: "bold" | "underline") => {
 
 const insertImage = (src: string) => {
     if (!editor.value) return;
-    // podés fijar un ancho inicial, ej. 60%:
     editor.value.chain().focus().setImage({ src, alt: "" }).run();
 };
 
@@ -308,15 +307,6 @@ const handleDrop = async (e: DragEvent) => {
         &.expanded {
             background: var(--sel);
         }
-    }
-
-    /* resize handles (from ResizableImage) */
-    .img-resize-handle {
-        width: 10px;
-        height: 10px;
-        border: 1px solid var(--sel);
-        background: var(--sel-02);
-        border-radius: 2px;
     }
 
     &.density-compact .field-shell {

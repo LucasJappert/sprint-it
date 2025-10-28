@@ -57,7 +57,7 @@
                     </div>
                 </div>
                 <!-- Display mode -->
-                <div v-else class="comment-content" v-html="comment.description"></div>
+                <div v-else class="comment-content" v-html="processCommentHtml(comment.description)"></div>
             </div>
         </div>
 
@@ -112,6 +112,13 @@ const sortedComments = computed(() => {
 });
 
 const hasChanges = computed(() => editCommentContent.value.trim() !== originalContent.value.trim());
+
+const processCommentHtml = (html: string): string => {
+    // Reemplazar todas las etiquetas <img> con links
+    return html.replace(/<img[^>]*src="([^"]*)"[^>]*>/g, (match, src) => {
+        return `<a href="${src}" target="_blank" rel="noopener noreferrer" style="color: #5aa7ff; text-decoration: underline; font-family: monospace; font-size: 0.9em;">${src}</a>`;
+    });
+};
 
 // Función para agregar comentario al inicio de la lista
 const addCommentToStart = async (comment: Comment) => {
