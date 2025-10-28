@@ -343,7 +343,7 @@ const handleSave = async () => {
             order: props.existingTask?.order || 0,
         };
         emit("save", task);
-        // No resetForm() para que el diálogo persista visible
+        emit("close");
     }
 };
 

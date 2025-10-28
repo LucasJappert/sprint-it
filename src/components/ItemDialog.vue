@@ -371,7 +371,7 @@ const handleSave = async () => {
             order: props.existingItem?.order || props.nextOrder,
         };
         emit("save", item);
-        // No resetForm() para que el diálogo persista visible
+        emit("close");
     }
 };
 const handleClose = () => {

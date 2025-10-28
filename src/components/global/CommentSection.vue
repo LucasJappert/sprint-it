@@ -13,7 +13,7 @@
                 placeholder="Write a comment..."
                 density="compact"
                 :height="'80px'"
-                @keydown.enter.exact.prevent="addComment"
+                @keydown.enter.exact.prevent="addCommentAsync"
             />
             <div class="add-comment-actions">
                 <MyButton @click="addCommentAsync" :disabled="!newCommentContent.trim()" class="custom-button"> Add Comment </MyButton>
@@ -47,13 +47,13 @@
                         v-model="editCommentContent"
                         :height="'80px'"
                         density="compact"
-                        @keydown.enter.exact.prevent="saveCommentEdit"
+                        @keydown.enter.exact.prevent="saveCommentEditAsync"
                         @keydown.escape="cancelCommentEdit"
                         placeholder="Write a comment"
                     />
                     <div class="edit-actions">
                         <MyButton @click="cancelCommentEdit" btn-class="px-2 custom-button" secondary>Cancel</MyButton>
-                        <MyButton @click="saveCommentEdit" btn-class="px-2 custom-button" :disabled="!hasChanges">Save</MyButton>
+                        <MyButton @click="saveCommentEditAsync" btn-class="px-2 custom-button" :disabled="!hasChanges">Save</MyButton>
                     </div>
                 </div>
                 <!-- Display mode -->
@@ -273,7 +273,7 @@ const cancelCommentEdit = () => {
     originalContent.value = "";
 };
 
-const saveCommentEdit = async () => {
+const saveCommentEditAsync = async () => {
     if (!editingCommentId.value || !editCommentContent.value.trim()) return;
 
     loadingStore.setLoading(true);

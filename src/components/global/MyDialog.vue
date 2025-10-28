@@ -43,10 +43,7 @@ const formattedMinWidth = computed(() => {
 });
 
 const closeDialog = () => {
-    if (props.persistent) {
-        console.log("Cant close persistent dialog");
-        return;
-    }
+    if (props.persistent) return console.log("Cant close persistent dialog");
     emit("close");
 };
 
@@ -91,6 +88,10 @@ $mobile-resolution: 600px !default;
     justify-content: center;
     align-items: center;
     z-index: 2000;
+}
+
+:global(html:has(.my-dialog-overlay)) {
+    overflow: hidden !important;
 }
 
 .full-size {
