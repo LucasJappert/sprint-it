@@ -23,7 +23,7 @@
         </div>
         <div class="item-col cols-title text-left">
             <v-icon class="yellow mr-1" size="16">mdi-clipboard-check-outline</v-icon>
-            <strong>{{ task.title }}</strong>
+            {{ task.title }}
         </div>
         <div class="item-col cols-assigned">
             {{ assignedUserName }}

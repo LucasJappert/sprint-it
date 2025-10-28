@@ -370,7 +370,7 @@ const toggleAllTasks = () => {
 .dashboard {
     padding: 6px;
     padding-top: 66px; /* Adjusted for 50px header + 16px padding */
-    font-size: 12px;
+    font-size: 0.9rem;
 }
 
 .board-header {

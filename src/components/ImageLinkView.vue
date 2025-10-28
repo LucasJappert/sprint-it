@@ -22,7 +22,7 @@ const props = defineProps(nodeViewProps);
     color: #5aa7ff;
     text-decoration: underline;
     font-family: monospace;
-    font-size: 0.9em;
+    font-size: 1rem;
     word-break: break-all;
 }
 

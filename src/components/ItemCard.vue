@@ -27,7 +27,7 @@
         </div>
         <div class="item-col cols-title text-left">
             <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
-            <span v-if="item.tasks.length">({{ item.tasks.length }})</span> <strong>{{ item.title }}</strong>
+            <span v-if="item.tasks.length">({{ item.tasks.length }})</span>{{ item.title }}
         </div>
         <div class="item-col cols-assigned">
             {{ assignedUserName }}
@@ -498,21 +498,6 @@ const onDrop = (e: DragEvent) => {
 
 .draggable-ghost.positioned-ghost::before {
     background: linear-gradient(45deg, transparent 30%, rgba(76, 175, 80, 0.4) 50%, transparent 70%) !important;
-}
-
-/* Estilos para el ghost de prueba */
-.test-ghost {
-    background: linear-gradient(45deg, #ff6b6b, #4ecdc4) !important;
-    border: 3px dashed #fff !important;
-    box-shadow: 0 0 20px rgba(255, 107, 107, 0.5) !important;
-    animation: pulse 1.5s infinite !important;
-    font-weight: bold !important;
-    font-size: 12px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    color: white !important;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 @keyframes pulse {

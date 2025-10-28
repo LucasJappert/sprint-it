@@ -310,7 +310,7 @@ const importItems = async () => {
 }
 
 .menu-item span {
-    font-size: 14px;
+    font-size: 0.9rem;
     color: $text;
 }
 
