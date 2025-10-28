@@ -27,7 +27,7 @@
         </div>
         <div class="item-col cols-title text-left">
             <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
-            <span v-if="item.tasks.length">({{ item.tasks.length }})</span>{{ item.title }}
+            <span v-if="item.tasks.length" class="mr-1">({{ item.tasks.length }})</span>{{ item.title }}
         </div>
         <div class="item-col cols-assigned">
             {{ assignedUserName }}

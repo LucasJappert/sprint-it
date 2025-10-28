@@ -255,10 +255,11 @@ const formatDate = (date: Date): string => {
 };
 
 const formatISODate = (date: Date): string => {
-    return new Date(date)
+    return new Date(date.getTime() - 3 * 60 * 60 * 1000)
         .toISOString()
         .replace("T", " ")
-        .replace(/\.\d{3}Z$/, "");
+        .replace(/\.\d{3}Z$/, "")
+        .replace("Z", "");
 };
 
 const startEditComment = (comment: Comment) => {
