@@ -11,10 +11,6 @@
                 :class="['editor-content', { focused: isFocused }]"
                 :aria-label="placeholder"
             />
-            <MyButton class="expand-btn" @click="toggleExpanded" :class="{ expanded: isExpanded }" secondary>
-                <v-icon v-if="!isExpanded" size="16">mdi-unfold-more-horizontal</v-icon>
-                <v-icon v-else size="16">mdi-unfold-less-horizontal</v-icon>
-            </MyButton>
         </div>
 
         <div class="toolbar" v-if="showToolbar">
@@ -48,7 +44,6 @@ interface Props {
     accent?: Accent;
     uploader?: (file: File) => Promise<string>;
     maxImageSizeMB?: number;
-    height?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -59,7 +54,6 @@ const props = withDefaults(defineProps<Props>(), {
     showToolbar: true,
     accent: "primary",
     maxImageSizeMB: 10,
-    height: "100px",
 });
 
 const emit = defineEmits<{
@@ -71,20 +65,11 @@ const emit = defineEmits<{
 const accentClass = computed(() => `accent-${props.accent}`);
 const densityClass = computed(() => `density-${props.density}`);
 
-const isExpanded = ref(false);
 const isFocused = ref(false);
 const hasContent = computed(() => {
     if (!editor.value) return false;
     const html = editor.value.getHTML();
     return html && html !== "<p></p>" && html !== "";
-});
-
-const toggleExpanded = () => {
-    isExpanded.value = !isExpanded.value;
-};
-
-const currentHeight = computed(() => {
-    return isExpanded.value ? "300px" : props.height;
 });
 
 const getInitialContent = (): string => props.modelValue || "";
@@ -224,7 +209,7 @@ const handleDrop = async (e: DragEvent) => {
     .floating-label {
         position: absolute;
         left: 14px;
-        top: 10px;
+        top: 14px;
         pointer-events: none;
         transition: all 0.18s ease;
         opacity: 1;
@@ -248,16 +233,11 @@ const handleDrop = async (e: DragEvent) => {
         border: 1px solid var(--border);
         border-radius: 20px;
         padding: 12px;
-        // height: v-bind(currentHeight);
         transition: height 0.3s ease, border-color 0.2s ease;
         box-shadow: none;
         line-height: 1.6;
         overflow-y: auto;
-        height: v-bind(currentHeight);
-        max-height: v-bind(currentHeight);
-        :deep(.ProseMirror) {
-            height: 100%;
-        }
+        max-height: 400px;
         :deep(.ProseMirror-focused) {
             outline: none;
         }
