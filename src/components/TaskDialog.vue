@@ -1,7 +1,7 @@
 <template>
     <MyDialog :visible="visible" :min-width="800" @close="handleClose" persistent>
         <div class="header flex-center justify-space-between">
-            <h3 class="text-left">
+            <h3 class="text-left flex-center justify-start">
                 <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
                 {{ isEditing ? "Edit Task" : "New Task" }}
             </h3>
@@ -351,6 +351,10 @@ const handleClose = () => {
     emit("close");
     resetForm();
 };
+
+onMounted(() => {
+    console.log("TaskDialog mounted");
+});
 
 // Llamar resetForm cuando se abre el diálogo o cambia existingTask
 watch(

@@ -237,7 +237,7 @@ const handleDrop = async (e: DragEvent) => {
         box-shadow: none;
         line-height: 1.6;
         overflow-y: auto;
-        max-height: 400px;
+        max-height: 200px;
         :deep(.ProseMirror-focused) {
             outline: none;
         }

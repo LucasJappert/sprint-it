@@ -46,7 +46,7 @@
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
-        <ItemDialog :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @save="onAddItem" />
+        <ItemDialog v-if="showAddItemDialog" :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @save="onAddItem" />
 
         <!-- Diálogo para agregar/editar task -->
         <TaskDialog
@@ -129,12 +129,24 @@ onMounted(async () => {
         await sprintStore.generateSprints();
     }
 
+    // Actualizar el título de la página con el sprint actual
+    document.title = `Sprint It - ${sprintStore.currentSprint?.titulo || "Sprint xx"}`;
+
     // Marcar el gráfico como listo después de la carga inicial
     chartReady.value = true;
 
     // Escuchar eventos del eventBus
     eventBus.on("taskCreated", onTaskCreated);
 });
+
+// Watcher para actualizar el título cuando cambia el sprint actual
+watch(
+    () => sprintStore.currentSprint,
+    (newSprint) => {
+        document.title = `Sprint It - ${newSprint?.titulo}`;
+    },
+    { immediate: true },
+);
 
 // Limpiar listeners al desmontar
 onUnmounted(() => {
@@ -186,6 +198,8 @@ const onSprintOptionsChange = (options: any[]) => {
     const selectedOption = options.find((opt) => opt.checked);
     if (selectedOption) {
         sprintStore.currentSprintId = selectedOption.value;
+        // Actualizar el título cuando cambia el sprint
+        document.title = `Sprint It - ${sprintStore.currentSprint?.titulo || "Sprint xx"}`;
     }
 };
 

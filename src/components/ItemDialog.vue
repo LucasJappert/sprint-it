@@ -172,6 +172,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 };
 
 onMounted(() => {
+    console.log("ItemDialog mounted");
     document.addEventListener("keydown", handleKeyDown);
 });
 

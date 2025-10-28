@@ -75,7 +75,34 @@ const emit = defineEmits<{
     contextMenuClosed: [];
 }>();
 
-const { showEditTaskDialog, editingTask, closeDialogs, openEditTaskDialog, onSaveEditTask, deleteTask } = useTaskManagement();
+const { deleteTask } = useTaskManagement();
+
+const showEditTaskDialog = ref(false);
+const editingTask = ref<Task | null>(null);
+
+const closeDialogs = () => {
+    showEditTaskDialog.value = false;
+    editingTask.value = null;
+};
+
+const onSaveEditTask = (task: Task) => {
+    if (!props.item) return;
+
+    const taskIndex = props.item.tasks.findIndex((t) => t.id === task.id);
+    if (taskIndex !== -1) {
+        props.item.tasks[taskIndex] = task;
+
+        // Recalcular esfuerzos del item padre si tiene tasks
+        if (props.item.tasks.length > 0) {
+            props.item.estimatedEffort = props.item.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
+            props.item.actualEffort = props.item.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
+        }
+
+        if (sprintStore.currentSprint) {
+            saveSprint(sprintStore.currentSprint);
+        }
+    }
+};
 
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
@@ -164,7 +191,8 @@ watch(
 );
 
 const onEditTask = (task: Task) => {
-    openEditTaskDialog(task, props.item);
+    editingTask.value = task;
+    showEditTaskDialog.value = true;
 };
 
 const onDragOver = (e: DragEvent) => {
