@@ -78,11 +78,13 @@ import { useSprintStore } from "@/stores/sprint";
 import type { Item } from "@/types";
 import { eventBus } from "@/utils/eventBus";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
 const loadingStore = useLoadingStore();
-const { getTaskIdFromUrl, getItemIdFromUrl } = useUrlManagement();
+const { getTaskIdFromUrl, getItemIdFromUrl } = useUrlManagement(router);
 
 // Estado para controlar cuándo mostrar el gráfico (solo después de carga inicial)
 const chartReady = ref(false);

@@ -1,6 +1,6 @@
-export const useUrlManagement = (router?: any) => {
+export const useUrlManagement = (router: any) => {
     const getRouter = () => {
-        return router || (window as any).__VUE_ROUTER__;
+        return router;
     };
 
     const setTaskUrl = (taskId: string) => {
@@ -28,7 +28,7 @@ export const useUrlManagement = (router?: any) => {
 
     const getTaskIdFromUrl = (): string | null => {
         try {
-            const router = (window as any).__VUE_ROUTER__;
+            const router = getRouter();
             if (router && router.currentRoute) {
                 return router.currentRoute.value.query.taskId as string || null;
             }
@@ -40,7 +40,7 @@ export const useUrlManagement = (router?: any) => {
 
     const getItemIdFromUrl = (): string | null => {
         try {
-            const router = (window as any).__VUE_ROUTER__;
+            const router = getRouter();
             if (router && router.currentRoute) {
                 return router.currentRoute.value.query.itemId as string || null;
             }
