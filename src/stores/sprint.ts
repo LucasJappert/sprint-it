@@ -42,7 +42,19 @@ export const useSprintStore = defineStore("sprint", () => {
             }
 
             sprints.value = allSprints;
-            currentSprintId.value = allSprints[0]?.id || "sprint-1";
+
+            // Seleccionar automáticamente el sprint actual basado en la fecha
+            const now = new Date();
+            const currentSprint = allSprints.find(sprint =>
+                now >= sprint.fechaDesde && now <= sprint.fechaHasta
+            );
+
+            if (currentSprint) {
+                currentSprintId.value = currentSprint.id;
+            } else {
+                // Fallback al primer sprint si no hay ninguno actual
+                currentSprintId.value = allSprints[0]?.id || "sprint-1";
+            }
 
             // Log para debug: mostrar sprints y items obtenidos
             console.log("📋 Sprints obtenidos:", allSprints.map(s => ({ id: s.id, titulo: s.titulo, itemsCount: s.items.length })));
