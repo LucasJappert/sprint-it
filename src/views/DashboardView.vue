@@ -157,7 +157,7 @@ onMounted(async () => {
     // Escuchar eventos del eventBus
     eventBus.on("taskCreated", onTaskCreated);
 
-    // Revisar si hay un taskId o itemId en la URL para abrir el modal
+    // Revisar si hay un id en la URL para abrir el modal
     const taskId = getTaskIdFromUrl();
     const itemId = getItemIdFromUrl();
 
