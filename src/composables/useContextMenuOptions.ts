@@ -102,10 +102,16 @@ export const useContextMenuOptions = () => {
         return [
             {
                 key: "duplicate",
-                label: "Duplicate",
+                label: "Duplicate Task",
                 icon: "mdi-content-copy",
-                action: () => {
-                    duplicateTaskFn(task.id, item.id);
+                action: async () => {
+                    const confirmed = await MyAlerts.confirmAsync(
+                        "Duplicate Task",
+                        `Are you sure you want to duplicate the task "${task.title}"?`
+                    );
+                    if (confirmed) {
+                        duplicateTaskFn(task.id, item.id);
+                    }
                 },
             },
             {
@@ -133,8 +139,8 @@ export const useContextMenuOptions = () => {
                 color: "error",
                 action: async () => {
                     const confirmed = await MyAlerts.confirmAsync(
-                        "Confirmar eliminación",
-                        `¿Estás seguro de que quieres eliminar la tarea "${task.title}"?`,
+                        "Confirm deletion",
+                        `Are you sure you want to delete the task "${task.title}"?`,
                         "warning",
                     );
                     if (confirmed) {
@@ -193,14 +199,14 @@ export const useContextMenuOptions = () => {
             },
             {
                 key: "duplicate",
-                label: "Duplicate",
+                label: "Duplicate Item",
                 icon: "mdi-content-copy",
                 action: async () => {
                     if (item.tasks.length === 0) {
                         // Si no tiene tasks, usar confirmAsync simple
                         const confirmed = await MyAlerts.confirmAsync(
-                            "Duplicar Item",
-                            `¿Estás seguro de que quieres duplicar el item "${item.title}"?`
+                            "Duplicate Item",
+                            `Are you sure you want to duplicate the item "${item.title}"?`
                         );
                         if (confirmed) {
                             duplicateItemFn(item.id, false);
@@ -208,11 +214,11 @@ export const useContextMenuOptions = () => {
                     } else {
                         // Si tiene tasks, mostrar opciones
                         const result = await MyAlerts.confirmWithButtonsAsync(
-                            "Duplicar Item",
-                            `¿Cómo quieres duplicar el item "${item.title}"?`,
+                            "Duplicate Item",
+                            `How do you want to duplicate the item "${item.title}"?`,
                             [
-                                { text: "Solo Item", value: "item-only" },
-                                { text: "Item + Tasks", value: "item-with-tasks" }
+                                { text: "Item + Tasks", value: "item-with-tasks" },
+                                { text: "Item Only", value: "item-only" },
                             ]
                         );
 
@@ -255,8 +261,8 @@ export const useContextMenuOptions = () => {
                 color: "error",
                 action: async () => {
                     const confirmed = await MyAlerts.confirmAsync(
-                        "Confirmar eliminación",
-                        `¿Estás seguro de que quieres eliminar el item "${item.title}" y todas sus tareas?`,
+                        "Confirm deletion",
+                        `Are you sure you want to delete the item "${item.title}" and all its tasks?`,
                         "warning",
                     );
                     if (confirmed) {
