@@ -155,7 +155,7 @@ const { createTaskContextMenuOptions } = useContextMenuOptions();
 const contextMenuOptions = ref<ContextMenuOption[]>([]);
 
 const loadContextMenuOptions = async () => {
-    contextMenuOptions.value = await createTaskContextMenuOptions(props.task, props.item, deleteTask);
+    contextMenuOptions.value = await createTaskContextMenuOptions(props.task, props.item, deleteTask, sprintStore.duplicateTask);
 };
 
 watch(

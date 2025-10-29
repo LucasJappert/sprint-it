@@ -111,10 +111,10 @@ const userTotals = computed(() => {
 // Calcular valores para debug
 const debugValues = computed(() => {
     const totalCapacity = sprintDays.value.length * 8; // 8 horas por día hábil
-    console.log("=== DEBUG Valores del Gráfico ===");
-    console.log("Días hábiles del sprint:", sprintDays.value.length);
-    console.log("Capacidad total disponible:", totalCapacity, "horas");
-    console.log("Totales por usuario:", userTotals.value);
+    // console.log("=== DEBUG Valores del Gráfico ===");
+    // console.log("Días hábiles del sprint:", sprintDays.value.length);
+    // console.log("Capacidad total disponible:", totalCapacity, "horas");
+    // console.log("Totales por usuario:", userTotals.value);
     return { totalCapacity, userTotals: userTotals.value };
 });
 

@@ -33,8 +33,20 @@
 
                 <v-spacer />
 
-                <!-- Confirm (right) -->
-                <MyButton :text="confirmText" :class="buttonClasses?.confirm" v-bind="{ minWidth: 60, ...confirmBtnProps }" @click="onConfirm" />
+                <!-- Multiple Confirm Buttons -->
+                <template v-if="confirmButtons && confirmButtons.length > 0">
+                    <MyButton
+                        v-for="(button, index) in confirmButtons"
+                        :key="index"
+                        :text="button.text"
+                        :class="buttonClasses?.confirm"
+                        v-bind="{ minWidth: 60, ...confirmBtnProps }"
+                        @click="onConfirm(button.value)"
+                    />
+                </template>
+
+                <!-- Single Confirm Button -->
+                <MyButton v-else :text="confirmText" :class="buttonClasses?.confirm" v-bind="{ minWidth: 60, ...confirmBtnProps }" @click="onConfirm" />
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -54,6 +66,7 @@ const props = withDefaults(
         showCancel?: boolean;
         confirmText?: string;
         cancelText?: string;
+        confirmButtons?: { text: string; value?: any }[];
         buttonClasses?: { confirm?: string; cancel?: string };
         persistent?: boolean;
         maxWidth?: number | string;
@@ -83,7 +96,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
     (e: "update:modelValue", val: boolean): void;
-    (e: "confirm"): void;
+    (e: "confirm", value?: any): void;
     (e: "cancel"): void;
 }>();
 
@@ -115,9 +128,9 @@ const onCancel = (): void => {
     open.value = false;
     emit("cancel");
 };
-const onConfirm = (): void => {
+const onConfirm = (value?: any): void => {
     open.value = false;
-    emit("confirm");
+    emit("confirm", value);
 };
 
 const uid = Math.random().toString(36).slice(2);

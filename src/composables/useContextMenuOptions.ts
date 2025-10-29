@@ -80,7 +80,7 @@ export const useContextMenuOptions = () => {
         }));
     };
 
-    const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void) => {
+    const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void, duplicateTaskFn: (taskId: string, itemId: string) => void) => {
         const updateTaskAssignedUser = async (userId: string) => {
             const oldValue = task.assignedUser || "";
             await sprintStore.updateTask(task.id, item.id, { assignedUser: userId });
@@ -100,6 +100,14 @@ export const useContextMenuOptions = () => {
         };
 
         return [
+            {
+                key: "duplicate",
+                label: "Duplicate",
+                icon: "mdi-content-copy",
+                action: () => {
+                    duplicateTaskFn(task.id, item.id);
+                },
+            },
             {
                 key: "reassign",
                 label: "Assign to",
@@ -137,7 +145,7 @@ export const useContextMenuOptions = () => {
         ];
     };
 
-    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void) => {
+    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void) => {
         const updateItemAssignedUser = async (userId: string) => {
             const oldValue = item.assignedUser || "";
             await sprintStore.updateItem(item.id, { assignedUser: userId });
@@ -181,6 +189,39 @@ export const useContextMenuOptions = () => {
                 color: "yellow",
                 action: () => {
                     openAddTaskDialogFn(item);
+                },
+            },
+            {
+                key: "duplicate",
+                label: "Duplicate",
+                icon: "mdi-content-copy",
+                action: async () => {
+                    if (item.tasks.length === 0) {
+                        // Si no tiene tasks, usar confirmAsync simple
+                        const confirmed = await MyAlerts.confirmAsync(
+                            "Duplicar Item",
+                            `¿Estás seguro de que quieres duplicar el item "${item.title}"?`
+                        );
+                        if (confirmed) {
+                            duplicateItemFn(item.id, false);
+                        }
+                    } else {
+                        // Si tiene tasks, mostrar opciones
+                        const result = await MyAlerts.confirmWithButtonsAsync(
+                            "Duplicar Item",
+                            `¿Cómo quieres duplicar el item "${item.title}"?`,
+                            [
+                                { text: "Solo Item", value: "item-only" },
+                                { text: "Item + Tasks", value: "item-with-tasks" }
+                            ]
+                        );
+
+                        if (result === "item-only") {
+                            duplicateItemFn(item.id, false);
+                        } else if (result === "item-with-tasks") {
+                            duplicateItemFn(item.id, true);
+                        }
+                    }
                 },
             },
             {

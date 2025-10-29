@@ -84,10 +84,9 @@ export const useSprintStore = defineStore("sprint", () => {
             }
 
             // Log para debug: mostrar sprints y items obtenidos
-            console.log("📋 Sprints obtenidos:", allSprints.map(s => ({ id: s.id, titulo: s.titulo, itemsCount: s.items.length })));
-            allSprints.forEach(sprint => {
-                console.log(`📋 Items del sprint "${sprint.titulo}":`, Array.isArray(sprint.items) ? sprint.items : Object.values(sprint.items || {}));
-            });
+            // allSprints.forEach(sprint => {
+            //     console.log(`📋 Items del sprint "${sprint.titulo}":`, Array.isArray(sprint.items) ? sprint.items : Object.values(sprint.items || {}));
+            // });
 
             // Subscribe to all sprint changes
             allSprints.forEach((sprint: Sprint) => {
@@ -371,6 +370,60 @@ export const useSprintStore = defineStore("sprint", () => {
         return true;
     };
 
+    const duplicateItem = async (itemId: string, includeTasks: boolean = false) => {
+        if (!currentSprint.value) return;
+
+        const originalItem = currentSprint.value.items.find(i => i.id === itemId);
+        if (!originalItem) return;
+
+        // Calcular el nuevo orden (al final de la lista)
+        const maxOrder = currentSprint.value.items.length > 0
+            ? Math.max(...currentSprint.value.items.map(item => item.order))
+            : 0;
+
+        const duplicatedItem: Item = {
+            ...originalItem,
+            id: `item-copy-${Date.now()}`,
+            title: `${originalItem.title}`,
+            order: maxOrder + 1,
+            createdAt: new Date(),
+            tasks: includeTasks ? originalItem.tasks.map((task) => ({
+                ...task,
+                id: `task-copy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                order: task.order, // Mantener el orden original de las tasks
+                createdAt: new Date()
+            })) : []
+        };
+
+        await addItem(duplicatedItem);
+    };
+
+    const duplicateTask = async (taskId: string, itemId: string) => {
+        if (!currentSprint.value) return;
+
+        const item = currentSprint.value.items.find(i => i.id === itemId);
+        if (!item) return;
+
+        const originalTask = item.tasks.find(t => t.id === taskId);
+        if (!originalTask) return;
+
+        // Calcular el nuevo orden (al final de la lista de tasks)
+        const maxOrder = item.tasks.length > 0
+            ? Math.max(...item.tasks.map(task => task.order))
+            : 0;
+
+        const duplicatedTask = {
+            ...originalTask,
+            id: `task-copy-${Date.now()}`,
+            title: `${originalTask.title}`,
+            order: maxOrder + 1,
+            createdAt: new Date()
+        };
+
+        item.tasks.push(duplicatedTask);
+        await updateItem(itemId, { tasks: item.tasks });
+    };
+
     const updateSprintDiasHabiles = async (diasHabiles: number) => {
         if (currentSprint.value) {
             currentSprint.value.diasHabiles = diasHabiles;
@@ -395,5 +448,7 @@ export const useSprintStore = defineStore("sprint", () => {
         updateSprintDiasHabiles,
         updateTask,
         moveItemToSprint,
+        duplicateItem,
+        duplicateTask,
     };
 });

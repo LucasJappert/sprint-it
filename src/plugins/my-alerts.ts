@@ -12,6 +12,7 @@ export type AlertOptions = {
     showCancel?: boolean;
     confirmText?: string;
     cancelText?: string;
+    confirmButtons?: { text: string; value?: any; }[];
     reverseButtons?: boolean;
     buttonClasses?: { confirm?: string; cancel?: string; };
     persistent?: boolean;
@@ -19,7 +20,7 @@ export type AlertOptions = {
     actionsClass?: string;
 };
 
-type Resolver = (val: boolean) => void;
+type Resolver = (val: boolean | any) => void;
 
 const DEFAULTS: Required<Pick<
     AlertOptions,
@@ -28,8 +29,8 @@ const DEFAULTS: Required<Pick<
     title: "ATENCIÓN",
     icon: "info",
     showCancel: true,
-    confirmText: "SI",
-    cancelText: "NO",
+    confirmText: "Yes",
+    cancelText: "No",
     reverseButtons: true,
     persistent: true,
     maxWidth: 440
@@ -60,7 +61,13 @@ const mountHost = (): void => {
                 modelValue: state.open,
                 "onUpdate:modelValue": (v: boolean) => (state.open = v),
                 ...state.opts,
-                onConfirm: () => state.resolve?.(true),
+                onConfirm: (value?: any) => {
+                    if (state.opts.confirmButtons && state.opts.confirmButtons.length > 0) {
+                        state.resolve?.(value);
+                    } else {
+                        state.resolve?.(true);
+                    }
+                },
                 onCancel: () => state.resolve?.(false)
             })
     };
@@ -86,9 +93,9 @@ const flushNext = (): void => {
     requestAnimationFrame(() => (state.open = true));
 };
 
-const openDialog = (opts: AlertOptions): Promise<boolean> => {
+const openDialog = (opts: AlertOptions): Promise<boolean | any> => {
     mountHost();
-    return new Promise<boolean>((resolve) => {
+    return new Promise<boolean | any>((resolve) => {
         queue.push({ opts, resolve });
         flushNext();
     });
@@ -100,8 +107,20 @@ const confirmAsync = (title: string, html: string = "", icon: Icon = "info"): Pr
         html,
         icon,
         showCancel: true,
-        confirmText: "SI",
-        cancelText: "NO",
+        confirmText: "Yes",
+        cancelText: "No",
+        reverseButtons: true,
+        persistent: true
+    });
+
+const confirmWithButtonsAsync = (title: string, html: string = "", confirmButtons: { text: string; value?: any; }[] = [], icon: Icon = "info"): Promise<any> =>
+    openDialog({
+        title,
+        html,
+        icon,
+        showCancel: true,
+        confirmButtons,
+        cancelText: "Cancel",
         reverseButtons: true,
         persistent: true
     });
@@ -139,8 +158,8 @@ const okCancelMessageAsync = (title: string, message: string): Promise<boolean> 
         text: message,
         icon: "info",
         showCancel: true,
-        confirmText: "SI",
-        cancelText: "NO",
+        confirmText: "Yes",
+        cancelText: "No",
         reverseButtons: true,
         persistent: true
     });
@@ -153,9 +172,10 @@ const closeCurrent = (confirmed = false): Promise<void> => {
 
 type MyAlertsApi = {
     install: (app: App) => void;
-    openDialog: (opts: AlertOptions) => Promise<boolean>;
+    openDialog: (opts: AlertOptions) => Promise<boolean | any>;
     closeCurrent: (confirmed?: boolean) => Promise<void>;
     confirmAsync: (title: string, html?: string, icon?: Icon) => Promise<boolean>;
+    confirmWithButtonsAsync: (title: string, html?: string, confirmButtons?: { text: string; value?: any; }[], icon?: Icon) => Promise<any>;
     warmConfirmAsync: (html: string) => Promise<boolean>;
     okMessageAsync: (title: string, text?: string, html?: string) => Promise<void>;
     infoMessageAsync: (title: string, text?: string, html?: string) => Promise<void>;
@@ -170,6 +190,7 @@ const MyAlerts: MyAlertsApi = {
     openDialog,
     closeCurrent,
     confirmAsync,
+    confirmWithButtonsAsync,
     warmConfirmAsync,
     okMessageAsync,
     infoMessageAsync,

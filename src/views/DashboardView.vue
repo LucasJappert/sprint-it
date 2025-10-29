@@ -162,8 +162,7 @@ onMounted(async () => {
     const taskId = getTaskIdFromUrl();
     const itemId = getItemIdFromUrl();
 
-    console.log("onMounted - URL params:", { taskId, itemId });
-
+    // TODO: Llevar lógica a otro módulo
     if (taskId) {
         console.log("Buscando task con ID:", taskId);
         const taskData = findTaskById(taskId);
