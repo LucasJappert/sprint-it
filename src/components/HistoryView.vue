@@ -1,11 +1,26 @@
 <template>
     <div class="history-section">
         <h4 class="mb-3">Change History</h4>
-        <div v-if="changeHistory.length === 0" class="no-history">
+
+        <!-- Sección de fecha de creación -->
+        <div v-if="createdAt" class="creation-info">
+            <div class="creation-header">
+                <v-icon size="16" class="mr-1">mdi-plus-circle</v-icon>
+                <span class="creation-title">Created</span>
+            </div>
+            <div class="creation-details">
+                <span class="creation-date">{{ formatRelativeDate(createdAt) }} | {{ formatISODate(createdAt) }}</span>
+            </div>
+        </div>
+
+        <div v-if="changeHistory.length === 0 && !createdAt" class="no-history">
             <v-icon size="48" color="grey">mdi-history</v-icon>
             <p class="mt-2 text-grey">No changes recorded yet</p>
         </div>
-        <div v-else class="history-list">
+        <div v-if="changeHistory.length > 0" class="changes-header">
+            <h5 class="mt-4 mb-2">Changes Made</h5>
+        </div>
+        <div v-if="changeHistory.length > 0" class="history-list">
             <div v-for="change in changeHistory" :key="change.id" class="history-item">
                 <div class="history-header">
                     <div>
@@ -14,7 +29,7 @@
                     </div>
                     <div>
                         <span class="user-name">{{ userNames[change.userId] || "Unknown" }}</span
-                        >| <span class="change-date ml-1">{{ formatDate(change.createdAt) }}</span>
+                        >| <span class="change-date ml-1">{{ formatRelativeDate(change.createdAt) }} | {{ formatISODate(change.createdAt) }}</span>
                     </div>
                 </div>
                 <div class="change-details">
@@ -29,10 +44,12 @@
 <script setup lang="ts">
 import { getUserByUsername, getUsernameById } from "@/services/firestore";
 import type { ChangeHistory } from "@/types";
+import { formatISODate, formatRelativeDate } from "@/utils/dateUtils";
 import { ref, watch } from "vue";
 
 interface Props {
     changeHistory: ChangeHistory[];
+    createdAt?: Date;
 }
 
 const props = defineProps<Props>();
@@ -73,16 +90,6 @@ const formatFieldName = (field: string): string => {
     };
     return fieldNames[field] || field;
 };
-
-const formatDate = (date: Date): string => {
-    return date.toLocaleString("es-AR", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-};
 </script>
 
 <style scoped>
@@ -94,6 +101,48 @@ const formatDate = (date: Date): string => {
     text-align: center;
     padding: 40px 20px;
     color: #666;
+}
+
+.creation-info {
+    border: 1px solid #2196f3;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #1a237e;
+    color: #ffffff;
+}
+
+.creation-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #bbdefb;
+}
+
+.creation-title {
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.creation-details {
+    font-size: 13px;
+}
+
+.creation-date {
+    color: #e3f2fd;
+}
+
+.changes-header {
+    color: #cccccc;
+}
+
+.changes-header h5 {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+    border-bottom: 1px solid #424242;
+    padding-bottom: 4px;
 }
 
 .history-list {

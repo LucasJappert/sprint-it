@@ -32,6 +32,7 @@ export interface Task {
     actualEffort: number;
     assignedUser: string | null; // user id (nullable)
     order: number;
+    createdAt: Date;
 }
 
 export interface Item {
@@ -45,6 +46,7 @@ export interface Item {
     assignedUser: string | null; // user id (nullable)
     tasks: Task[];
     order: number;
+    createdAt: Date;
 }
 
 export interface Sprint {

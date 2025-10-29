@@ -1,6 +1,6 @@
 import MyAlerts from "@/plugins/my-alerts";
 import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
-import { getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
+import { convertFirestoreTimestamp, getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
 import { useLoadingStore } from "@/stores/loading";
 import type { Item, Sprint } from "@/types";
 import { defineStore } from "pinia";
@@ -17,6 +17,33 @@ export const useSprintStore = defineStore("sprint", () => {
     const currentSprint = computed(() =>
         sprints.value.find((s) => s.id === currentSprintId.value)
     );
+
+    /**
+     * Convierte las propiedades createdAt de items y tasks de timestamps de Firestore a objetos Date
+     */
+    const processSprintItems = (sprint: Sprint): Sprint => {
+        const processedSprint = { ...sprint };
+
+        if (Array.isArray(processedSprint.items)) {
+            processedSprint.items = processedSprint.items.map((item: Item) => {
+                const processedItem = {
+                    ...item,
+                    createdAt: convertFirestoreTimestamp(item.createdAt)
+                };
+
+                if (Array.isArray(processedItem.tasks)) {
+                    processedItem.tasks = processedItem.tasks.map((task) => ({
+                        ...task,
+                        createdAt: convertFirestoreTimestamp(task.createdAt)
+                    }));
+                }
+
+                return processedItem;
+            });
+        }
+
+        return processedSprint;
+    };
 
     const generateSprints = async () => {
         loadingStore.setLoading(true);
@@ -41,7 +68,7 @@ export const useSprintStore = defineStore("sprint", () => {
                 allSprints.push(sprint1);
             }
 
-            sprints.value = allSprints;
+            sprints.value = allSprints.map(processSprintItems);
 
             // Seleccionar automáticamente el sprint actual basado en la fecha
             const now = new Date();
@@ -67,11 +94,11 @@ export const useSprintStore = defineStore("sprint", () => {
                 subscribeToSprint(sprint.id, (updatedSprint) => {
                     const index = sprints.value.findIndex(s => s.id === updatedSprint.id);
                     if (index !== -1) {
-                        // Asegurar que items sea un array
-                        const safeUpdatedSprint = {
+                        // Asegurar que items sea un array y procesar createdAt
+                        const safeUpdatedSprint = processSprintItems({
                             ...updatedSprint,
                             items: Array.isArray(updatedSprint.items) ? updatedSprint.items : []
-                        };
+                        });
 
                         // Actualizar backup cuando se recibe un sprint actualizado
                         if (safeUpdatedSprint.id === currentSprintId.value) {
@@ -210,7 +237,7 @@ export const useSprintStore = defineStore("sprint", () => {
         subscribeToSprint(newSprint.id, (updatedSprint) => {
             const index = sprints.value.findIndex(s => s.id === updatedSprint.id);
             if (index !== -1) {
-                sprints.value[index] = updatedSprint;
+                sprints.value[index] = processSprintItems(updatedSprint);
             }
         });
 

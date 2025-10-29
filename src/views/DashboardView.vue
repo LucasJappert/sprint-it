@@ -127,6 +127,7 @@ const currentItemForTaskDialog = computed((): Item => {
         assignedUser: null,
         tasks: [],
         order: 1,
+        createdAt: new Date(),
     };
 });
 

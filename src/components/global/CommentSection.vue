@@ -28,7 +28,7 @@
                         <span class="comment-author" :style="{ color: getAuthorColor(comment.userId) }">
                             {{ authorNames[comment.userId] || "Loading..." }}
                         </span>
-                        <span class="comment-date"> | {{ formatDate(comment.createdAt) }} | {{ formatISODate(comment.createdAt) }}</span>
+                        <span class="comment-date"> | {{ formatRelativeDate(comment.createdAt) }} | {{ formatISODate(comment.createdAt) }}</span>
                     </div>
 
                     <!-- Edit/Delete buttons for comment author -->
@@ -73,6 +73,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import { useSprintStore } from "@/stores/sprint";
 import type { Comment } from "@/types";
+import { formatISODate, formatRelativeDate } from "@/utils/dateUtils";
 import { computed, ref, watch } from "vue";
 
 interface Props {
@@ -230,36 +231,6 @@ const addCommentAsync = async () => {
             loadingStore.setLoading(false);
         }
     }
-};
-
-const formatDate = (date: Date): string => {
-    const now = new Date();
-    const commentDate = new Date(date);
-    const diffInMs = now.getTime() - commentDate.getTime();
-    const diffInHours = diffInMs / (1000 * 60 * 60);
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-
-    if (diffInHours < 1) {
-        const minutes = Math.floor(diffInMs / (1000 * 60));
-        return minutes <= 1 ? "Just now" : `${minutes} minutes ago`;
-    }
-    if (diffInDays < 1) {
-        const hours = Math.floor(diffInHours);
-        return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
-    }
-    if (diffInDays < 7) {
-        const days = Math.floor(diffInDays);
-        return days === 1 ? "1 day ago" : `${days} days ago`;
-    }
-    return commentDate.toLocaleDateString();
-};
-
-const formatISODate = (date: Date): string => {
-    return new Date(date.getTime() - 3 * 60 * 60 * 1000)
-        .toISOString()
-        .replace("T", " ")
-        .replace(/\.\d{3}Z$/, "")
-        .replace("Z", "");
 };
 
 const startEditComment = (comment: Comment) => {

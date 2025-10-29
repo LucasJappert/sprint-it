@@ -62,7 +62,7 @@
             </template>
 
             <template v-else-if="viewMode === 'history'">
-                <HistoryView :change-history="changeHistory" />
+                <HistoryView :change-history="changeHistory" :createdAt="existingTask?.createdAt" />
             </template>
         </div>
         <div class="footer">
@@ -477,6 +477,7 @@ const handleSave = async () => {
             actualEffort: parseInt(actualEffort.value) || 0,
             assignedUser: assignedUserId,
             order: props.existingTask?.order || 0,
+            createdAt: props.existingTask?.createdAt || new Date(),
         };
 
         // Guardar cambios si es edición

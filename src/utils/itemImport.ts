@@ -98,6 +98,7 @@ export const sanitizeImportedItem = async (rawItem: any, index: number, users: U
                 actualEffort: typeof rawTask.actualEffort === "number" ? rawTask.actualEffort : 0,
                 assignedUser: taskAssignedUser,
                 order: typeof rawTask.order === "number" ? rawTask.order : taskIndex + 1,
+                createdAt: new Date(),
             };
             sanitizedTasks.push(sanitizedTask);
         }
@@ -118,6 +119,7 @@ export const sanitizeImportedItem = async (rawItem: any, index: number, users: U
         assignedUser: itemAssignedUser,
         tasks: sanitizedTasks,
         order: typeof rawItem.order === "number" ? rawItem.order : index + 1,
+        createdAt: new Date(),
     };
 
     return sanitizedItem;

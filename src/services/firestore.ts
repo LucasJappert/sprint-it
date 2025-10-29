@@ -7,6 +7,37 @@ const usersCollection = collection(db, "users");
 const commentsCollection = collection(db, "comments");
 const changesCollection = collection(db, "changes");
 
+/**
+ * Convierte un timestamp de Firestore a un objeto Date de JavaScript
+ * Maneja tanto objetos Date nativos como timestamps de Firestore
+ */
+export const convertFirestoreTimestamp = (timestamp: any): Date => {
+    if (!timestamp) return new Date();
+
+    // Si ya es un objeto Date nativo, devolverlo tal como está
+    if (timestamp instanceof Date) {
+        return timestamp;
+    }
+
+    // Si es un timestamp de Firestore con método toDate()
+    if (timestamp.toDate && typeof timestamp.toDate === "function") {
+        return timestamp.toDate();
+    }
+
+    // Si es un objeto con seconds (formato timestamp de Firestore)
+    if (timestamp.seconds && typeof timestamp.seconds === "number") {
+        return new Date(timestamp.seconds * 1000 + Math.floor((timestamp.nanoseconds || 0) / 1000000));
+    }
+
+    // Si es un string, intentar convertirlo a Date
+    if (typeof timestamp === "string") {
+        return new Date(timestamp);
+    }
+
+    // Último recurso: devolver nueva fecha
+    return new Date();
+};
+
 export const saveSprint = async (sprint: Sprint) => {
     const docRef = doc(sprintsCollection, sprint.id);
     await setDoc(docRef, sprint as DocumentData);
