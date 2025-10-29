@@ -50,6 +50,7 @@
 
         <!-- Diálogo para agregar/editar task -->
         <TaskDialog
+            v-if="showAddTaskDialog || showEditTaskDialog"
             :visible="showAddTaskDialog || showEditTaskDialog"
             :item="currentItemForTaskDialog"
             :existing-task="editingTask"
@@ -69,17 +70,19 @@ import ItemDialog from "@/components/ItemDialog.vue";
 import TaskDialog from "@/components/TaskDialog.vue";
 import UserProgressChart from "@/components/UserProgressChart.vue";
 import { useTaskManagement } from "@/composables/useTaskManagement";
+import { useUrlManagement } from "@/composables/useUrlManagement";
 import { saveSprint } from "@/services/firestore";
 import { useDragDropStore } from "@/stores/dragDrop";
 import { useLoadingStore } from "@/stores/loading";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item } from "@/types";
 import { eventBus } from "@/utils/eventBus";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
 const loadingStore = useLoadingStore();
+const { getTaskIdFromUrl, getItemIdFromUrl } = useUrlManagement();
 
 // Estado para controlar cuándo mostrar el gráfico (solo después de carga inicial)
 const chartReady = ref(false);
@@ -137,6 +140,32 @@ onMounted(async () => {
 
     // Escuchar eventos del eventBus
     eventBus.on("taskCreated", onTaskCreated);
+
+    // Revisar si hay un taskId o itemId en la URL para abrir el modal
+    const taskId = getTaskIdFromUrl();
+    const itemId = getItemIdFromUrl();
+
+    console.log("onMounted - URL params:", { taskId, itemId });
+
+    if (taskId) {
+        console.log("Buscando task con ID:", taskId);
+        const taskData = findTaskById(taskId);
+        if (taskData) {
+            console.log("Task encontrada, abriendo modal de edición");
+            openEditTaskDialog(taskData.task, taskData.item);
+        } else {
+            console.log("Task no encontrada");
+        }
+    } else if (itemId) {
+        console.log("Buscando item con ID:", itemId);
+        const item = items.value.find((i) => i.id === itemId);
+        if (item) {
+            console.log("Item encontrado, abriendo modal de agregar task");
+            openAddTaskDialog(item);
+        } else {
+            console.log("Item no encontrado");
+        }
+    }
 });
 
 // Watcher para actualizar el título cuando cambia el sprint actual
@@ -336,6 +365,17 @@ const expandedItems = ref<Set<string>>(new Set());
 
 // Estado para controlar si todas las tasks están expandidas o colapsadas
 const allTasksExpanded = ref(false);
+
+// Función para encontrar una task por ID
+const findTaskById = (taskId: string) => {
+    for (const item of items.value) {
+        const task = item.tasks.find((t) => t.id === taskId);
+        if (task) {
+            return { task, item };
+        }
+    }
+    return null;
+};
 
 // Manejar cuando un item recibe una task desde otro item
 const onTaskReceived = (itemId: string) => {

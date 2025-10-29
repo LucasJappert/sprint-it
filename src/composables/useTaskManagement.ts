@@ -3,6 +3,8 @@ import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { eventBus } from "@/utils/eventBus";
 import { readonly, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useUrlManagement } from "./useUrlManagement";
 
 const showAddTaskDialog = ref(false);
 const showEditTaskDialog = ref(false);
@@ -10,7 +12,9 @@ const editingTask = ref<Task | null>(null);
 const currentItem = ref<Item | null>(null);
 
 export const useTaskManagement = () => {
+    const router = useRouter();
     const sprintStore = useSprintStore();
+    const { setTaskUrl, clearQueryParams } = useUrlManagement(router);
 
     const openAddTaskDialog = (item: Item) => {
         currentItem.value = item;
@@ -24,6 +28,7 @@ export const useTaskManagement = () => {
         editingTask.value = task;
         showEditTaskDialog.value = true;
         showAddTaskDialog.value = false;
+        setTaskUrl(task.id);
     };
 
     const closeDialogs = () => {
@@ -31,6 +36,7 @@ export const useTaskManagement = () => {
         showEditTaskDialog.value = false;
         editingTask.value = null;
         currentItem.value = null;
+        clearQueryParams();
     };
 
     const saveTask = (task: Task) => {

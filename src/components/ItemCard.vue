@@ -8,7 +8,7 @@
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
             props.isContextMenuOpen ? 'context-menu-open' : '',
         ]"
-        @click="showEditItemDialog = true"
+        @click="onEditItem"
         @contextmenu.prevent.stop="onRightClick"
         @dragover.prevent="onDragOver"
         @drop.prevent="onDrop"
@@ -50,7 +50,7 @@
         :visible="showEditItemDialog"
         :existing-item="item"
         :next-order="item.order"
-        @close="showEditItemDialog = false"
+        @close="onCloseItemDialog"
         @save="onSaveEditItem"
     />
 
@@ -61,6 +61,7 @@
 <script setup lang="ts">
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
+import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
@@ -69,6 +70,7 @@ import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import ContextMenu from "./ContextMenu.vue";
 import ItemDialog from "./ItemDialog.vue";
 import TaskCard from "./TaskCard.vue";
@@ -90,10 +92,12 @@ const emit = defineEmits<{
 
 // Remover lógica de tasks ya que ahora se maneja en el composable
 
+const router = useRouter();
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
 const { showAddTaskDialog, openAddTaskDialog, closeDialogs, saveTask } = useTaskManagement();
+const { setItemUrl, clearQueryParams } = useUrlManagement(router);
 const showTasks = ref(false);
 
 // Computed para determinar si este item debe mostrar bordes
@@ -164,6 +168,11 @@ onMounted(() => {
 
 const showEditItemDialog = ref(false);
 
+const onEditItem = () => {
+    showEditItemDialog.value = true;
+    setItemUrl(props.item.id);
+};
+
 // Menú contextual
 const contextMenuRef = ref();
 const { createItemContextMenuOptions } = useContextMenuOptions();
@@ -208,6 +217,11 @@ const onSaveEditItem = async (item: Item) => {
         assignedUser: item.assignedUser,
     });
     // No cerrar el diálogo para que persista visible después de guardar
+};
+
+const onCloseItemDialog = () => {
+    showEditItemDialog.value = false;
+    clearQueryParams();
 };
 
 const onRightClick = (event: MouseEvent) => {

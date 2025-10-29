@@ -74,6 +74,7 @@
 
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
+import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
@@ -81,6 +82,7 @@ import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById
 import { useAuthStore } from "@/stores/auth";
 import type { ChangeHistory, Comment, Item, Task } from "@/types";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 
 const props = defineProps<{
     visible: boolean;
@@ -140,6 +142,8 @@ const originalActualEffort = ref("");
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
 
+const router = useRouter();
+const { clearQueryParams } = useUrlManagement(router);
 const viewMode = ref<"details" | "history">("details");
 const changeHistory = ref<ChangeHistory[]>([]);
 
@@ -175,6 +179,7 @@ const loadAssignedUserOptions = async () => {
 
 onMounted(() => {
     loadAssignedUserOptions();
+    document.addEventListener("keydown", handleKeyDown);
 });
 
 const handleKeyDown = (event: KeyboardEvent) => {
@@ -185,10 +190,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
         }
     }
 };
-
-onMounted(() => {
-    document.addEventListener("keydown", handleKeyDown);
-});
 
 onUnmounted(() => {
     document.removeEventListener("keydown", handleKeyDown);
@@ -258,8 +259,7 @@ const loadChangeHistory = async (taskId: string) => {
 };
 
 const saveChanges = async (oldTask: Task, newTask: Task) => {
-    const authStore = useAuthStore();
-    const userId = authStore.user?.id;
+    const userId = useAuthStore().user?.id;
 
     if (!userId) return;
 
@@ -446,8 +446,6 @@ const onStateChange = (options: any[]) => {
     }
 };
 
-const authStore = useAuthStore();
-
 const handleCommentAdded = (comment: Comment) => {
     // El comentario ya se guardó en Firestore, no necesitamos actualizar el task local
     // ya que los comentarios ahora se manejan independientemente
@@ -493,11 +491,8 @@ const handleSave = async () => {
 const handleClose = () => {
     emit("close");
     resetForm();
+    clearQueryParams();
 };
-
-onMounted(() => {
-    console.log("TaskDialog mounted");
-});
 
 // Llamar resetForm cuando se abre el diálogo o cambia existingTask
 watch(

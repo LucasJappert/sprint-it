@@ -43,7 +43,7 @@
         :visible="showEditTaskDialog"
         :item="props.item"
         :existing-task="editingTask"
-        @close="closeDialogs"
+        @close="onCloseTaskDialog"
         @save="onSaveEditTask"
     />
 
@@ -54,6 +54,7 @@
 <script setup lang="ts">
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
+import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
@@ -62,6 +63,7 @@ import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import ContextMenu from "./ContextMenu.vue";
 import TaskDialog from "./TaskDialog.vue";
 
@@ -75,34 +77,13 @@ const emit = defineEmits<{
     contextMenuClosed: [];
 }>();
 
-const { deleteTask } = useTaskManagement();
+const router = useRouter();
+const sprintStore = useSprintStore();
+const authStore = useAuthStore();
+const dragDropStore = useDragDropStore();
 
-const showEditTaskDialog = ref(false);
-const editingTask = ref<Task | null>(null);
-
-const closeDialogs = () => {
-    showEditTaskDialog.value = false;
-    editingTask.value = null;
-};
-
-const onSaveEditTask = (task: Task) => {
-    if (!props.item) return;
-
-    const taskIndex = props.item.tasks.findIndex((t) => t.id === task.id);
-    if (taskIndex !== -1) {
-        props.item.tasks[taskIndex] = task;
-
-        // Recalcular esfuerzos del item padre si tiene tasks
-        if (props.item.tasks.length > 0) {
-            props.item.estimatedEffort = props.item.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
-            props.item.actualEffort = props.item.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
-        }
-
-        if (sprintStore.currentSprint) {
-            saveSprint(sprintStore.currentSprint);
-        }
-    }
-};
+const { deleteTask, showEditTaskDialog, editingTask, openEditTaskDialog, closeDialogs, onSaveEditTask } = useTaskManagement();
+const { clearQueryParams } = useUrlManagement(router);
 
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
@@ -114,10 +95,6 @@ const getStateHtml = (state: string | undefined) => {
     const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
     return option ? option.name : state;
 };
-
-const sprintStore = useSprintStore();
-const authStore = useAuthStore();
-const dragDropStore = useDragDropStore();
 
 const assignedUserName = ref("");
 
@@ -150,6 +127,7 @@ const loadAssignedUserName = async () => {
 // Cargar el nombre cuando el componente se monta o cuando cambia el task
 onMounted(() => {
     loadAssignedUserName();
+    loadContextMenuOptions();
 });
 
 // Watch para recargar cuando cambia el assignedUser
@@ -179,10 +157,6 @@ const loadContextMenuOptions = async () => {
     contextMenuOptions.value = await createTaskContextMenuOptions(props.task, props.item, deleteTask);
 };
 
-onMounted(() => {
-    loadContextMenuOptions();
-});
-
 watch(
     () => props.task,
     () => {
@@ -191,8 +165,11 @@ watch(
 );
 
 const onEditTask = (task: Task) => {
-    editingTask.value = task;
-    showEditTaskDialog.value = true;
+    openEditTaskDialog(task, props.item);
+};
+
+const onCloseTaskDialog = () => {
+    closeDialogs();
 };
 
 const onDragOver = (e: DragEvent) => {
