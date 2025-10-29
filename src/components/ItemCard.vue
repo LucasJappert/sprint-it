@@ -42,7 +42,7 @@
     </div>
 
     <div v-if="showTasks || props.isExpanded" class="tasks-container">
-        <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" />
+        <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" :show-dialog="false" />
     </div>
 
     <ItemDialog

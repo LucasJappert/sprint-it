@@ -23,12 +23,13 @@ export const useTaskManagement = () => {
         showEditTaskDialog.value = false;
     };
 
-    const openEditTaskDialog = (task: Task, item: Item) => {
+    const openEditTaskDialog = (task: Task, item: Item, openFromUrl: boolean = false) => {
+        console.log("openEditTaskDialog", task, item);
         currentItem.value = item;
         editingTask.value = task;
         showEditTaskDialog.value = true;
         showAddTaskDialog.value = false;
-        setTaskUrl(task.id);
+        if (!openFromUrl) setTaskUrl(task.id);
     };
 
     const closeDialogs = () => {

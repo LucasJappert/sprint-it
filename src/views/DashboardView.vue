@@ -48,10 +48,20 @@
         <!-- Diálogo para agregar nuevo item -->
         <ItemDialog v-if="showAddItemDialog" :visible="showAddItemDialog" :next-order="items.length + 1" @close="showAddItemDialog = false" @save="onAddItem" />
 
+        <!-- Diálogo para editar item existente -->
+        <ItemDialog
+            v-if="showEditItemDialog"
+            :visible="showEditItemDialog"
+            :next-order="editingItem?.order || 1"
+            :existing-item="editingItem"
+            @close="onCloseEditItemDialog"
+            @save="onSaveEditItem"
+        />
+
         <!-- Diálogo para agregar/editar task -->
         <TaskDialog
-            v-if="showAddTaskDialog || showEditTaskDialog"
-            :visible="showAddTaskDialog || showEditTaskDialog"
+            v-if="showEditTaskDialog"
+            :visible="showEditTaskDialog"
             :item="currentItemForTaskDialog"
             :existing-task="editingTask"
             @close="closeDialogs"
@@ -91,6 +101,10 @@ const chartReady = ref(false);
 
 // Estado para el diálogo de tasks
 const { showAddTaskDialog, showEditTaskDialog, editingTask, currentItem, openAddTaskDialog, openEditTaskDialog, closeDialogs, saveTask } = useTaskManagement();
+
+// Estado para el diálogo de edición de items
+const showEditItemDialog = ref(false);
+const editingItem = ref<Item | null>(null);
 
 // Computed para el item actual del diálogo de task
 const currentItemForTaskDialog = computed((): Item => {
@@ -153,8 +167,10 @@ onMounted(async () => {
         console.log("Buscando task con ID:", taskId);
         const taskData = findTaskById(taskId);
         if (taskData) {
-            console.log("Task encontrada, abriendo modal de edición");
-            openEditTaskDialog(taskData.task, taskData.item);
+            console.log("Task encontrada, expandiendo item y abriendo modal de edición");
+            // Expandir el item que contiene la task
+            expandedItems.value.add(taskData.item.id);
+            openEditTaskDialog(taskData.task, taskData.item, true);
         } else {
             console.log("Task no encontrada");
         }
@@ -162,8 +178,9 @@ onMounted(async () => {
         console.log("Buscando item con ID:", itemId);
         const item = items.value.find((i) => i.id === itemId);
         if (item) {
-            console.log("Item encontrado, abriendo modal de agregar task");
-            openAddTaskDialog(item);
+            console.log("Item encontrado, abriendo modal de edición");
+            // No expandir el item automáticamente, solo abrir el modal de edición
+            openEditItemDialog(item);
         } else {
             console.log("Item no encontrado");
         }
@@ -243,6 +260,35 @@ const showAddItemDialog = ref(false);
 
 const onAddItem = async (item: Item) => {
     await sprintStore.addItem(item);
+};
+
+// Funciones para editar items
+const openEditItemDialog = (item: Item) => {
+    editingItem.value = item;
+    showEditItemDialog.value = true;
+};
+
+const onCloseEditItemDialog = () => {
+    showEditItemDialog.value = false;
+    editingItem.value = null;
+    // Limpiar la URL cuando se cierra el modal de edición de item
+    const { clearQueryParams } = useUrlManagement(router);
+    clearQueryParams();
+};
+
+const onSaveEditItem = async (item: Item) => {
+    if (editingItem.value) {
+        await sprintStore.updateItem(editingItem.value.id, {
+            title: item.title,
+            detail: item.detail,
+            priority: item.priority,
+            state: item.state,
+            estimatedEffort: item.estimatedEffort,
+            actualEffort: item.actualEffort,
+            assignedUser: item.assignedUser,
+        });
+    }
+    // No cerrar el diálogo para que persista visible después de guardar
 };
 
 // Usar el store para el estado del drag & drop

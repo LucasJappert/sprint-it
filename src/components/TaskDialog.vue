@@ -178,6 +178,7 @@ const loadAssignedUserOptions = async () => {
 };
 
 onMounted(() => {
+    console.log("TaskDialog onMounted");
     loadAssignedUserOptions();
     document.addEventListener("keydown", handleKeyDown);
 });

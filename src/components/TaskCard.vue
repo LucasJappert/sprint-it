@@ -39,7 +39,7 @@
 
     <!-- Diálogo de edición de task -->
     <TaskDialog
-        v-if="showEditTaskDialog"
+        v-if="showEditTaskDialog && props.showDialog !== false"
         :visible="showEditTaskDialog"
         :item="props.item"
         :existing-task="editingTask"
@@ -70,6 +70,7 @@ import TaskDialog from "./TaskDialog.vue";
 const props = defineProps<{
     task: Task;
     item: Item;
+    showDialog?: boolean;
 }>();
 
 const emit = defineEmits<{
