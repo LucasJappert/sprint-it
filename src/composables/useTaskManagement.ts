@@ -24,7 +24,6 @@ export const useTaskManagement = () => {
     };
 
     const openEditTaskDialog = (task: Task, item: Item, openFromUrl: boolean = false) => {
-        console.log("openEditTaskDialog", task, item);
         currentItem.value = item;
         editingTask.value = task;
         showEditTaskDialog.value = true;

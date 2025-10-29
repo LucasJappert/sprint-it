@@ -88,7 +88,7 @@ import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { ChangeHistory, Comment, Item } from "@/types";
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 interface Props {
     visible: boolean;
@@ -202,6 +202,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 onMounted(() => {
     console.log("ItemDialog mounted");
     document.addEventListener("keydown", handleKeyDown);
+    titleInputRef.value?.focus();
 });
 
 onUnmounted(() => {
@@ -317,28 +318,6 @@ const resetForm = async () => {
         loadingStore.setLoading(false);
     }
 };
-
-// Watch para resetear el form cuando cambia existingItem
-watch(
-    () => props.existingItem,
-    async (newItem, oldItem) => {
-        await resetForm();
-    },
-    { immediate: true },
-);
-
-// Watch para dar foco al input cuando se abre el diálogo
-watch(
-    () => props.visible,
-    async (visible) => {
-        if (visible) {
-            // Usar setTimeout para asegurar que el componente esté completamente renderizado
-            setTimeout(() => {
-                titleInputRef.value?.focus();
-            }, 10);
-        }
-    },
-);
 
 const onAssignedUserChange = (options: any[]) => {
     // Encontrar la opción seleccionada

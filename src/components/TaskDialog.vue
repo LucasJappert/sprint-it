@@ -178,9 +178,9 @@ const loadAssignedUserOptions = async () => {
 };
 
 onMounted(() => {
-    console.log("TaskDialog onMounted");
     loadAssignedUserOptions();
     document.addEventListener("keydown", handleKeyDown);
+    titleInputRef.value?.focus();
 });
 
 const handleKeyDown = (event: KeyboardEvent) => {
@@ -495,25 +495,11 @@ const handleClose = () => {
     clearQueryParams();
 };
 
-// Llamar resetForm cuando se abre el diálogo o cambia existingTask
-watch(
-    () => props.visible,
-    async (visible) => {
-        if (visible) {
-            await resetForm();
-            // Usar setTimeout para asegurar que el componente esté completamente renderizado
-            // especialmente cuando se abre desde menú contextual
-            setTimeout(() => {
-                titleInputRef.value?.focus();
-            }, 10);
-        }
-    },
-);
-
 watch(
     () => props.existingTask,
     async (newTask, oldTask) => {
         if (props.visible) {
+            console.log("props.visible", props.visible);
             await resetForm();
         }
     },

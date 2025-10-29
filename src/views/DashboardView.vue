@@ -60,8 +60,8 @@
 
         <!-- Diálogo para agregar/editar task -->
         <TaskDialog
-            v-if="showEditTaskDialog"
-            :visible="showEditTaskDialog"
+            v-if="showAddTaskDialog || showEditTaskDialog"
+            :visible="showAddTaskDialog || showEditTaskDialog"
             :item="currentItemForTaskDialog"
             :existing-task="editingTask"
             @close="closeDialogs"
