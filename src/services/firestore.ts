@@ -1,10 +1,11 @@
-import type { Comment, Sprint, User } from "@/types";
+import type { ChangeHistory, Comment, Sprint, User } from "@/types";
 import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
 import { db } from "./firebase";
 
 const sprintsCollection = collection(db, "sprints");
 const usersCollection = collection(db, "users");
 const commentsCollection = collection(db, "comments");
+const changesCollection = collection(db, "changes");
 
 export const saveSprint = async (sprint: Sprint) => {
     const docRef = doc(sprintsCollection, sprint.id);
@@ -168,11 +169,34 @@ export const getAllUsers = async (): Promise<User[]> => {
     })) as User[];
 };
 
+export const addChange = async (change: Omit<ChangeHistory, "id">): Promise<string> => {
+    const changeData = {
+        ...change,
+        createdAt: change.createdAt,
+    };
+    const docRef = await addDoc(changesCollection, changeData);
+    return docRef.id;
+};
+
+export const getChangesByAssociatedId = async (associatedId: string): Promise<ChangeHistory[]> => {
+    const q = query(changesCollection, where("associatedId", "==", associatedId));
+    const querySnapshot = await getDocs(q);
+    const changes = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+    })) as ChangeHistory[];
+
+    // Ordenar por createdAt descendente (más recientes primero)
+    return changes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+};
+
 export const exportAllData = async () => {
-    const [sprintsSnapshot, usersSnapshot, commentsSnapshot] = await Promise.all([
+    const [sprintsSnapshot, usersSnapshot, commentsSnapshot, changesSnapshot] = await Promise.all([
         getDocs(sprintsCollection),
         getDocs(usersCollection),
         getDocs(commentsCollection),
+        getDocs(changesCollection),
     ]);
 
     const sprints = sprintsSnapshot.docs.map(doc => ({
@@ -194,10 +218,17 @@ export const exportAllData = async () => {
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
     }));
 
+    const changes = changesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+    }));
+
     return {
         sprints,
         users,
         comments,
+        changes,
         exportedAt: new Date().toISOString(),
     };
 };

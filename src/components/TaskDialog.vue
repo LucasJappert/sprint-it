@@ -1,51 +1,69 @@
 <template>
     <MyDialog :visible="visible" :min-width="800" @close="handleClose" persistent>
         <div class="header flex-center justify-space-between">
-            <h3 class="text-left flex-center justify-start">
-                <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
-                {{ isEditing ? "Edit Task" : "New Task" }}
-            </h3>
+            <div class="flex-center">
+                <h3 class="text-left flex-center justify-start">
+                    <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
+                    {{ isEditing ? "Edit Task" : "New Task" }}
+                </h3>
+                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4">
+                    <v-btn value="details" size="small">
+                        <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
+                        Details
+                    </v-btn>
+                    <v-btn value="history" size="small">
+                        <v-icon size="16" class="mr-1">mdi-history</v-icon>
+                        History
+                    </v-btn>
+                </v-btn-toggle>
+            </div>
             <v-icon class="close-btn" @click="$emit('close')" :size="24">mdi-close</v-icon>
         </div>
         <div class="body-scroll">
-            <!-- Título ocupando 100% del ancho -->
-            <div class="full-width">
-                <MyInput ref="titleInputRef" v-model="title" label="Title" density="compact" @keydown.enter="handleSave" />
-            </div>
+            <template v-if="viewMode === 'details'">
+                <!-- Título ocupando 100% del ancho -->
+                <div class="full-width">
+                    <MyInput ref="titleInputRef" v-model="title" label="Title" density="compact" @keydown.enter="handleSave" />
+                </div>
 
-            <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
-            <div class="form-row mt-3">
-                <div class="field-group assigned-user">
-                    <MySelect
-                        v-model="assignedUser"
-                        label="Assigned Person"
-                        :options="assignedUserOptions"
-                        placeholder="Select user..."
-                        density="compact"
-                        @update:options="onAssignedUserChange"
-                    />
+                <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
+                <div class="form-row mt-3">
+                    <div class="field-group assigned-user">
+                        <MySelect
+                            v-model="assignedUser"
+                            label="Assigned Person"
+                            :options="assignedUserOptions"
+                            placeholder="Select user..."
+                            density="compact"
+                            @update:options="onAssignedUserChange"
+                        />
+                    </div>
+                    <div class="field-group state">
+                        <MySelect v-model="state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
+                    </div>
+                    <div class="field-group estimated-effort">
+                        <MyInput v-model="estimatedEffort" label="Effort" type="number" density="compact" />
+                    </div>
+                    <div class="field-group actual-effort">
+                        <MyInput v-model="actualEffort" label="Real Effort" type="number" density="compact" />
+                    </div>
+                    <div class="field-group priority">
+                        <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
+                    </div>
                 </div>
-                <div class="field-group state">
-                    <MySelect v-model="state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
-                </div>
-                <div class="field-group estimated-effort">
-                    <MyInput v-model="estimatedEffort" label="Effort" type="number" density="compact" />
-                </div>
-                <div class="field-group actual-effort">
-                    <MyInput v-model="actualEffort" label="Real Effort" type="number" density="compact" />
-                </div>
-                <div class="field-group priority">
-                    <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
-                </div>
-            </div>
 
-            <!-- Detalle en textarea ocupando 100% del ancho -->
-            <div class="full-width mt-3">
-                <MyRichText v-model="detail" placeholder="Description" density="compact" class="detail-textarea" />
-            </div>
+                <!-- Detalle en textarea ocupando 100% del ancho -->
+                <div class="full-width mt-3">
+                    <MyRichText v-model="detail" placeholder="Description" density="compact" class="detail-textarea" />
+                </div>
 
-            <!-- Comments section -->
-            <CommentSection v-if="existingTask" :associated-id="props.existingTask?.id || ''" associated-type="task" @comment-added="handleCommentAdded" />
+                <!-- Comments section -->
+                <CommentSection v-if="existingTask" :associated-id="props.existingTask?.id || ''" associated-type="task" @comment-added="handleCommentAdded" />
+            </template>
+
+            <template v-else-if="viewMode === 'history'">
+                <HistoryView :change-history="changeHistory" />
+            </template>
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="handleClose">Cancel</MyButton>
@@ -55,12 +73,13 @@
 </template>
 
 <script setup lang="ts">
+import HistoryView from "@/components/HistoryView.vue";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
-import { getUserByUsername, getUsernameById } from "@/services/firestore";
+import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
-import type { Comment, Item, Task } from "@/types";
+import type { ChangeHistory, Comment, Item, Task } from "@/types";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 const props = defineProps<{
@@ -120,6 +139,9 @@ const originalEstimatedEffort = ref("");
 const originalActualEffort = ref("");
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
+
+const viewMode = ref<"details" | "history">("details");
+const changeHistory = ref<ChangeHistory[]>([]);
 
 const priorityOptions = ref(
     PRIORITY_OPTIONS.map((option: any) => ({
@@ -226,6 +248,118 @@ const selectStateOption = (task: Task) => {
     });
 };
 
+const loadChangeHistory = async (taskId: string) => {
+    try {
+        changeHistory.value = await getChangesByAssociatedId(taskId);
+    } catch (error) {
+        console.error("Error loading change history:", error);
+        changeHistory.value = [];
+    }
+};
+
+const saveChanges = async (oldTask: Task, newTask: Task) => {
+    const authStore = useAuthStore();
+    const userId = authStore.user?.id;
+
+    if (!userId) return;
+
+    const changes: Array<Omit<ChangeHistory, "id">> = [];
+
+    // Comparar campos y crear cambios
+    if (oldTask.title !== newTask.title) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "title",
+            oldValue: oldTask.title,
+            newValue: newTask.title,
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldTask.detail !== newTask.detail) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "detail",
+            oldValue: oldTask.detail,
+            newValue: newTask.detail,
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldTask.priority !== newTask.priority) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "priority",
+            oldValue: oldTask.priority,
+            newValue: newTask.priority,
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldTask.state !== newTask.state) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "state",
+            oldValue: oldTask.state,
+            newValue: newTask.state,
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldTask.estimatedEffort !== newTask.estimatedEffort) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "estimatedEffort",
+            oldValue: oldTask.estimatedEffort.toString(),
+            newValue: newTask.estimatedEffort.toString(),
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldTask.actualEffort !== newTask.actualEffort) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "actualEffort",
+            oldValue: oldTask.actualEffort.toString(),
+            newValue: newTask.actualEffort.toString(),
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldTask.assignedUser !== newTask.assignedUser) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "assignedUser",
+            oldValue: oldTask.assignedUser || "",
+            newValue: newTask.assignedUser || "",
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    // Guardar todos los cambios
+    for (const change of changes) {
+        try {
+            await addChange(change);
+        } catch (error) {
+            console.error("Error saving change:", error);
+        }
+    }
+};
+
 const resetFormForEditing = async (task: Task) => {
     const assignedUserValue = await getAssignedUserValue(task);
     setFormValuesFromTask(task, assignedUserValue);
@@ -238,6 +372,9 @@ const resetFormForEditing = async (task: Task) => {
     selectAssignedUserOption(assignedUserValue);
     selectPriorityOption(task);
     selectStateOption(task);
+
+    // Cargar historial de cambios
+    await loadChangeHistory(task.id);
 };
 
 const resetFormForNew = () => {
@@ -342,6 +479,12 @@ const handleSave = async () => {
             assignedUser: assignedUserId,
             order: props.existingTask?.order || 0,
         };
+
+        // Guardar cambios si es edición
+        if (props.existingTask) {
+            await saveChanges(props.existingTask, task);
+        }
+
         emit("save", task);
         emit("close");
     }

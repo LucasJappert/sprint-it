@@ -55,3 +55,14 @@ export interface Sprint {
     diasHabiles: number;
     items: Item[];
 }
+
+export interface ChangeHistory {
+    id: string;
+    associatedId: string; // id of the task or item
+    associatedType: "task" | "item";
+    field: string; // e.g., "title", "detail", "priority", etc.
+    oldValue: string;
+    newValue: string;
+    userId: string; // user who made the change
+    createdAt: Date;
+}

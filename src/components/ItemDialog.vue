@@ -1,52 +1,76 @@
 <template>
     <MyDialog :visible="visible" :min-width="800" @close="handleClose" persistent>
         <div class="header flex-center justify-space-between">
-            <h3 class="text-left flex-center justify-start">
-                <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
-                {{ isEditing ? "Edit Item" : "New Item" }}
-            </h3>
+            <div class="flex-center">
+                <h3 class="text-left flex-center justify-start">
+                    <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
+                    {{ isEditing ? "Edit Item" : "New Item" }}
+                </h3>
+                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4">
+                    <v-btn value="details" size="small">
+                        <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
+                        Details
+                    </v-btn>
+                    <v-btn value="history" size="small">
+                        <v-icon size="16" class="mr-1">mdi-history</v-icon>
+                        History
+                    </v-btn>
+                </v-btn-toggle>
+            </div>
             <v-icon class="close-btn" @click="$emit('close')" :size="24">mdi-close</v-icon>
         </div>
         <div class="body-scroll">
-            <MyCard accent="gray">
-                <!-- Título ocupando 100% del ancho -->
-                <div class="full-width mt-2">
-                    <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
-                </div>
-                <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
-                <div class="form-row mt-3">
-                    <div class="field-group assigned-user">
-                        <MySelect
-                            v-model="newItem.assignedUser"
-                            label="Assigned Person"
-                            :options="assignedUserOptions"
-                            placeholder="Select user..."
-                            density="compact"
-                            @update:options="onAssignedUserChange"
-                        />
+            <template v-if="viewMode === 'details'">
+                <MyCard accent="gray">
+                    <!-- Título ocupando 100% del ancho -->
+                    <div class="full-width mt-2">
+                        <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
                     </div>
-                    <div class="field-group state">
-                        <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
+                    <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
+                    <div class="form-row mt-3">
+                        <div class="field-group assigned-user">
+                            <MySelect
+                                v-model="newItem.assignedUser"
+                                label="Assigned Person"
+                                :options="assignedUserOptions"
+                                placeholder="Select user..."
+                                density="compact"
+                                @update:options="onAssignedUserChange"
+                            />
+                        </div>
+                        <div class="field-group state">
+                            <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
+                        </div>
+                        <div class="field-group estimated-effort">
+                            <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
+                        </div>
+                        <div class="field-group actual-effort">
+                            <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
+                        </div>
+                        <div class="field-group priority">
+                            <MySelect
+                                v-model="newItem.priority"
+                                label="Priority"
+                                :options="priorityOptions"
+                                density="compact"
+                                @update:options="onPriorityChange"
+                            />
+                        </div>
                     </div>
-                    <div class="field-group estimated-effort">
-                        <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
-                    </div>
-                    <div class="field-group actual-effort">
-                        <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
-                    </div>
-                    <div class="field-group priority">
-                        <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
-                    </div>
-                </div>
 
-                <!-- Detalle en textarea ocupando 100% del ancho -->
-                <div class="full-width mt-3">
-                    <MyRichText v-model="newItem.detail" placeholder="Description" density="compact" class="detail-textarea" />
-                </div>
-            </MyCard>
+                    <!-- Detalle en textarea ocupando 100% del ancho -->
+                    <div class="full-width mt-3">
+                        <MyRichText v-model="newItem.detail" placeholder="Description" density="compact" class="detail-textarea" />
+                    </div>
+                </MyCard>
 
-            <!-- Comments section -->
-            <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" @comment-added="handleCommentAdded" />
+                <!-- Comments section -->
+                <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" @comment-added="handleCommentAdded" />
+            </template>
+
+            <template v-else-if="viewMode === 'history'">
+                <HistoryView :change-history="changeHistory" />
+            </template>
         </div>
         <div class="footer">
             <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancel</MyButton>
@@ -56,13 +80,14 @@
 </template>
 
 <script setup lang="ts">
+import HistoryView from "@/components/HistoryView.vue";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
-import { getUserByUsername, getUsernameById } from "@/services/firestore";
+import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
-import type { Comment, Item } from "@/types";
+import type { ChangeHistory, Comment, Item } from "@/types";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 interface Props {
@@ -129,6 +154,9 @@ const canSave = computed(() => {
 });
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
+
+const viewMode = ref<"details" | "history">("details");
+const changeHistory = ref<ChangeHistory[]>([]);
 
 const priorityOptions = ref(
     PRIORITY_OPTIONS.map((option: any) => ({
@@ -247,6 +275,9 @@ const resetForm = async () => {
             stateOptions.value.forEach((option) => {
                 option.checked = option.value.toLowerCase() === (props.existingItem!.state || STATE_VALUES.TODO).toLowerCase();
             });
+
+            // Cargar historial de cambios
+            await loadChangeHistory(props.existingItem.id);
         } else {
             newItem.value = {
                 title: "",
@@ -339,6 +370,118 @@ const onStateChange = (options: any[]) => {
     }
 };
 
+const loadChangeHistory = async (itemId: string) => {
+    try {
+        changeHistory.value = await getChangesByAssociatedId(itemId);
+    } catch (error) {
+        console.error("Error loading change history:", error);
+        changeHistory.value = [];
+    }
+};
+
+const saveChanges = async (oldItem: Item, newItem: Item) => {
+    const authStore = useAuthStore();
+    const userId = authStore.user?.id;
+
+    if (!userId) return;
+
+    const changes: Array<Omit<ChangeHistory, "id">> = [];
+
+    // Comparar campos y crear cambios
+    if (oldItem.title !== newItem.title) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "title",
+            oldValue: oldItem.title,
+            newValue: newItem.title,
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldItem.detail !== newItem.detail) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "detail",
+            oldValue: oldItem.detail,
+            newValue: newItem.detail,
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldItem.priority !== newItem.priority) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "priority",
+            oldValue: oldItem.priority,
+            newValue: newItem.priority,
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldItem.state !== newItem.state) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "state",
+            oldValue: oldItem.state,
+            newValue: newItem.state,
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldItem.estimatedEffort !== newItem.estimatedEffort) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "estimatedEffort",
+            oldValue: oldItem.estimatedEffort.toString(),
+            newValue: newItem.estimatedEffort.toString(),
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldItem.actualEffort !== newItem.actualEffort) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "actualEffort",
+            oldValue: oldItem.actualEffort.toString(),
+            newValue: newItem.actualEffort.toString(),
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    if (oldItem.assignedUser !== newItem.assignedUser) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "assignedUser",
+            oldValue: oldItem.assignedUser || "",
+            newValue: newItem.assignedUser || "",
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
+    // Guardar todos los cambios
+    for (const change of changes) {
+        try {
+            await addChange(change);
+        } catch (error) {
+            console.error("Error saving change:", error);
+        }
+    }
+};
+
 const handleCommentAdded = (comment: Comment) => {
     // El comentario ya se guardó en Firestore, no necesitamos actualizar el item local
     // ya que los comentarios ahora se manejan independientemente
@@ -371,6 +514,12 @@ const handleSave = async () => {
             tasks: props.existingItem?.tasks || [],
             order: props.existingItem?.order || props.nextOrder,
         };
+
+        // Guardar cambios si es edición
+        if (props.existingItem) {
+            await saveChanges(props.existingItem, item);
+        }
+
         emit("save", item);
         emit("close");
     }

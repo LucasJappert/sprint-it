@@ -2,9 +2,10 @@ import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import MyAlerts from "@/plugins/my-alerts";
-import { getUserByUsername } from "@/services/firestore";
+import { addChange, getUserByUsername } from "@/services/firestore";
+import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
-import type { Item, Task } from "@/types";
+import type { ChangeHistory, Item, Task } from "@/types";
 
 export interface ContextMenuOption {
     key: string;
@@ -18,6 +19,28 @@ export interface ContextMenuOption {
 
 export const useContextMenuOptions = () => {
     const sprintStore = useSprintStore();
+    const authStore = useAuthStore();
+
+    const saveChange = async (associatedId: string, associatedType: "task" | "item", field: string, oldValue: string, newValue: string) => {
+        const userId = authStore.user?.id;
+        if (!userId) return;
+
+        const change: Omit<ChangeHistory, "id"> = {
+            associatedId,
+            associatedType,
+            field,
+            oldValue,
+            newValue,
+            userId,
+            createdAt: new Date(),
+        };
+
+        try {
+            await addChange(change);
+        } catch (error) {
+            console.error("Error saving change:", error);
+        }
+    };
 
     const createUserOptions = async (updateFunction: (userId: string) => Promise<void>) => {
         const options = [];
@@ -59,15 +82,21 @@ export const useContextMenuOptions = () => {
 
     const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void) => {
         const updateTaskAssignedUser = async (userId: string) => {
+            const oldValue = task.assignedUser || "";
             await sprintStore.updateTask(task.id, item.id, { assignedUser: userId });
+            await saveChange(task.id, "task", "assignedUser", oldValue, userId);
         };
 
         const updateTaskState = async (state: string) => {
+            const oldValue = task.state;
             await sprintStore.updateTask(task.id, item.id, { state: state as any });
+            await saveChange(task.id, "task", "state", oldValue, state);
         };
 
         const updateTaskPriority = async (priority: string) => {
+            const oldValue = task.priority;
             await sprintStore.updateTask(task.id, item.id, { priority: priority as any });
+            await saveChange(task.id, "task", "priority", oldValue, priority);
         };
 
         return [
@@ -110,15 +139,21 @@ export const useContextMenuOptions = () => {
 
     const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void) => {
         const updateItemAssignedUser = async (userId: string) => {
+            const oldValue = item.assignedUser || "";
             await sprintStore.updateItem(item.id, { assignedUser: userId });
+            await saveChange(item.id, "item", "assignedUser", oldValue, userId);
         };
 
         const updateItemState = async (state: string) => {
+            const oldValue = item.state;
             await sprintStore.updateItem(item.id, { state: state as any });
+            await saveChange(item.id, "item", "state", oldValue, state);
         };
 
         const updateItemPriority = async (priority: string) => {
+            const oldValue = item.priority;
             await sprintStore.updateItem(item.id, { priority: priority as any });
+            await saveChange(item.id, "item", "priority", oldValue, priority);
         };
 
         const moveItemToSprint = async (targetSprintId: string) => {
