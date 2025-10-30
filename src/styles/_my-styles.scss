@@ -370,3 +370,34 @@ hr {
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
     color: rgba(#ffffff, 0.7) !important;
 }
+
+// MyRichText list styles
+ul {
+    margin-left: 1em !important;
+    padding-left: 0 !important;
+}
+
+ol {
+    margin-left: 1em !important;
+    padding-left: 0 !important;
+}
+
+li {
+    margin-left: 1em !important;
+}
+
+ul ul {
+    margin-left: 2em !important;
+}
+
+ol ol {
+    margin-left: 2em !important;
+}
+
+ul ol {
+    margin-left: 2em !important;
+}
+
+ol ul {
+    margin-left: 2em !important;
+}
