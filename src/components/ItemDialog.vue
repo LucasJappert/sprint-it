@@ -199,7 +199,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
 };
 
 onMounted(() => {
-    console.log("ItemDialog mounted");
     document.addEventListener("keydown", handleKeyDown);
     resetForm();
     titleInputRef.value?.focus();
