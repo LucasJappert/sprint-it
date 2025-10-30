@@ -58,7 +58,13 @@
                 </div>
 
                 <!-- Comments section -->
-                <CommentSection v-if="existingTask" :associated-id="props.existingTask?.id || ''" associated-type="task" @comment-added="handleCommentAdded" />
+                <CommentSection
+                    v-if="existingTask"
+                    ref=""
+                    :associated-id="props.existingTask?.id || ''"
+                    associated-type="task"
+                    @comment-added="handleCommentAdded"
+                />
             </template>
 
             <template v-else-if="viewMode === 'history'">

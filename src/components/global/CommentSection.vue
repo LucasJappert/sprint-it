@@ -154,7 +154,7 @@ const loadComments = async () => {
 const loadAuthorNames = async () => {
     loadingStore.setLoading(true);
     try {
-        const uniqueAuthorIds = [...new Set(comments.value.map((c) => c.userId))];
+        const uniqueAuthorIds = Array.from(new Set(comments.value.map((c) => c.userId)));
         const names: Record<string, string> = {};
 
         for (const authorId of uniqueAuthorIds) {
@@ -278,6 +278,20 @@ const deleteCommentAsync = async (commentId: string) => {
         loadingStore.setLoading(false);
     }
 };
+
+// Warn about pending comments before unmounting
+onBeforeUnmount(async () => {
+    if (newCommentContent.value.trim()) {
+        const confirmed = await MyAlerts.confirmAsync(
+            "Comentario pendiente",
+            "Tienes un comentario sin guardar. ¿Quieres guardarlo antes de continuar?",
+            "warning",
+        );
+        if (confirmed) {
+            await addCommentAsync();
+        }
+    }
+});
 </script>
 
 <style scoped lang="scss">

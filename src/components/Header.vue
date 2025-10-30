@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar color="rgba(0, 0, 0, 0.2)" dark height="50" :class="{ 'header-hidden': !isVisible }" class="header-transition">
+    <v-app-bar dark height="50" :class="{ 'header-hidden': !isVisible }" class="header-transition">
         <div class="dashboard-header">
             <div class="sprint-container-1">
                 <div style="width: 280px">
@@ -247,6 +247,7 @@ const importItems = async () => {
 
 .header-transition {
     transition: transform 0.3s ease-in-out;
+    background: #111 !important;
 }
 
 .dashboard-header {

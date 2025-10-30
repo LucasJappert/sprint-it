@@ -113,7 +113,6 @@ const emit = defineEmits<{
     save: [item: Item];
 }>();
 
-const authStore = useAuthStore();
 const loadingStore = useLoadingStore();
 
 const isEditing = computed(() => !!props.existingItem);
