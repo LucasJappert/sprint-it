@@ -1,0 +1,53 @@
+.v-list {
+    background-color: transparent !important;
+}
+.v-list-item {
+    margin-bottom: auto !important;
+}
+
+.v-list-item--density-default:not(.v-list-item--nav).v-list-item--one-line {
+    padding-inline: 16px !important;
+}
+.v-toolbar__content {
+    overflow: visible !important;
+}
+
+.custom-icon-button {
+    background-color: transparent !important;
+    color: $primary !important;
+    box-shadow: none !important;
+
+    &:hover {
+        background-color: rgba(0, 184, 148, 0.1);
+    }
+
+    .v-icon {
+        color: inherit;
+    }
+}
+.v-list-item__overlay {
+    background-color: #ffffff40 !important;
+}
+.full-width-container .v-container {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+.v-label {
+    opacity: 1 !important;
+}
+
+.icon {
+    background: transparent;
+    border: 1px solid $gray;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+.danger {
+    color: $error !important;
+}
+.green {
+    color: $green !important;
+}
+.v-btn {
+    min-width: auto;
+}

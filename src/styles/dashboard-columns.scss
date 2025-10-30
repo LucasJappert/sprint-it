@@ -1,0 +1,62 @@
+@use "@/styles/variables.scss" as *;
+
+.header-row {
+    .item-col {
+        border-right: 1px solid rgba($gray, 0.2);
+        height: 28px;
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+
+        &:last-child {
+            border-right: none;
+        }
+    }
+}
+.item-col {
+    padding: 0 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cols-actions {
+    flex: 0 0 70px;
+    max-width: 70px;
+    text-align: left;
+}
+
+.cols-order {
+    flex: 0 0 65px;
+    max-width: 65px;
+    text-align: center;
+}
+
+.cols-title {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+
+.cols-assigned {
+    flex: 0 0 130px;
+    max-width: 130px;
+    text-align: left;
+}
+
+.cols-state {
+    flex: 0 0 100px;
+    max-width: 100px;
+    text-align: center;
+}
+
+.cols-effort {
+    flex: 0 0 100px;
+    max-width: 100px;
+}
+
+.cols-priority {
+    flex: 0 0 80px;
+    max-width: 80px;
+    text-align: center;
+}
