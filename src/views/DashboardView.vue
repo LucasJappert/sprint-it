@@ -83,9 +83,8 @@ import { useTaskManagement } from "@/composables/useTaskManagement";
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { saveSprint } from "@/services/firestore";
 import { useDragDropStore } from "@/stores/dragDrop";
-import { useLoadingStore } from "@/stores/loading";
 import { useSprintStore } from "@/stores/sprint";
-import type { Item } from "@/types";
+import type { Item } from "@/types/index";
 import { eventBus } from "@/utils/eventBus";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -93,14 +92,13 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
-const loadingStore = useLoadingStore();
 const { getTaskIdFromUrl, getItemIdFromUrl } = useUrlManagement(router);
 
 // Estado para controlar cuándo mostrar el gráfico (solo después de carga inicial)
 const chartReady = ref(false);
 
 // Estado para el diálogo de tasks
-const { showAddTaskDialog, showEditTaskDialog, editingTask, currentItem, openAddTaskDialog, openEditTaskDialog, closeDialogs, saveTask } = useTaskManagement();
+const { showAddTaskDialog, showEditTaskDialog, editingTask, currentItem, openEditTaskDialog, closeDialogs, saveTask } = useTaskManagement();
 
 // Estado para el diálogo de edición de items
 const showEditItemDialog = ref(false);
@@ -150,7 +148,7 @@ onMounted(async () => {
     }
 
     // Actualizar el título de la página con el sprint actual
-    document.title = `Sprint It - ${sprintStore.currentSprint?.titulo || "Sprint xx"}`;
+    document.title = `Sprint It - ${sprintStore.currentSprint?.titulo}`;
 
     // Marcar el gráfico como listo después de la carga inicial
     chartReady.value = true;
@@ -202,58 +200,10 @@ onUnmounted(() => {
 });
 
 // Selector de sprint
-const sprintOptions = computed(() =>
-    sprintStore.sprints.map((sprint) => ({
-        name: sprint.titulo,
-        checked: sprint.id === sprintStore.currentSprintId,
-        value: sprint.id,
-    })),
-);
 
 // Días hábiles del sprint actual
-const currentSprintDiasHabiles = computed({
-    get: () => sprintStore.currentSprint?.diasHabiles || 10,
-    set: (value: number) => {
-        if (sprintStore.currentSprint) {
-            sprintStore.currentSprint.diasHabiles = value;
-        }
-    },
-});
 
 // Fechas del sprint actual formateadas
-const currentSprintDates = computed(() => {
-    if (!sprintStore.currentSprint) return "";
-    const desde = sprintStore.currentSprint.fechaDesde.toLocaleDateString("es-ES");
-    const hasta = sprintStore.currentSprint.fechaHasta.toLocaleDateString("es-ES");
-    return `${desde} - ${hasta}`;
-});
-
-const currentSprintDiasHabilesString = computed({
-    get: () => currentSprintDiasHabiles.value.toString(),
-    set: (value: string) => {
-        const num = parseInt(value);
-        if (!isNaN(num)) {
-            currentSprintDiasHabiles.value = num;
-        }
-    },
-});
-
-const updateDiasHabiles = async () => {
-    await sprintStore.updateSprintDiasHabiles(currentSprintDiasHabiles.value);
-};
-
-const onSprintOptionsChange = (options: any[]) => {
-    const selectedOption = options.find((opt) => opt.checked);
-    if (selectedOption) {
-        sprintStore.currentSprintId = selectedOption.value;
-        // Actualizar el título cuando cambia el sprint
-        document.title = `Sprint It - ${sprintStore.currentSprint?.titulo || "Sprint xx"}`;
-    }
-};
-
-const createNewSprint = async () => {
-    await sprintStore.createNewSprint();
-};
 
 // Crear nuevo item
 const showAddItemDialog = ref(false);
@@ -291,56 +241,12 @@ const onSaveEditItem = async (item: Item) => {
     // No cerrar el diálogo para que persista visible después de guardar
 };
 
-// Usar el store para el estado del drag & drop
-
-const onItemDragStart = (item: Item) => {
-    // Nota: Las coordenadas iniciales se pasan desde ItemCard
-    // El store ya fue iniciado desde ItemCard con las coordenadas correctas
-};
-
 const onItemDragOver = (e: DragEvent) => {
     // Actualizar posición del ghost siguiendo al mouse
     dragDropStore.updateGhostPositionWithMouseAsync(e.clientX, e.clientY);
 
     // Actualizar bordes basado en posición del mouse (solo si superó el umbral)
     dragDropStore.updateBorderHighlightsAsync(e.clientX, e.clientY, items.value);
-};
-
-const reorder = async (source: Item, target: Item, position: "above" | "below") => {
-    const list = items.value;
-    const from = list.findIndex((i) => i.id === source.id);
-    let to = list.findIndex((i) => i.id === target.id);
-    if (from === -1 || to === -1) return;
-
-    if (position === "below") to += 1;
-
-    const toAdjusted = to > from ? to - 1 : to;
-
-    const moved = list.splice(from, 1)[0];
-    if (moved === undefined) return;
-    list.splice(toAdjusted, 0, moved);
-
-    // Reasignar order determinista
-    list.forEach((it, idx) => (it.order = idx + 1));
-
-    if (sprintStore.currentSprint) {
-        // Usar la función de validación del store (accediendo internamente)
-        const isValid = await (sprintStore as any).validateSprintItemsBeforeSave(sprintStore.currentSprint);
-        if (isValid) {
-            saveSprint(sprintStore.currentSprint);
-        }
-    }
-};
-
-const onItemDrop = async (target: Item) => {
-    if (dragDropStore.dragItem && dragDropStore.dragItem.id !== target.id) {
-        // Encontrar la posición basada en el target item
-        const targetIndex = items.value.findIndex((item) => item.id === target.id);
-        if (targetIndex !== -1) {
-            await reorder(dragDropStore.dragItem, target, "below");
-        }
-    }
-    dragDropStore.clearDragStateAsync();
 };
 
 const onBoardDrop = async (e: DragEvent) => {

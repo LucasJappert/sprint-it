@@ -8,13 +8,7 @@
 
         <!-- Add comment section -->
         <div class="add-comment relative">
-            <MyRichText
-                v-model="newCommentContent"
-                placeholder="Write a comment..."
-                density="compact"
-                :height="'80px'"
-                @keydown.enter.exact.prevent="addCommentAsync"
-            />
+            <MyRichText v-model="newCommentContent" placeholder="Write a comment..." density="compact" :height="'80px'" />
             <div class="add-comment-actions">
                 <MyButton @click="addCommentAsync" :disabled="!newCommentContent.trim()" class="custom-button"> Add Comment </MyButton>
             </div>
@@ -71,10 +65,8 @@ import MyAlerts from "@/plugins/my-alerts";
 import { addComment, deleteComment, getCommentsByAssociatedId, getUser, updateComment } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
-import { useSprintStore } from "@/stores/sprint";
 import type { Comment } from "@/types";
 import { formatISODate, formatRelativeDate } from "@/utils/dateUtils";
-import { computed, ref, watch } from "vue";
 
 interface Props {
     associatedId: string;
@@ -90,7 +82,6 @@ const emit = defineEmits<Emits>();
 
 const authStore = useAuthStore();
 const loadingStore = useLoadingStore();
-const sprintStore = useSprintStore();
 const newCommentContent = ref("");
 const authorNames = ref<Record<string, string>>({});
 const comments = ref<Comment[]>([]);
