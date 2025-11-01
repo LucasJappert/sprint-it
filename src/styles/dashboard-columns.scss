@@ -38,15 +38,17 @@
     text-align: left;
 }
 
+$col-assigned-width: 90px;
 .cols-assigned {
-    flex: 0 0 130px;
-    max-width: 130px;
+    flex: 0 0 $col-assigned-width;
+    max-width: $col-assigned-width;
     text-align: left;
 }
 
+$col-state-width: 120px;
 .cols-state {
-    flex: 0 0 100px;
-    max-width: 100px;
+    flex: 0 0 $col-state-width;
+    max-width: $col-state-width;
     text-align: center;
 }
 
