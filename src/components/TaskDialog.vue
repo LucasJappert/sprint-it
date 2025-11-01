@@ -6,7 +6,7 @@
                     <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
                     {{ isEditing ? "Edit Task" : "New Task" }}
                 </h3>
-                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4">
+                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4" style="height: 30px">
                     <v-btn value="details" size="small">
                         <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
                         Details
@@ -58,13 +58,7 @@
                 </div>
 
                 <!-- Comments section -->
-                <CommentSection
-                    v-if="existingTask"
-                    ref=""
-                    :associated-id="props.existingTask?.id || ''"
-                    associated-type="task"
-                    @comment-added="handleCommentAdded"
-                />
+                <CommentSection v-if="existingTask" ref="" :associated-id="props.existingTask?.id || ''" associated-type="task" />
             </template>
 
             <template v-else-if="viewMode === 'history'">
@@ -86,7 +80,7 @@ import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
-import type { ChangeHistory, Comment, Item, Task } from "@/types";
+import type { ChangeHistory, Item, Task } from "@/types";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
@@ -453,11 +447,6 @@ const onStateChange = (options: any[]) => {
     }
 };
 
-const handleCommentAdded = (comment: Comment) => {
-    // El comentario ya se guardó en Firestore, no necesitamos actualizar el task local
-    // ya que los comentarios ahora se manejan independientemente
-};
-
 const handleSave = async () => {
     if (title.value.trim()) {
         let assignedUserId = null;
@@ -506,7 +495,7 @@ watch(
     () => props.existingTask,
     async (newTask, oldTask) => {
         if (props.visible) {
-            console.log("props.visible", props.visible);
+            console.log("props.visible", props.visible, newTask, oldTask);
             await resetForm();
         }
     },

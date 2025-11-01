@@ -6,8 +6,8 @@
                     <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
                     {{ isEditing ? "Edit Item" : "New Item" }}
                 </h3>
-                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4">
-                    <v-btn value="details" size="small">
+                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4" style="height: 30px">
+                    <v-btn value="details" size="small" style="height: 30px">
                         <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
                         Details
                     </v-btn>
@@ -65,7 +65,7 @@
                 </MyCard>
 
                 <!-- Comments section -->
-                <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" @comment-added="handleCommentAdded" />
+                <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" />
             </template>
 
             <template v-else-if="viewMode === 'history'">
@@ -87,7 +87,7 @@ import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
-import type { ChangeHistory, Comment, Item } from "@/types";
+import type { ChangeHistory, Item } from "@/types";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
 interface Props {
@@ -458,11 +458,6 @@ const saveChanges = async (oldItem: Item, newItem: Item) => {
             console.error("Error saving change:", error);
         }
     }
-};
-
-const handleCommentAdded = (comment: Comment) => {
-    // El comentario ya se guardó en Firestore, no necesitamos actualizar el item local
-    // ya que los comentarios ahora se manejan independientemente
 };
 
 const handleSave = async () => {

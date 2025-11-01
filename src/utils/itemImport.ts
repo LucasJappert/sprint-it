@@ -138,7 +138,8 @@ export const processImportedItems = async (rawItems: any[]): Promise<ImportResul
 
     // Sanitizar todos los items con orden correcto
     const sanitizedItems: Item[] = [];
-    for (const [index, rawItem] of rawItems.entries()) {
+    for (let index = 0; index < rawItems.length; index++) {
+        const rawItem = rawItems[index];
         const sanitizedItem = await sanitizeImportedItem(rawItem, index, users);
         sanitizedItems.push(sanitizedItem);
     }
