@@ -21,15 +21,15 @@
         <div class="item-col cols-order">
             {{ task.order }}
         </div>
-        <div class="item-col cols-title text-left">
-            <v-icon class="yellow mr-1" size="16">mdi-clipboard-check-outline</v-icon>
-            {{ task.title }}
-        </div>
         <div class="item-col cols-assigned">
             {{ assignedUserName }}
         </div>
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(task.state || STATE_VALUES.TODO)"></span>
+        </div>
+        <div class="item-col cols-title text-left">
+            <v-icon class="yellow mr-1" size="16">mdi-clipboard-check-outline</v-icon>
+            {{ task.title }}
         </div>
         <div class="item-col cols-effort">{{ task.estimatedEffort }} - {{ task.actualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
@@ -54,7 +54,6 @@
 <script setup lang="ts">
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
-import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
@@ -63,7 +62,6 @@ import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
 import ContextMenu from "./ContextMenu.vue";
 import TaskDialog from "./TaskDialog.vue";
 
@@ -78,13 +76,11 @@ const emit = defineEmits<{
     contextMenuClosed: [];
 }>();
 
-const router = useRouter();
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
 
 const { deleteTask, showEditTaskDialog, editingTask, openEditTaskDialog, closeDialogs, onSaveEditTask } = useTaskManagement();
-const { clearQueryParams } = useUrlManagement(router);
 
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
@@ -291,7 +287,7 @@ const onDragStart = (e: DragEvent) => {
     });
 };
 
-const onDragEnd = (e: DragEvent) => {
+const onDragEnd = () => {
     // Siempre limpiar el estado del drag cuando termina el evento
     dragDropStore.clearDragStateAsync();
 };

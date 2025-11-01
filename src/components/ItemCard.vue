@@ -25,15 +25,15 @@
         <div class="item-col cols-order" :title="item.order.toString()">
             {{ item.order }}
         </div>
-        <div class="item-col cols-title text-left">
-            <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
-            <span v-if="item.tasks.length" class="mr-1">({{ item.tasks.length }})</span>{{ item.title }}
-        </div>
         <div class="item-col cols-assigned">
             {{ assignedUserName }}
         </div>
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(item.state || STATE_VALUES.TODO)"></span>
+        </div>
+        <div class="item-col cols-title text-left">
+            <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
+            <span v-if="item.tasks.length" class="mr-1">({{ item.tasks.length }})</span>{{ item.title }}
         </div>
         <div class="item-col cols-effort">{{ calculatedEstimatedEffort }} - {{ calculatedActualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
@@ -96,7 +96,7 @@ const router = useRouter();
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
-const { showAddTaskDialog, openAddTaskDialog, closeDialogs, saveTask } = useTaskManagement();
+const { openAddTaskDialog } = useTaskManagement();
 const { setItemUrl, clearQueryParams } = useUrlManagement(router);
 const showTasks = ref(false);
 
@@ -258,7 +258,7 @@ const onDragStart = (e: DragEvent) => {
     });
 };
 
-const onDragEnd = (e: DragEvent) => {
+const onDragEnd = () => {
     // Siempre limpiar el estado del drag cuando termina el evento
     // El drop ya fue manejado por onDrop si ocurrió
     dragDropStore.clearDragStateAsync();
