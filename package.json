@@ -4,7 +4,7 @@
     "main": "index.js",
     "scripts": {
         "dev": "node scripts/validate-config.js && vite --port 5180",
-        "build": "vue-tsc && vite build",
+        "build": "vue-tsc --noEmit && vite build",
         "preview": "vite preview",
         "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
         "typecheck": "vue-tsc --noEmit",

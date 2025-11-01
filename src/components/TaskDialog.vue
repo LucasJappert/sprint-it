@@ -6,7 +6,7 @@
                     <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
                     {{ isEditing ? "Edit Task" : "New Task" }}
                 </h3>
-                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4">
+                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4" style="height: 30px">
                     <v-btn value="details" size="small">
                         <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
                         Details
