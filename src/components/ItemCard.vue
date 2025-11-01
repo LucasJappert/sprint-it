@@ -96,7 +96,7 @@ const router = useRouter();
 const sprintStore = useSprintStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
-const { showAddTaskDialog, openAddTaskDialog, closeDialogs, saveTask } = useTaskManagement();
+const { openAddTaskDialog } = useTaskManagement();
 const { setItemUrl, clearQueryParams } = useUrlManagement(router);
 const showTasks = ref(false);
 
@@ -258,7 +258,7 @@ const onDragStart = (e: DragEvent) => {
     });
 };
 
-const onDragEnd = (e: DragEvent) => {
+const onDragEnd = () => {
     // Siempre limpiar el estado del drag cuando termina el evento
     // El drop ya fue manejado por onDrop si ocurrió
     dragDropStore.clearDragStateAsync();
