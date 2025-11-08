@@ -12,7 +12,7 @@
         </div>
 
         <!-- iOS installation instructions -->
-        <div v-if="isIOS && shouldShowIOSInstructions" class="ios-install-instructions" role="dialog" aria-label="Instructions to install on iPhone">
+        <div v-if="(isIOS && shouldShowIOSInstructions) || true" class="ios-install-instructions" role="dialog" aria-label="Instructions to install on iPhone">
             <div class="instructions-content">
                 <div class="instructions-header">
                     <span class="instructions-title">Install App</span>
@@ -38,7 +38,7 @@
                         <span>Select <strong>"Add to Home Screen"</strong></span>
                     </div>
                 </div>
-                <button class="dismiss-btn" @click="dismissIOSInstructions" aria-label="Understood, close instructions">Understood</button>
+                <button class="dismiss-btn mt-2" @click="dismissIOSInstructions" aria-label="Understood, close instructions">Understood</button>
             </div>
         </div>
     </teleport>
@@ -236,7 +236,7 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     background: $bg-primary;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba($primary, 0.2);
     color: $primary;
     border-radius: 8px;
     padding: 8px 12px;
@@ -266,13 +266,13 @@ onMounted(() => {
     width: 24px;
     height: 24px;
     background: $bg-primary;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba($primary, 0.2);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba($primary, 0.2);
         transform: scale(1.05);
     }
 
@@ -320,7 +320,7 @@ onMounted(() => {
     flex-direction: column;
     background: rgba(20, 22, 25, 0.96);
     color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba($primary, 0.12);
     border-radius: 14px;
     padding: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
@@ -376,7 +376,7 @@ onMounted(() => {
 .dismiss-btn {
     align-self: flex-end;
     background: $bg-primary;
-    color: white;
+    color: $primary;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     padding: 6px 12px;
@@ -386,11 +386,12 @@ onMounted(() => {
     transition: all 0.2s ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: #1565c0;
+        transform: scale(1.02);
     }
 
     &:active {
-        transform: scale(0.95);
+        transform: scale(0.98);
     }
 }
 
