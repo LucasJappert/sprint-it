@@ -110,9 +110,7 @@ const dismiss = () => {
 @media (max-width: $mobile-resolution) {
     .version-update-notification {
         right: 8px;
-        left: 8px;
         bottom: 8px;
-        max-width: none;
     }
 
     .notification-content {
