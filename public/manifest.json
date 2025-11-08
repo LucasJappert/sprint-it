@@ -1,0 +1,24 @@
+{
+	"name": "Sprint It",
+	"short_name": "SprintIt",
+	"description": "Aplicación de gestión de sprints para equipos",
+	"theme_color": "#33c7ff",
+	"background_color": "#121212",
+	"display": "standalone",
+	"orientation": "portrait",
+	"scope": "/",
+	"start_url": "/",
+	"icons": [
+		{
+			"src": "/favicon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		}
+	],
+	"categories": [
+		"productivity",
+		"business"
+	],
+	"lang": "es"
+}

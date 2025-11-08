@@ -1,6 +1,6 @@
 {
     "name": "sprint-it",
-    "version": "1.0.0",
+    "version": "1.1.6",
     "main": "index.js",
     "scripts": {
         "dev": "node scripts/validate-config.js && vite --port 5180",
@@ -45,6 +45,7 @@
         "sass-embedded": "^1.93.2",
         "unplugin-auto-import": "^20.2.0",
         "unplugin-vue-components": "^29.1.0",
+        "vite-plugin-pwa": "^1.1.0",
         "vite-plugin-vuetify": "^2.1.2",
         "vue-tsc": "^3.1.1"
     }
