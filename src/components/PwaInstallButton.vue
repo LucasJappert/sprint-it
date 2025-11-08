@@ -12,7 +12,7 @@
         </div>
 
         <!-- iOS installation instructions -->
-        <div v-if="(isIOS && shouldShowIOSInstructions) || true" class="ios-install-instructions" role="dialog" aria-label="Instructions to install on iPhone">
+        <div v-if="isIOS && shouldShowIOSInstructions" class="ios-install-instructions" role="dialog" aria-label="Instructions to install on iPhone">
             <div class="instructions-content">
                 <div class="instructions-header">
                     <span class="instructions-title">Install App</span>
