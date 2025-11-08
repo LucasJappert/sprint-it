@@ -421,11 +421,19 @@ const onDrop = (e: DragEvent) => {
     position: relative;
     cursor: pointer;
     user-select: none;
+    min-width: fit-content; /* Consistent width across all cards */
 
     &:hover,
     &.context-menu-open {
         background: rgba($bg-secondary, 1);
         border: 1px solid rgba($gray, 1);
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .item-card {
+        min-width: fit-content; /* Allow natural width based on content */
     }
 }
 

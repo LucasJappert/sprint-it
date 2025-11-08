@@ -379,15 +379,30 @@ const toggleAllTasks = () => {
     padding: 6px;
     padding-top: 66px; /* Adjusted for 50px header + 16px padding */
     font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .board-header {
     display: flex;
     justify-content: flex-start;
+    margin-bottom: 8px;
 }
 
 .board {
     padding: 8px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .board {
+        overflow-x: auto; /* Enable horizontal scrolling */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
 }
 
 .header-row {
@@ -399,6 +414,7 @@ const toggleAllTasks = () => {
     border-radius: 8px 8px 0 0;
     font-weight: bold;
     color: $text;
+    min-width: fit-content; /* Allow natural width based on content */
 }
 
 .list {
@@ -408,9 +424,50 @@ const toggleAllTasks = () => {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .dashboard-header {
-        flex-direction: column;
-        align-items: stretch;
+    .dashboard {
+        padding: 4px;
+        padding-top: 66px;
+        font-size: 0.8rem;
+    }
+
+    .board-header {
+        justify-content: center;
+    }
+
+    .board {
+        overflow-x: auto; /* Enable horizontal scrolling on mobile */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        padding: 4px;
+    }
+
+    .header-row {
+        min-width: 600px; /* Minimum width to prevent cramping, allows scrolling */
+        padding: 6px;
+    }
+
+    .list {
+        min-width: 600px; /* Match header for consistent scrolling */
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard {
+        padding: 2px;
+        padding-top: 66px;
+    }
+
+    .board {
+        padding: 2px;
+    }
+
+    .header-row {
+        min-width: 550px;
+        padding: 4px;
+        font-size: 0.75rem;
+    }
+
+    .list {
+        min-width: 550px;
     }
 }
 </style>

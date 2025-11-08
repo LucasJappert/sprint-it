@@ -312,11 +312,19 @@ const onDragEnd = () => {
     position: relative;
     cursor: pointer;
     user-select: none;
+    min-width: fit-content; /* Consistent width across all cards */
 
     &:hover {
         background: rgba($bg-secondary, 0.3);
         border: 1px solid rgba($gray, 0.5);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .task-card {
+        min-width: fit-content; /* Allow natural width based on content */
     }
 }
 

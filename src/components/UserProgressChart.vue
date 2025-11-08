@@ -299,6 +299,8 @@ const chartOptions = computed(() => ({
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     margin-top: 20px;
+    overflow-x: auto; /* Enable horizontal scrolling on mobile */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 .chart-title {
@@ -306,5 +308,30 @@ const chartOptions = computed(() => ({
     color: #ffffff;
     font-size: 1.2em;
     font-weight: bold;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .user-progress-chart {
+        padding: 16px;
+        margin-top: 16px;
+    }
+
+    .chart-title {
+        font-size: 1.1em;
+        margin-bottom: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-progress-chart {
+        padding: 12px;
+        margin-top: 12px;
+    }
+
+    .chart-title {
+        font-size: 1em;
+        margin-bottom: 12px;
+    }
 }
 </style>
