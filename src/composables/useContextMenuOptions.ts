@@ -80,7 +80,7 @@ export const useContextMenuOptions = () => {
         }));
     };
 
-    const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void, duplicateTaskFn: (taskId: string, itemId: string) => void) => {
+    const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void, duplicateTaskFn: (taskId: string, itemId: string) => void, softDeleteTaskFn: (taskId: string, item: Item) => void) => {
         const updateTaskAssignedUser = async (userId: string) => {
             const oldValue = task.assignedUser || "";
             await sprintStore.updateTask(task.id, item.id, { assignedUser: userId });
@@ -160,14 +160,14 @@ export const useContextMenuOptions = () => {
                         "warning",
                     );
                     if (confirmed) {
-                        deleteTaskFn(task.id, item);
+                        softDeleteTaskFn(task.id, item);
                     }
                 },
             },
         ];
     };
 
-    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void) => {
+    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void, softDeleteItemFn: (itemId: string) => void) => {
         const updateItemAssignedUser = async (userId: string) => {
             const oldValue = item.assignedUser || "";
             await sprintStore.updateItem(item.id, { assignedUser: userId });
@@ -298,7 +298,7 @@ export const useContextMenuOptions = () => {
                         "warning",
                     );
                     if (confirmed) {
-                        await sprintStore.deleteItem(item.id);
+                        softDeleteItemFn(item.id);
                     }
                 },
             },

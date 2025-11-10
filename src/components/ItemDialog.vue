@@ -82,14 +82,6 @@ import { useLoadingStore } from "@/stores/loading";
 import type { ChangeHistory, Item } from "@/types";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
-// Computed para ancho mínimo responsivo
-const mobileMinWidth = computed(() => {
-    if (typeof window !== "undefined" && window.innerWidth <= 768) {
-        return 350; // Ancho más pequeño en móviles
-    }
-    return 800; // Ancho normal en desktop
-});
-
 interface Props {
     visible: boolean;
     nextOrder: number;
@@ -487,6 +479,7 @@ const handleSave = async () => {
             tasks: props.existingItem?.tasks || [],
             order: props.existingItem?.order || props.nextOrder,
             createdAt: props.existingItem?.createdAt || new Date(),
+            deletedAt: props.existingItem?.deletedAt || null,
         };
 
         // Guardar cambios si es edición

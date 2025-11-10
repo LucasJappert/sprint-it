@@ -84,14 +84,6 @@ import type { ChangeHistory, Item, Task } from "@/types";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
-// Computed para ancho mínimo responsivo
-const mobileMinWidth = computed(() => {
-    if (typeof window !== "undefined" && window.innerWidth <= 768) {
-        return 350; // Ancho más pequeño en móviles
-    }
-    return 800; // Ancho normal en desktop
-});
-
 const props = defineProps<{
     visible: boolean;
     item: Item;
@@ -481,6 +473,7 @@ const handleSave = async () => {
             assignedUser: assignedUserId,
             order: props.existingTask?.order || 0,
             createdAt: props.existingTask?.createdAt || new Date(),
+            deletedAt: props.existingTask?.deletedAt || null,
         };
 
         // Guardar cambios si es edición

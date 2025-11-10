@@ -24,7 +24,7 @@ import { useSprintStore } from "@/stores/sprint";
 import { computed, ref, watch } from "vue";
 
 // Colores para usuarios (mismos que CommentSection)
-const AUTHOR_COLORS = ["#33c7ffaa", "#3a9962aa"];
+const AUTHOR_COLORS = ["#1bc0fcaa", "#1ea958aa"];
 
 const getUserColor = (userId: string): string => {
     const index = userId.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % AUTHOR_COLORS.length;

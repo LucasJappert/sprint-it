@@ -124,6 +124,7 @@ const currentItemForTaskDialog = computed((): Item => {
         tasks: [],
         order: 1,
         createdAt: new Date(),
+        deletedAt: null,
     };
 });
 
@@ -134,7 +135,9 @@ const contextMenuItemId = ref<string | null>(null);
 const items = computed<Item[]>(() => {
     const currentItems = sprintStore.currentSprint?.items ?? [];
     // Convertir de objeto a array si es necesario (compatibilidad con Firestore)
-    return Array.isArray(currentItems) ? currentItems : Object.values(currentItems || {});
+    const itemsArray = Array.isArray(currentItems) ? currentItems : Object.values(currentItems || {});
+    // Filtrar elementos marcados como borrados (soft delete)
+    return itemsArray.filter((item: any) => item.deletedAt === null);
 });
 
 // Logs de debug removidos para simplificar la lógica

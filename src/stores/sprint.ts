@@ -28,13 +28,15 @@ export const useSprintStore = defineStore("sprint", () => {
             processedSprint.items = processedSprint.items.map((item: Item) => {
                 const processedItem = {
                     ...item,
-                    createdAt: convertFirestoreTimestamp(item.createdAt)
+                    createdAt: convertFirestoreTimestamp(item.createdAt),
+                    deletedAt: item.deletedAt ? convertFirestoreTimestamp(item.deletedAt) : null
                 };
 
                 if (Array.isArray(processedItem.tasks)) {
                     processedItem.tasks = processedItem.tasks.map((task) => ({
                         ...task,
-                        createdAt: convertFirestoreTimestamp(task.createdAt)
+                        createdAt: convertFirestoreTimestamp(task.createdAt),
+                        deletedAt: task.deletedAt ? convertFirestoreTimestamp(task.deletedAt) : null
                     }));
                 }
 
@@ -283,6 +285,19 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    const softDeleteItem = async (itemId: string) => {
+        if (currentSprint.value) {
+            const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (index !== -1 && currentSprint.value.items[index]) {
+                // Marcar como borrado en lugar de eliminar físicamente
+                currentSprint.value.items[index].deletedAt = new Date();
+                if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                    await saveSprint(currentSprint.value);
+                }
+            }
+        }
+    };
+
     const deleteItem = async (itemId: string) => {
         if (currentSprint.value) {
             const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
@@ -398,6 +413,18 @@ export const useSprintStore = defineStore("sprint", () => {
         await addItem(duplicatedItem);
     };
 
+    const softDeleteTask = async (taskId: string, item: Item) => {
+        if (!currentSprint.value) return;
+
+        const taskIndex = item.tasks.findIndex(t => t.id === taskId);
+        if (taskIndex === -1) return;
+
+        // Marcar como borrado en lugar de eliminar físicamente
+        item.tasks[taskIndex].deletedAt = new Date();
+
+        await updateItem(item.id, { tasks: item.tasks });
+    };
+
     const duplicateTask = async (taskId: string, itemId: string) => {
         if (!currentSprint.value) return;
 
@@ -407,9 +434,10 @@ export const useSprintStore = defineStore("sprint", () => {
         const originalTask = item.tasks.find(t => t.id === taskId);
         if (!originalTask) return;
 
-        // Calcular el nuevo orden (al final de la lista de tasks)
-        const maxOrder = item.tasks.length > 0
-            ? Math.max(...item.tasks.map(task => task.order))
+        // Calcular el nuevo orden (al final de la lista de tasks activas)
+        const activeTasks = item.tasks.filter(t => t.deletedAt === null);
+        const maxOrder = activeTasks.length > 0
+            ? Math.max(...activeTasks.map(task => task.order))
             : 0;
 
         const duplicatedTask = {
@@ -417,7 +445,8 @@ export const useSprintStore = defineStore("sprint", () => {
             id: `task-copy-${Date.now()}`,
             title: `${originalTask.title}`,
             order: maxOrder + 1,
-            createdAt: new Date()
+            createdAt: new Date(),
+            deletedAt: null
         };
 
         item.tasks.push(duplicatedTask);
@@ -441,6 +470,8 @@ export const useSprintStore = defineStore("sprint", () => {
         addItem,
         updateItem,
         deleteItem,
+        softDeleteItem,
+        softDeleteTask,
         moveTask,
         reorderTasks,
         createNewSprint,
