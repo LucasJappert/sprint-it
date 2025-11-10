@@ -29,38 +29,32 @@
                 <!-- Campos organizados en filas lógicas -->
                 <div class="form-section mt-3">
                     <!-- Primera fila: persona asignada y estado -->
-                    <v-row class="form-row">
-                        <v-col cols="12" md="6" class="field-group assigned-user">
-                            <MySelect
-                                v-model="assignedUser"
-                                label="Assigned Person"
-                                :options="assignedUserOptions"
-                                placeholder="Select user..."
-                                density="compact"
-                                @update:options="onAssignedUserChange"
-                            />
-                        </v-col>
-                        <v-col cols="12" md="6" class="field-group state">
-                            <MySelect v-model="state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
-                        </v-col>
-                    </v-row>
+                    <div class="assigned-user">
+                        <MySelect
+                            v-model="assignedUser"
+                            label="Assigned Person"
+                            :options="assignedUserOptions"
+                            placeholder="Select user..."
+                            density="compact"
+                            @update:options="onAssignedUserChange"
+                        />
+                    </div>
+                    <div class="state">
+                        <MySelect v-model="state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
+                    </div>
 
                     <!-- Segunda fila: esfuerzos -->
-                    <v-row class="form-row">
-                        <v-col cols="12" md="6" class="field-group estimated-effort">
-                            <MyInput v-model="estimatedEffort" label="Effort" type="number" density="compact" />
-                        </v-col>
-                        <v-col cols="12" md="6" class="field-group actual-effort">
-                            <MyInput v-model="actualEffort" label="Real Effort" type="number" density="compact" />
-                        </v-col>
-                    </v-row>
+                    <div class="estimated-effort">
+                        <MyInput v-model="estimatedEffort" label="Effort" type="number" density="compact" />
+                    </div>
+                    <div class="actual-effort">
+                        <MyInput v-model="actualEffort" label="Real Effort" type="number" density="compact" />
+                    </div>
 
                     <!-- Tercera fila: prioridad -->
-                    <v-row class="form-row">
-                        <v-col cols="12" class="field-group priority">
-                            <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
-                        </v-col>
-                    </v-row>
+                    <div class="priority">
+                        <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
+                    </div>
                 </div>
 
                 <!-- Detalle en textarea ocupando 100% del ancho -->
@@ -522,7 +516,7 @@ watch(
 );
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* Full width elements */
 .full-width {
     width: 100%;
@@ -544,18 +538,45 @@ watch(
 /* Form layout */
 .form-section {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 12px;
     width: 100%;
+    justify-content: space-between;
+    .assigned-user,
+    .state,
+    .priority {
+        min-width: 150px;
+        max-width: 150px;
+    }
+    .state {
+        min-width: 190px;
+        max-width: 190px;
+    }
+    .estimated-effort,
+    .actual-effort {
+        min-width: 100px;
+        max-width: 100px;
+    }
+    @media (max-width: $mobile-resolution) {
+        .assigned-user,
+        .state {
+            min-width: 48%;
+            max-width: 48%;
+        }
+        .estimated-effort,
+        .actual-effort,
+        .priority {
+            min-width: 30%;
+            max-width: 30%;
+        }
+    }
 }
 
-.form-row {
-    margin: 0 -8px; /* Negative margin to compensate for v-col padding */
-}
-
-/* Field groups - responsive sizing with Vuetify grid */
+/* Field groups - responsive sizing */
 .field-group {
-    padding: 0 8px; /* Add back padding for content */
+    flex: 1 1 auto;
+    min-width: 100px;
+    max-width: 100px;
 }
 
 /* Mobile responsive toggle */
@@ -615,13 +636,10 @@ watch(
         font-size: 1.1rem;
     }
 
-    .form-row {
-        gap: 8px;
-    }
-
     .field-group {
-        min-width: 100%; /* Full width on mobile */
-        flex: 1 1 100%;
+        min-width: 50%; /* 50% width on mobile */
+        max-width: 50%;
+        flex: 1 1 50%;
     }
 
     .detail-textarea :deep(.v-field__input) {
@@ -641,10 +659,6 @@ watch(
 
     .header h3 {
         font-size: 1rem;
-    }
-
-    .form-row {
-        gap: 6px;
     }
 
     .detail-textarea :deep(.v-field__input) {
