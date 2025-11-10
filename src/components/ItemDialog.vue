@@ -21,59 +21,40 @@
         </div>
         <div class="body-scroll">
             <template v-if="viewMode === 'details'">
-                <MyCard accent="gray">
-                    <!-- Título ocupando 100% del ancho -->
-                    <div class="full-width mt-2">
-                        <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
+                <!-- Título ocupando 100% del ancho -->
+                <div class="full-width mt-2">
+                    <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
+                </div>
+                <!-- Campos organizados en filas lógicas -->
+                <div class="form-section mt-3">
+                    <div class="assigned-user">
+                        <MySelect
+                            v-model="newItem.assignedUser"
+                            label="Assigned Person"
+                            :options="assignedUserOptions"
+                            placeholder="Select user..."
+                            density="compact"
+                            @update:options="onAssignedUserChange"
+                        />
                     </div>
-                    <!-- Campos organizados en filas lógicas -->
-                    <div class="form-section mt-3">
-                        <!-- Primera fila: persona asignada y estado -->
-                        <v-row class="form-row">
-                            <v-col cols="12" md="6" class="field-group assigned-user">
-                                <MySelect
-                                    v-model="newItem.assignedUser"
-                                    label="Assigned Person"
-                                    :options="assignedUserOptions"
-                                    placeholder="Select user..."
-                                    density="compact"
-                                    @update:options="onAssignedUserChange"
-                                />
-                            </v-col>
-                            <v-col cols="12" md="6" class="field-group state">
-                                <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
-                            </v-col>
-                        </v-row>
-
-                        <!-- Segunda fila: esfuerzos -->
-                        <v-row class="form-row">
-                            <v-col cols="12" md="6" class="field-group estimated-effort">
-                                <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
-                            </v-col>
-                            <v-col cols="12" md="6" class="field-group actual-effort">
-                                <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
-                            </v-col>
-                        </v-row>
-
-                        <!-- Tercera fila: prioridad -->
-                        <v-row class="form-row">
-                            <v-col cols="12" class="field-group priority">
-                                <MySelect
-                                    v-model="newItem.priority"
-                                    label="Priority"
-                                    :options="priorityOptions"
-                                    density="compact"
-                                    @update:options="onPriorityChange"
-                                />
-                            </v-col>
-                        </v-row>
+                    <div class="state">
+                        <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
                     </div>
-
-                    <!-- Detalle en textarea ocupando 100% del ancho -->
-                    <div class="full-width mt-3">
-                        <MyRichText v-model="newItem.detail" placeholder="Description" density="compact" class="detail-textarea" />
+                    <div class="estimated-effort">
+                        <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
                     </div>
-                </MyCard>
+                    <div class="actual-effort">
+                        <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
+                    </div>
+                    <div class="priority">
+                        <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
+                    </div>
+                </div>
+
+                <!-- Detalle en textarea ocupando 100% del ancho -->
+                <div class="full-width mt-3">
+                    <MyRichText v-model="newItem.detail" placeholder="Description" density="compact" class="detail-textarea" />
+                </div>
 
                 <!-- Comments section -->
                 <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" />
@@ -523,7 +504,7 @@ const handleClose = () => {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* Full width elements */
 .full-width {
     width: 100%;
@@ -545,18 +526,38 @@ const handleClose = () => {
 /* Form layout */
 .form-section {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 12px;
     width: 100%;
-}
-
-.form-row {
-    margin: 0 -8px; /* Negative margin to compensate for v-col padding */
-}
-
-/* Field groups - responsive sizing with Vuetify grid */
-.field-group {
-    padding: 0 8px; /* Add back padding for content */
+    justify-content: space-between;
+    .assigned-user,
+    .state,
+    .priority {
+        min-width: 150px;
+        max-width: 150px;
+    }
+    .state {
+        min-width: 190px;
+        max-width: 190px;
+    }
+    .estimated-effort,
+    .actual-effort {
+        min-width: 100px;
+        max-width: 100px;
+    }
+    @media (max-width: $mobile-resolution) {
+        .assigned-user,
+        .state {
+            min-width: 48%;
+            max-width: 48%;
+        }
+        .estimated-effort,
+        .actual-effort,
+        .priority {
+            min-width: 30%;
+            max-width: 30%;
+        }
+    }
 }
 
 /* Mobile responsive toggle */
@@ -568,7 +569,7 @@ const handleClose = () => {
     display: inline;
 }
 
-@media (max-width: 768px) {
+@media (max-width: $mobile-resolution) {
     .btn-text {
         display: none; /* Hide text on mobile, keep icons */
     }
@@ -607,7 +608,7 @@ const handleClose = () => {
 }
 
 /* Mobile optimizations */
-@media (max-width: 768px) {
+@media (max-width: $mobile-resolution) {
     .header {
         padding: 8px 12px;
     }
@@ -620,11 +621,6 @@ const handleClose = () => {
         gap: 8px;
     }
 
-    .field-group {
-        min-width: 100%; /* Full width on mobile */
-        flex: 1 1 100%;
-    }
-
     .detail-textarea :deep(.v-field__input) {
         min-height: 200px !important;
         padding: 12px !important;
@@ -632,29 +628,6 @@ const handleClose = () => {
 
     .detail-textarea :deep(textarea) {
         min-height: 200px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .header {
-        padding: 6px 8px;
-    }
-
-    .header h3 {
-        font-size: 1rem;
-    }
-
-    .form-row {
-        gap: 6px;
-    }
-
-    .detail-textarea :deep(.v-field__input) {
-        min-height: 150px !important;
-        padding: 8px !important;
-    }
-
-    .detail-textarea :deep(textarea) {
-        min-height: 150px !important;
     }
 }
 

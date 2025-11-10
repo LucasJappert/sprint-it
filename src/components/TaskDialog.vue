@@ -27,8 +27,7 @@
                 </div>
 
                 <!-- Campos organizados en filas lógicas -->
-                <div class="form-section mt-3">
-                    <!-- Primera fila: persona asignada y estado -->
+                <div class="form-section">
                     <div class="assigned-user">
                         <MySelect
                             v-model="assignedUser"
@@ -42,16 +41,12 @@
                     <div class="state">
                         <MySelect v-model="state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
                     </div>
-
-                    <!-- Segunda fila: esfuerzos -->
                     <div class="estimated-effort">
                         <MyInput v-model="estimatedEffort" label="Effort" type="number" density="compact" />
                     </div>
                     <div class="actual-effort">
                         <MyInput v-model="actualEffort" label="Real Effort" type="number" density="compact" />
                     </div>
-
-                    <!-- Tercera fila: prioridad -->
                     <div class="priority">
                         <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
                     </div>
@@ -572,13 +567,6 @@ watch(
     }
 }
 
-/* Field groups - responsive sizing */
-.field-group {
-    flex: 1 1 auto;
-    min-width: 100px;
-    max-width: 100px;
-}
-
 /* Mobile responsive toggle */
 .view-mode-toggle {
     height: 32px;
@@ -634,12 +622,6 @@ watch(
 
     .header h3 {
         font-size: 1.1rem;
-    }
-
-    .field-group {
-        min-width: 50%; /* 50% width on mobile */
-        max-width: 50%;
-        flex: 1 1 50%;
     }
 
     .detail-textarea :deep(.v-field__input) {
