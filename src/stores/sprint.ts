@@ -1,6 +1,7 @@
 import MyAlerts from "@/plugins/my-alerts";
 import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
 import { convertFirestoreTimestamp, getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
+import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { Item, Sprint } from "@/types";
 import { defineStore } from "pinia";
@@ -8,6 +9,7 @@ import { computed, ref } from "vue";
 
 export const useSprintStore = defineStore("sprint", () => {
     const loadingStore = useLoadingStore();
+    const authStore = useAuthStore();
     const sprints = ref<Sprint[]>([]);
     const currentSprintId = ref<string>("");
 
@@ -29,14 +31,16 @@ export const useSprintStore = defineStore("sprint", () => {
                 const processedItem = {
                     ...item,
                     createdAt: convertFirestoreTimestamp(item.createdAt),
-                    deletedAt: item.deletedAt ? convertFirestoreTimestamp(item.deletedAt) : null
+                    deletedAt: item.deletedAt ? convertFirestoreTimestamp(item.deletedAt) : null,
+                    createdBy: item.createdBy || "" // Asegurar que createdBy tenga un valor por defecto
                 };
 
                 if (Array.isArray(processedItem.tasks)) {
                     processedItem.tasks = processedItem.tasks.map((task) => ({
                         ...task,
                         createdAt: convertFirestoreTimestamp(task.createdAt),
-                        deletedAt: task.deletedAt ? convertFirestoreTimestamp(task.deletedAt) : null
+                        deletedAt: task.deletedAt ? convertFirestoreTimestamp(task.deletedAt) : null,
+                        createdBy: task.createdBy || "" // Asegurar que createdBy tenga un valor por defecto
                     }));
                 }
 
@@ -443,11 +447,13 @@ export const useSprintStore = defineStore("sprint", () => {
             title: `${originalItem.title}`,
             order: maxOrder + 1,
             createdAt: new Date(),
+            createdBy: authStore.user?.id || "",
             tasks: includeTasks ? originalItem.tasks.map((task) => ({
                 ...task,
                 id: `task-copy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 order: task.order, // Mantener el orden original de las tasks
-                createdAt: new Date()
+                createdAt: new Date(),
+                createdBy: authStore.user?.id || ""
             })) : []
         };
 
@@ -487,6 +493,7 @@ export const useSprintStore = defineStore("sprint", () => {
             title: `${originalTask.title}`,
             order: maxOrder + 1,
             createdAt: new Date(),
+            createdBy: authStore.user?.id || "",
             deletedAt: null
         };
 

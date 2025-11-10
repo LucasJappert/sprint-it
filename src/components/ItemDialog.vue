@@ -61,7 +61,7 @@
             </template>
 
             <template v-else-if="viewMode === 'history'">
-                <HistoryView :change-history="changeHistory" :createdAt="existingItem?.createdAt" />
+                <HistoryView :change-history="changeHistory" :createdAt="existingItem?.createdAt" :createdBy="existingItem?.createdBy" />
             </template>
         </div>
         <div class="footer">
@@ -106,6 +106,7 @@ const emit = defineEmits<{
 }>();
 
 const loadingStore = useLoadingStore();
+const authStore = useAuthStore();
 
 const isEditing = computed(() => !!props.existingItem);
 
@@ -479,6 +480,7 @@ const handleSave = async () => {
             tasks: props.existingItem?.tasks || [],
             order: props.existingItem?.order || props.nextOrder,
             createdAt: props.existingItem?.createdAt || new Date(),
+            createdBy: props.existingItem?.createdBy || authStore.user?.id || "",
             deletedAt: props.existingItem?.deletedAt || null,
         };
 

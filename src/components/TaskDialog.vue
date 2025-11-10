@@ -62,7 +62,7 @@
             </template>
 
             <template v-else-if="viewMode === 'history'">
-                <HistoryView :change-history="changeHistory" :createdAt="existingTask?.createdAt" />
+                <HistoryView :change-history="changeHistory" :createdAt="existingTask?.createdAt" :createdBy="existingTask?.createdBy" />
             </template>
         </div>
         <div class="footer">
@@ -473,6 +473,7 @@ const handleSave = async () => {
             assignedUser: assignedUserId,
             order: props.existingTask?.order || 0,
             createdAt: props.existingTask?.createdAt || new Date(),
+            createdBy: props.existingTask?.createdBy || useAuthStore().user?.id || "",
             deletedAt: props.existingTask?.deletedAt || null,
         };
 

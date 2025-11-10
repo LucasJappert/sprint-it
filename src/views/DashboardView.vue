@@ -124,6 +124,7 @@ const currentItemForTaskDialog = computed((): Item => {
         tasks: [],
         order: 1,
         createdAt: new Date(),
+        createdBy: "",
         deletedAt: null,
     };
 });
@@ -144,45 +145,50 @@ const items = computed<Item[]>(() => {
 
 // Asegurar que los sprints estén generados
 onMounted(async () => {
-    if (sprintStore.sprints.length === 0) {
-        await sprintStore.generateSprints();
-    }
-
-    // Actualizar el título de la página con el sprint actual
-    document.title = `Sprint It - ${sprintStore.currentSprint?.titulo}`;
-
-    // Marcar el gráfico como listo después de la carga inicial
-    chartReady.value = true;
-
-    // Escuchar eventos del eventBus
-    eventBus.on("taskCreated", onTaskCreated);
-
-    // Revisar si hay un id en la URL para abrir el modal
-    const taskId = getTaskIdFromUrl();
-    const itemId = getItemIdFromUrl();
-
-    // TODO: Llevar lógica a otro módulo
-    if (taskId) {
-        console.log("Buscando task con ID:", taskId);
-        const taskData = findTaskById(taskId);
-        if (taskData) {
-            console.log("Task encontrada, expandiendo item y abriendo modal de edición");
-            // Expandir el item que contiene la task
-            expandedItems.value.add(taskData.item.id);
-            openEditTaskDialog(taskData.task, taskData.item, true);
-        } else {
-            console.log("Task no encontrada");
+    try {
+        if (sprintStore.sprints.length === 0) {
+            await sprintStore.generateSprints();
         }
-    } else if (itemId) {
-        console.log("Buscando item con ID:", itemId);
-        const item = items.value.find((i) => i.id === itemId);
-        if (item) {
-            console.log("Item encontrado, abriendo modal de edición");
-            // No expandir el item automáticamente, solo abrir el modal de edición
-            openEditItemDialog(item);
-        } else {
-            console.log("Item no encontrado");
+
+        // Actualizar el título de la página con el sprint actual
+        document.title = `Sprint It - ${sprintStore.currentSprint?.titulo}`;
+
+        // Marcar el gráfico como listo después de la carga inicial
+        chartReady.value = true;
+
+        // Escuchar eventos del eventBus
+        eventBus.on("taskCreated", onTaskCreated);
+
+        // Revisar si hay un id en la URL para abrir el modal
+        const taskId = getTaskIdFromUrl();
+        const itemId = getItemIdFromUrl();
+
+        // TODO: Llevar lógica a otro módulo
+        if (taskId) {
+            console.log("Buscando task con ID:", taskId);
+            const taskData = findTaskById(taskId);
+            if (taskData) {
+                console.log("Task encontrada, expandiendo item y abriendo modal de edición");
+                // Expandir el item que contiene la task
+                expandedItems.value.add(taskData.item.id);
+                openEditTaskDialog(taskData.task, taskData.item, true);
+            } else {
+                console.log("Task no encontrada");
+            }
+        } else if (itemId) {
+            console.log("Buscando item con ID:", itemId);
+            const item = items.value.find((i) => i.id === itemId);
+            if (item) {
+                console.log("Item encontrado, abriendo modal de edición");
+                // No expandir el item automáticamente, solo abrir el modal de edición
+                openEditItemDialog(item);
+            } else {
+                console.log("Item no encontrado");
+            }
         }
+    } catch (error) {
+        console.error("Error en onMounted de DashboardView:", error);
+        // Mostrar algún mensaje de error o fallback
     }
 });
 
