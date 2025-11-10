@@ -1,19 +1,19 @@
 <template>
-    <MyDialog :visible="visible" :min-width="800" @close="handleClose" persistent>
+    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent>
         <div class="header flex-center justify-space-between">
             <div class="flex-center">
                 <h3 class="text-left flex-center justify-start">
                     <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
                     {{ isEditing ? "Edit Item" : "New Item" }}
                 </h3>
-                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4" style="height: 30px">
-                    <v-btn value="details" size="small" style="height: 30px">
+                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4 view-mode-toggle">
+                    <v-btn value="details" size="small">
                         <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
-                        Details
+                        <span class="btn-text">Details</span>
                     </v-btn>
                     <v-btn value="history" size="small">
                         <v-icon size="16" class="mr-1">mdi-history</v-icon>
-                        History
+                        <span class="btn-text">History</span>
                     </v-btn>
                 </v-btn-toggle>
             </div>
@@ -26,36 +26,47 @@
                     <div class="full-width mt-2">
                         <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
                     </div>
-                    <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
-                    <div class="form-row mt-3">
-                        <div class="field-group assigned-user">
-                            <MySelect
-                                v-model="newItem.assignedUser"
-                                label="Assigned Person"
-                                :options="assignedUserOptions"
-                                placeholder="Select user..."
-                                density="compact"
-                                @update:options="onAssignedUserChange"
-                            />
-                        </div>
-                        <div class="field-group state">
-                            <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
-                        </div>
-                        <div class="field-group estimated-effort">
-                            <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
-                        </div>
-                        <div class="field-group actual-effort">
-                            <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
-                        </div>
-                        <div class="field-group priority">
-                            <MySelect
-                                v-model="newItem.priority"
-                                label="Priority"
-                                :options="priorityOptions"
-                                density="compact"
-                                @update:options="onPriorityChange"
-                            />
-                        </div>
+                    <!-- Campos organizados en filas lógicas -->
+                    <div class="form-section mt-3">
+                        <!-- Primera fila: persona asignada y estado -->
+                        <v-row class="form-row">
+                            <v-col cols="12" md="6" class="field-group assigned-user">
+                                <MySelect
+                                    v-model="newItem.assignedUser"
+                                    label="Assigned Person"
+                                    :options="assignedUserOptions"
+                                    placeholder="Select user..."
+                                    density="compact"
+                                    @update:options="onAssignedUserChange"
+                                />
+                            </v-col>
+                            <v-col cols="12" md="6" class="field-group state">
+                                <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
+                            </v-col>
+                        </v-row>
+
+                        <!-- Segunda fila: esfuerzos -->
+                        <v-row class="form-row">
+                            <v-col cols="12" md="6" class="field-group estimated-effort">
+                                <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
+                            </v-col>
+                            <v-col cols="12" md="6" class="field-group actual-effort">
+                                <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
+                            </v-col>
+                        </v-row>
+
+                        <!-- Tercera fila: prioridad -->
+                        <v-row class="form-row">
+                            <v-col cols="12" class="field-group priority">
+                                <MySelect
+                                    v-model="newItem.priority"
+                                    label="Priority"
+                                    :options="priorityOptions"
+                                    density="compact"
+                                    @update:options="onPriorityChange"
+                                />
+                            </v-col>
+                        </v-row>
                     </div>
 
                     <!-- Detalle en textarea ocupando 100% del ancho -->
@@ -89,6 +100,14 @@ import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { ChangeHistory, Item } from "@/types";
 import { computed, onMounted, onUnmounted, ref } from "vue";
+
+// Computed para ancho mínimo responsivo
+const mobileMinWidth = computed(() => {
+    if (typeof window !== "undefined" && window.innerWidth <= 768) {
+        return 350; // Ancho más pequeño en móviles
+    }
+    return 800; // Ancho normal en desktop
+});
 
 interface Props {
     visible: boolean;
@@ -505,99 +524,143 @@ const handleClose = () => {
 </script>
 
 <style scoped>
-/* Título ocupando 100% del ancho */
+/* Full width elements */
 .full-width {
     width: 100%;
 }
 
+/* Header layout */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 12px 16px;
 }
 
-/* Distribución en fila para persona asignada, prioridad y esfuerzos */
-.form-row {
+.header h3 {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+/* Form layout */
+.form-section {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 12px;
     width: 100%;
 }
 
-/* Persona asignada - 25% */
-.assigned-user {
-    flex: 0 0 25%;
+.form-row {
+    margin: 0 -8px; /* Negative margin to compensate for v-col padding */
 }
 
-/* Estado - 20% */
-.state {
-    flex: 0 0 20%;
+/* Field groups - responsive sizing with Vuetify grid */
+.field-group {
+    padding: 0 8px; /* Add back padding for content */
 }
 
-/* Esfuerzo estimado - 15% */
-.estimated-effort {
-    flex: 0 0 15%;
+/* Mobile responsive toggle */
+.view-mode-toggle {
+    height: 32px;
 }
 
-/* Esfuerzo real - 15% */
-.actual-effort {
-    flex: 0 0 15%;
+.btn-text {
+    display: inline;
 }
 
-/* Prioridad - 20% */
-.priority {
-    flex: 0 0 20%;
+@media (max-width: 768px) {
+    .btn-text {
+        display: none; /* Hide text on mobile, keep icons */
+    }
+
+    .view-mode-toggle {
+        height: 28px;
+    }
 }
 
-/* Textarea para detalle ocupando 100% del ancho */
+/* Textarea styling */
 .detail-textarea {
     width: 100%;
+    margin-top: 16px;
 }
 
 .detail-textarea :deep(.v-field) {
-    border-radius: 20px !important;
+    border-radius: 12px !important;
     box-shadow: none !important;
     overflow: visible !important;
 }
 
 .detail-textarea :deep(.v-field__input) {
-    min-height: 380px !important;
+    min-height: 300px !important;
     overflow-y: auto !important;
-    padding: 20px 24px !important;
+    padding: 16px !important;
     margin-top: 8px !important;
+    border-radius: 8px !important;
 }
 
 .detail-textarea :deep(textarea) {
-    min-height: 380px !important;
+    min-height: 300px !important;
     overflow-y: auto !important;
     padding: 0 !important;
     line-height: 1.6 !important;
     margin-top: 4px !important;
 }
 
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .header {
+        padding: 8px 12px;
+    }
+
+    .header h3 {
+        font-size: 1.1rem;
+    }
+
+    .form-row {
+        gap: 8px;
+    }
+
+    .field-group {
+        min-width: 100%; /* Full width on mobile */
+        flex: 1 1 100%;
+    }
+
+    .detail-textarea :deep(.v-field__input) {
+        min-height: 200px !important;
+        padding: 12px !important;
+    }
+
+    .detail-textarea :deep(textarea) {
+        min-height: 200px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 6px 8px;
+    }
+
+    .header h3 {
+        font-size: 1rem;
+    }
+
+    .form-row {
+        gap: 6px;
+    }
+
+    .detail-textarea :deep(.v-field__input) {
+        min-height: 150px !important;
+        padding: 8px !important;
+    }
+
+    .detail-textarea :deep(textarea) {
+        min-height: 150px !important;
+    }
+}
+
 .loading-container {
     padding: 16px;
     text-align: center;
     color: #666;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .form-row {
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .field-group {
-        flex: 1;
-    }
-
-    .assigned-user,
-    .state,
-    .priority,
-    .estimated-effort,
-    .actual-effort {
-        flex: 1;
-    }
 }
 </style>
