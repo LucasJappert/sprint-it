@@ -1,6 +1,7 @@
 import MyAlerts from "@/plugins/my-alerts";
 import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
 import { convertFirestoreTimestamp, getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
+import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { Item, Sprint } from "@/types";
 import { defineStore } from "pinia";
@@ -8,6 +9,7 @@ import { computed, ref } from "vue";
 
 export const useSprintStore = defineStore("sprint", () => {
     const loadingStore = useLoadingStore();
+    const authStore = useAuthStore();
     const sprints = ref<Sprint[]>([]);
     const currentSprintId = ref<string>("");
 
@@ -28,13 +30,17 @@ export const useSprintStore = defineStore("sprint", () => {
             processedSprint.items = processedSprint.items.map((item: Item) => {
                 const processedItem = {
                     ...item,
-                    createdAt: convertFirestoreTimestamp(item.createdAt)
+                    createdAt: convertFirestoreTimestamp(item.createdAt),
+                    deletedAt: item.deletedAt ? convertFirestoreTimestamp(item.deletedAt) : null,
+                    createdBy: item.createdBy || "" // Asegurar que createdBy tenga un valor por defecto
                 };
 
                 if (Array.isArray(processedItem.tasks)) {
                     processedItem.tasks = processedItem.tasks.map((task) => ({
                         ...task,
-                        createdAt: convertFirestoreTimestamp(task.createdAt)
+                        createdAt: convertFirestoreTimestamp(task.createdAt),
+                        deletedAt: task.deletedAt ? convertFirestoreTimestamp(task.deletedAt) : null,
+                        createdBy: task.createdBy || "" // Asegurar que createdBy tenga un valor por defecto
                     }));
                 }
 
@@ -193,6 +199,47 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    const sortTasksByState = async (itemId: string) => {
+        const item = currentSprint.value?.items.find((i) => i.id === itemId);
+        if (!item || !currentSprint.value) return;
+
+        // Define the order: Done, Ready for test, Waiting, In Progress, To Do
+        const stateOrder = ["Done", "Ready For Test", "Waiting", "In Progress", "To Do"];
+
+        // Define priority order: High, Medium, Normal (higher priority first)
+        const priorityOrder = ["High", "Medium", "Normal"];
+
+        // Sort tasks based on state order, then by priority, then by original order
+        item.tasks.sort((a, b) => {
+            const aStateIndex = stateOrder.indexOf(a.state);
+            const bStateIndex = stateOrder.indexOf(b.state);
+            if (aStateIndex !== bStateIndex) {
+                return aStateIndex - bStateIndex;
+            }
+
+            // Same state, sort by priority
+            const aPriorityIndex = priorityOrder.indexOf(a.priority);
+            const bPriorityIndex = priorityOrder.indexOf(b.priority);
+            if (aPriorityIndex !== bPriorityIndex) {
+                return aPriorityIndex - bPriorityIndex;
+            }
+
+            // Same state and priority, maintain original order
+            return a.order - b.order;
+        });
+
+        // Update order property for each task
+        item.tasks.forEach((task, index) => {
+            task.order = index + 1;
+        });
+
+        // Save the changes
+        if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+            await saveSprint(currentSprint.value);
+            notifyOk("Tasks sorted", `Tasks in "${item.title}" have been sorted by state and priority`);
+        }
+    };
+
     const createNewSprint = async () => {
         const lastSprintNumber = sprints.value.length > 0
             ? Math.max(...sprints.value.map(s => {
@@ -280,6 +327,19 @@ export const useSprintStore = defineStore("sprint", () => {
             notifyOk("Fechas recalculadas", "Las fechas de los sprints han sido corregidas");
         } finally {
             loadingStore.setLoading(false);
+        }
+    };
+
+    const softDeleteItem = async (itemId: string) => {
+        if (currentSprint.value) {
+            const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (index !== -1 && currentSprint.value.items[index]) {
+                // Marcar como borrado en lugar de eliminar físicamente
+                currentSprint.value.items[index].deletedAt = new Date();
+                if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                    await saveSprint(currentSprint.value);
+                }
+            }
         }
     };
 
@@ -387,15 +447,29 @@ export const useSprintStore = defineStore("sprint", () => {
             title: `${originalItem.title}`,
             order: maxOrder + 1,
             createdAt: new Date(),
+            createdBy: authStore.user?.id || "",
             tasks: includeTasks ? originalItem.tasks.map((task) => ({
                 ...task,
                 id: `task-copy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 order: task.order, // Mantener el orden original de las tasks
-                createdAt: new Date()
+                createdAt: new Date(),
+                createdBy: authStore.user?.id || ""
             })) : []
         };
 
         await addItem(duplicatedItem);
+    };
+
+    const softDeleteTask = async (taskId: string, item: Item) => {
+        if (!currentSprint.value) return;
+
+        const taskIndex = item.tasks.findIndex(t => t.id === taskId);
+        if (taskIndex === -1) return;
+
+        // Marcar como borrado en lugar de eliminar físicamente
+        item.tasks[taskIndex].deletedAt = new Date();
+
+        await updateItem(item.id, { tasks: item.tasks });
     };
 
     const duplicateTask = async (taskId: string, itemId: string) => {
@@ -407,9 +481,10 @@ export const useSprintStore = defineStore("sprint", () => {
         const originalTask = item.tasks.find(t => t.id === taskId);
         if (!originalTask) return;
 
-        // Calcular el nuevo orden (al final de la lista de tasks)
-        const maxOrder = item.tasks.length > 0
-            ? Math.max(...item.tasks.map(task => task.order))
+        // Calcular el nuevo orden (al final de la lista de tasks activas)
+        const activeTasks = item.tasks.filter(t => t.deletedAt === null);
+        const maxOrder = activeTasks.length > 0
+            ? Math.max(...activeTasks.map(task => task.order))
             : 0;
 
         const duplicatedTask = {
@@ -417,7 +492,9 @@ export const useSprintStore = defineStore("sprint", () => {
             id: `task-copy-${Date.now()}`,
             title: `${originalTask.title}`,
             order: maxOrder + 1,
-            createdAt: new Date()
+            createdAt: new Date(),
+            createdBy: authStore.user?.id || "",
+            deletedAt: null
         };
 
         item.tasks.push(duplicatedTask);
@@ -441,8 +518,11 @@ export const useSprintStore = defineStore("sprint", () => {
         addItem,
         updateItem,
         deleteItem,
+        softDeleteItem,
+        softDeleteTask,
         moveTask,
         reorderTasks,
+        sortTasksByState,
         createNewSprint,
         recalculateSprintDates,
         updateSprintDiasHabiles,

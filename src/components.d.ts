@@ -9,6 +9,14 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     CommentSection: typeof import('./components/global/CommentSection.vue')['default']
+    ContextMenu: typeof import('./components/ContextMenu.vue')['default']
+    ContextSubmenu: typeof import('./components/ContextSubmenu.vue')['default']
+    Header: typeof import('./components/Header.vue')['default']
+    HistoryView: typeof import('./components/HistoryView.vue')['default']
+    ImageLinkView: typeof import('./components/ImageLinkView.vue')['default']
+    ItemCard: typeof import('./components/ItemCard.vue')['default']
+    ItemDialog: typeof import('./components/ItemDialog.vue')['default']
+    MyAlertDialog: typeof import('./components/my-elements/MyAlertDialog.vue')['default']
     MyButton: typeof import('./components/global/MyButton.vue')['default']
     MyCard: typeof import('./components/global/MyCard.vue')['default']
     MyDatePicker: typeof import('./components/global/MyDatePicker.vue')['default']
@@ -20,7 +28,13 @@ declare module 'vue' {
     MySelect: typeof import('./components/global/MySelect.vue')['default']
     MySeparator: typeof import('./components/global/MySeparator.vue')['default']
     MyTextarea: typeof import('./components/global/MyTextarea.vue')['default']
+    PwaInstallButton: typeof import('./components/PwaInstallButton.vue')['default']
+    ResizableImageView: typeof import('./components/ResizableImageView.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TaskCard: typeof import('./components/TaskCard.vue')['default']
+    TaskDialog: typeof import('./components/TaskDialog.vue')['default']
+    UserProgressChart: typeof import('./components/UserProgressChart.vue')['default']
+    VersionUpdateNotification: typeof import('./components/VersionUpdateNotification.vue')['default']
   }
 }

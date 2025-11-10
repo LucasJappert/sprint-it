@@ -153,15 +153,23 @@ $mobile-resolution: 600px !default;
         justify-content: space-between;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
         min-width: auto;
         width: 96%;
+        max-width: 96%;
+        max-height: 96vh;
+    }
+
+    @media (max-width: 480px) {
+        width: 98%;
+        max-width: 98%;
+        max-height: 98vh;
     }
 }
 
 .slot-container {
     @media (max-width: $mobile-resolution) {
-        min-width: $mobile-resolution;
+        min-width: auto; /* Allow flexible width on mobile */
     }
 }
 </style>

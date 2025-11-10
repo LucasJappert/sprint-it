@@ -1,25 +1,25 @@
 <template>
     <div class="history-section">
-        <h4 class="mb-3">Change History</h4>
-
         <!-- Sección de fecha de creación -->
-        <div v-if="createdAt" class="creation-info">
-            <div class="creation-header">
-                <v-icon size="16" class="mr-1">mdi-plus-circle</v-icon>
-                <span class="creation-title">Created</span>
-            </div>
-            <div class="creation-details">
-                <span class="creation-date">{{ formatRelativeDate(createdAt) }} | {{ formatISODate(createdAt) }}</span>
-            </div>
-        </div>
 
         <div v-if="changeHistory.length === 0 && !createdAt" class="no-history">
             <v-icon size="48" color="grey">mdi-history</v-icon>
             <p class="mt-2 text-grey">No changes recorded yet</p>
         </div>
-        <div v-if="changeHistory.length > 0" class="changes-header">
-            <h5 class="mt-4 mb-2">Changes Made</h5>
+
+        <div v-if="createdAt" class="history-item">
+            <div class="history-header">
+                <div>
+                    <v-icon size="16" class="mr-1">mdi-plus-circle</v-icon>
+                    <span class="field-name">Created</span>
+                </div>
+                <div>
+                    <span class="user-name">{{ createdBy ? userNames[createdBy] || "Unknown" : "" }}</span
+                    ><span v-if="createdBy">| </span><span class="change-date ml-1">{{ formatRelativeDate(createdAt) }} | {{ formatISODate(createdAt) }}</span>
+                </div>
+            </div>
         </div>
+
         <div v-if="changeHistory.length > 0" class="history-list">
             <div v-for="change in changeHistory" :key="change.id" class="history-item">
                 <div class="history-header">
@@ -50,6 +50,7 @@ import { ref, watch } from "vue";
 interface Props {
     changeHistory: ChangeHistory[];
     createdAt?: Date;
+    createdBy?: string;
 }
 
 const props = defineProps<Props>();
@@ -58,6 +59,12 @@ const userNames = ref<Record<string, string>>({});
 
 const loadUserNames = async () => {
     const userIds = [...new Set(props.changeHistory.map((c: ChangeHistory) => c.userId))];
+
+    // Agregar el createdBy si existe
+    if (props.createdBy) {
+        userIds.push(props.createdBy);
+    }
+
     const names: Record<string, string> = {};
     for (const userId of userIds) {
         try {
@@ -76,7 +83,7 @@ const loadUserNames = async () => {
     userNames.value = names;
 };
 
-watch(() => props.changeHistory, loadUserNames, { immediate: true });
+watch(() => [props.changeHistory, props.createdBy], loadUserNames, { immediate: true });
 
 const formatFieldName = (field: string): string => {
     const fieldNames: Record<string, string> = {
@@ -93,10 +100,6 @@ const formatFieldName = (field: string): string => {
 </script>
 
 <style scoped>
-.history-section {
-    padding: 16px;
-}
-
 .no-history {
     text-align: center;
     padding: 40px 20px;

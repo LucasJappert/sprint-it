@@ -151,7 +151,7 @@ const { createTaskContextMenuOptions } = useContextMenuOptions();
 const contextMenuOptions = ref<ContextMenuOption[]>([]);
 
 const loadContextMenuOptions = async () => {
-    contextMenuOptions.value = await createTaskContextMenuOptions(props.task, props.item, deleteTask, sprintStore.duplicateTask);
+    contextMenuOptions.value = await createTaskContextMenuOptions(props.task, props.item, deleteTask, sprintStore.duplicateTask, sprintStore.softDeleteTask);
 };
 
 watch(
@@ -312,6 +312,7 @@ const onDragEnd = () => {
     position: relative;
     cursor: pointer;
     user-select: none;
+    min-width: fit-content;
 
     &:hover {
         background: rgba($bg-secondary, 0.3);

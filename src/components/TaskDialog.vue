@@ -1,19 +1,19 @@
 <template>
-    <MyDialog :visible="visible" :min-width="800" @close="handleClose" persistent>
+    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent>
         <div class="header flex-center justify-space-between">
             <div class="flex-center">
                 <h3 class="text-left flex-center justify-start">
                     <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
                     {{ isEditing ? "Edit Task" : "New Task" }}
                 </h3>
-                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4" style="height: 30px">
+                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4 view-mode-toggle">
                     <v-btn value="details" size="small">
                         <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
-                        Details
+                        <span class="btn-text">Details</span>
                     </v-btn>
                     <v-btn value="history" size="small">
                         <v-icon size="16" class="mr-1">mdi-history</v-icon>
-                        History
+                        <span class="btn-text">History</span>
                     </v-btn>
                 </v-btn-toggle>
             </div>
@@ -26,9 +26,9 @@
                     <MyInput ref="titleInputRef" v-model="title" label="Title" density="compact" @keydown.enter="handleSave" />
                 </div>
 
-                <!-- Campos en una sola fila: persona asignada, estado, esfuerzos, prioridad -->
-                <div class="form-row mt-3">
-                    <div class="field-group assigned-user">
+                <!-- Campos organizados en filas lógicas -->
+                <div class="form-section mt-3">
+                    <div class="assigned-user">
                         <MySelect
                             v-model="assignedUser"
                             label="Assigned Person"
@@ -38,16 +38,16 @@
                             @update:options="onAssignedUserChange"
                         />
                     </div>
-                    <div class="field-group state">
+                    <div class="state">
                         <MySelect v-model="state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
                     </div>
-                    <div class="field-group estimated-effort">
+                    <div class="estimated-effort">
                         <MyInput v-model="estimatedEffort" label="Effort" type="number" density="compact" />
                     </div>
-                    <div class="field-group actual-effort">
+                    <div class="actual-effort">
                         <MyInput v-model="actualEffort" label="Real Effort" type="number" density="compact" />
                     </div>
-                    <div class="field-group priority">
+                    <div class="priority">
                         <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
                     </div>
                 </div>
@@ -62,7 +62,7 @@
             </template>
 
             <template v-else-if="viewMode === 'history'">
-                <HistoryView :change-history="changeHistory" :createdAt="existingTask?.createdAt" />
+                <HistoryView :change-history="changeHistory" :createdAt="existingTask?.createdAt" :createdBy="existingTask?.createdBy" />
             </template>
         </div>
         <div class="footer">
@@ -473,6 +473,8 @@ const handleSave = async () => {
             assignedUser: assignedUserId,
             order: props.existingTask?.order || 0,
             createdAt: props.existingTask?.createdAt || new Date(),
+            createdBy: props.existingTask?.createdBy || useAuthStore().user?.id || "",
+            deletedAt: props.existingTask?.deletedAt || null,
         };
 
         // Guardar cambios si es edición
@@ -504,93 +506,5 @@ watch(
 </script>
 
 <style scoped lang="scss">
-/* Título ocupando 100% del ancho */
-.full-width {
-    width: 100%;
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* Distribución en fila para persona asignada, prioridad y esfuerzos */
-.form-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-/* Persona asignada - 25% */
-.assigned-user {
-    flex: 0 0 25%;
-}
-
-/* Estado - 20% */
-.state {
-    flex: 0 0 20%;
-}
-
-/* Esfuerzo estimado - 15% */
-.estimated-effort {
-    flex: 0 0 15%;
-}
-
-/* Esfuerzo real - 15% */
-.actual-effort {
-    flex: 0 0 15%;
-}
-
-/* Prioridad - 20% */
-.priority {
-    flex: 0 0 20%;
-}
-
-/* Textarea para detalle ocupando 100% del ancho */
-.detail-textarea {
-    width: 100%;
-}
-
-.detail-textarea :deep(.v-field) {
-    border-radius: 20px !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-}
-
-.detail-textarea :deep(.v-field__input) {
-    min-height: 380px !important;
-    overflow-y: auto !important;
-    padding: 20px 24px !important;
-    margin-top: 8px !important;
-}
-
-.detail-textarea :deep(textarea) {
-    min-height: 380px !important;
-    overflow-y: auto !important;
-    padding: 0 !important;
-    line-height: 1.6 !important;
-    margin-top: 4px !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .form-row {
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .field-group {
-        flex: 1;
-    }
-
-    .assigned-user,
-    .state,
-    .priority,
-    .estimated-effort,
-    .actual-effort {
-        flex: 1;
-    }
-}
+@import "@/styles/dialog-form.scss";
 </style>

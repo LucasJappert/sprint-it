@@ -34,8 +34,13 @@
 
 .cols-title {
     flex: 1;
-    min-width: 0;
+    min-width: 500px;
+    max-width: 500px;
     text-align: left;
+    @media (max-width: $mobile-resolution) {
+        flex: 0 0 300px;
+        max-width: 300px;
+    }
 }
 
 $col-assigned-width: 90px;

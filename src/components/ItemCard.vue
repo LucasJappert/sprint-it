@@ -17,7 +17,7 @@
             <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
                 <v-icon size="24">mdi-drag</v-icon>
             </span>
-            <v-btn v-if="item.tasks.length > 0" icon size="x-small" @click.stop="onToggleTasks" @mousedown.stop>
+            <v-btn v-if="activeTasks.length > 0" icon size="x-small" @click.stop="onToggleTasks" @mousedown.stop>
                 <v-icon size="16">{{ showTasks || props.isExpanded ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
         </div>
@@ -33,7 +33,7 @@
         </div>
         <div class="item-col cols-title text-left">
             <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
-            <span v-if="item.tasks.length" class="mr-1">({{ item.tasks.length }})</span>{{ item.title }}
+            <span v-if="activeTasks.length" class="mr-1">({{ activeTasks.length }})</span>{{ item.title }}
         </div>
         <div class="item-col cols-effort">{{ calculatedEstimatedEffort }} - {{ calculatedActualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
@@ -42,7 +42,7 @@
     </div>
 
     <div v-if="showTasks || props.isExpanded" class="tasks-container">
-        <TaskCard v-for="task in item.tasks" :key="task.id" :task="task" :item="item" :show-dialog="false" />
+        <TaskCard v-for="task in activeTasks" :key="task.id" :task="task" :item="item" :show-dialog="false" />
     </div>
 
     <ItemDialog
@@ -112,14 +112,18 @@ const highlightPosition = computed(() => {
 
 const assignedUserName = ref("");
 
+const activeTasks = computed(() => {
+    return props.item.tasks.filter((task) => task.deletedAt === null);
+});
+
 const calculatedEstimatedEffort = computed(() => {
-    if (props.item.tasks.length === 0) return props.item.estimatedEffort;
-    return props.item.tasks.reduce((sum, task) => sum + task.estimatedEffort, 0);
+    if (activeTasks.value.length === 0) return props.item.estimatedEffort;
+    return activeTasks.value.reduce((sum, task) => sum + task.estimatedEffort, 0);
 });
 
 const calculatedActualEffort = computed(() => {
-    if (props.item.tasks.length === 0) return props.item.actualEffort;
-    return props.item.tasks.reduce((sum, task) => sum + task.actualEffort, 0);
+    if (activeTasks.value.length === 0) return props.item.actualEffort;
+    return activeTasks.value.reduce((sum, task) => sum + task.actualEffort, 0);
 });
 
 const loadAssignedUserName = async () => {
@@ -179,7 +183,13 @@ const { createItemContextMenuOptions } = useContextMenuOptions();
 const contextMenuOptions = ref<ContextMenuOption[]>([]);
 
 const loadContextMenuOptions = async () => {
-    contextMenuOptions.value = await createItemContextMenuOptions(props.item, openAddTaskDialog, sprintStore.duplicateItem);
+    contextMenuOptions.value = await createItemContextMenuOptions(
+        props.item,
+        openAddTaskDialog,
+        sprintStore.duplicateItem,
+        sprintStore.softDeleteItem,
+        sprintStore.sortTasksByState,
+    );
 };
 
 onMounted(() => {
@@ -421,6 +431,7 @@ const onDrop = (e: DragEvent) => {
     position: relative;
     cursor: pointer;
     user-select: none;
+    min-width: fit-content;
 
     &:hover,
     &.context-menu-open {

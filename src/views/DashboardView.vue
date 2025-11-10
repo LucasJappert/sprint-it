@@ -28,21 +28,19 @@
                 <div class="item-col cols-priority">Priority</div>
             </div>
 
-            <div class="list">
-                <ItemCard
-                    v-for="it in items"
-                    :key="it.id"
-                    :item="it"
-                    :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
-                    :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
-                    :isContextMenuOpen="contextMenuItemId === it.id"
-                    :isExpanded="expandedItems.has(it.id)"
-                    @contextMenuOpened="onContextMenuOpened"
-                    @contextMenuClosed="onContextMenuClosed"
-                    @taskReceived="onTaskReceived"
-                    @toggleExpanded="onToggleExpanded"
-                />
-            </div>
+            <ItemCard
+                v-for="it in items"
+                :key="it.id"
+                :item="it"
+                :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
+                :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
+                :isContextMenuOpen="contextMenuItemId === it.id"
+                :isExpanded="expandedItems.has(it.id)"
+                @contextMenuOpened="onContextMenuOpened"
+                @contextMenuClosed="onContextMenuClosed"
+                @taskReceived="onTaskReceived"
+                @toggleExpanded="onToggleExpanded"
+            />
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
@@ -126,6 +124,8 @@ const currentItemForTaskDialog = computed((): Item => {
         tasks: [],
         order: 1,
         createdAt: new Date(),
+        createdBy: "",
+        deletedAt: null,
     };
 });
 
@@ -136,52 +136,59 @@ const contextMenuItemId = ref<string | null>(null);
 const items = computed<Item[]>(() => {
     const currentItems = sprintStore.currentSprint?.items ?? [];
     // Convertir de objeto a array si es necesario (compatibilidad con Firestore)
-    return Array.isArray(currentItems) ? currentItems : Object.values(currentItems || {});
+    const itemsArray = Array.isArray(currentItems) ? currentItems : Object.values(currentItems || {});
+    // Filtrar elementos marcados como borrados (soft delete)
+    return (itemsArray as Item[]).filter((item) => item.deletedAt === null);
 });
 
 // Logs de debug removidos para simplificar la lógica
 
 // Asegurar que los sprints estén generados
 onMounted(async () => {
-    if (sprintStore.sprints.length === 0) {
-        await sprintStore.generateSprints();
-    }
-
-    // Actualizar el título de la página con el sprint actual
-    document.title = `Sprint It - ${sprintStore.currentSprint?.titulo}`;
-
-    // Marcar el gráfico como listo después de la carga inicial
-    chartReady.value = true;
-
-    // Escuchar eventos del eventBus
-    eventBus.on("taskCreated", onTaskCreated);
-
-    // Revisar si hay un id en la URL para abrir el modal
-    const taskId = getTaskIdFromUrl();
-    const itemId = getItemIdFromUrl();
-
-    // TODO: Llevar lógica a otro módulo
-    if (taskId) {
-        console.log("Buscando task con ID:", taskId);
-        const taskData = findTaskById(taskId);
-        if (taskData) {
-            console.log("Task encontrada, expandiendo item y abriendo modal de edición");
-            // Expandir el item que contiene la task
-            expandedItems.value.add(taskData.item.id);
-            openEditTaskDialog(taskData.task, taskData.item, true);
-        } else {
-            console.log("Task no encontrada");
+    try {
+        if (sprintStore.sprints.length === 0) {
+            await sprintStore.generateSprints();
         }
-    } else if (itemId) {
-        console.log("Buscando item con ID:", itemId);
-        const item = items.value.find((i) => i.id === itemId);
-        if (item) {
-            console.log("Item encontrado, abriendo modal de edición");
-            // No expandir el item automáticamente, solo abrir el modal de edición
-            openEditItemDialog(item);
-        } else {
-            console.log("Item no encontrado");
+
+        // Actualizar el título de la página con el sprint actual
+        document.title = `Sprint It - ${sprintStore.currentSprint?.titulo}`;
+
+        // Marcar el gráfico como listo después de la carga inicial
+        chartReady.value = true;
+
+        // Escuchar eventos del eventBus
+        eventBus.on("taskCreated", onTaskCreated);
+
+        // Revisar si hay un id en la URL para abrir el modal
+        const taskId = getTaskIdFromUrl();
+        const itemId = getItemIdFromUrl();
+
+        // TODO: Llevar lógica a otro módulo
+        if (taskId) {
+            console.log("Buscando task con ID:", taskId);
+            const taskData = findTaskById(taskId);
+            if (taskData) {
+                console.log("Task encontrada, expandiendo item y abriendo modal de edición");
+                // Expandir el item que contiene la task
+                expandedItems.value.add(taskData.item.id);
+                openEditTaskDialog(taskData.task, taskData.item, true);
+            } else {
+                console.log("Task no encontrada");
+            }
+        } else if (itemId) {
+            console.log("Buscando item con ID:", itemId);
+            const item = items.value.find((i) => i.id === itemId);
+            if (item) {
+                console.log("Item encontrado, abriendo modal de edición");
+                // No expandir el item automáticamente, solo abrir el modal de edición
+                openEditItemDialog(item);
+            } else {
+                console.log("Item no encontrado");
+            }
         }
+    } catch (error) {
+        console.error("Error en onMounted de DashboardView:", error);
+        // Mostrar algún mensaje de error o fallback
     }
 });
 
@@ -379,15 +386,29 @@ const toggleAllTasks = () => {
     padding: 6px;
     padding-top: 66px; /* Adjusted for 50px header + 16px padding */
     font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
 }
-
 .board-header {
     display: flex;
     justify-content: flex-start;
+    margin-bottom: 8px;
 }
 
 .board {
     padding: 8px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Mobile responsive */
+@media (max-width: $mobile-resolution) {
+    .board {
+        overflow-x: auto; /* Enable horizontal scrolling */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
 }
 
 .header-row {
@@ -399,18 +420,42 @@ const toggleAllTasks = () => {
     border-radius: 8px 8px 0 0;
     font-weight: bold;
     color: $text;
-}
-
-.list {
-    display: flex;
-    flex-direction: column;
+    min-width: fit-content; /* Allow natural width based on content */
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .dashboard-header {
-        flex-direction: column;
-        align-items: stretch;
+    .dashboard {
+        padding: 4px;
+        padding-top: 66px;
+        font-size: 0.8rem;
+    }
+
+    .board-header {
+        justify-content: center;
+    }
+
+    .board {
+        overflow-x: auto; /* Enable horizontal scrolling on mobile */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        padding: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard {
+        padding: 2px;
+        padding-top: 66px;
+    }
+
+    .board {
+        padding: 2px;
+    }
+
+    .header-row {
+        min-width: 550px;
+        padding: 4px;
+        font-size: 0.75rem;
     }
 }
 </style>

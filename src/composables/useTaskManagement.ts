@@ -1,4 +1,5 @@
 import { saveSprint } from "@/services/firestore";
+import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { eventBus } from "@/utils/eventBus";
@@ -14,6 +15,7 @@ const currentItem = ref<Item | null>(null);
 export const useTaskManagement = () => {
     const router = useRouter();
     const sprintStore = useSprintStore();
+    const authStore = useAuthStore();
     const { setTaskUrl, clearQueryParams } = useUrlManagement(router);
 
     const openAddTaskDialog = (item: Item) => {
@@ -63,6 +65,7 @@ export const useTaskManagement = () => {
         } else {
             // Agregar nueva task
             task.order = currentItem.value.tasks.length + 1;
+            task.createdBy = authStore.user?.id || "";
             currentItem.value.tasks.push(task);
 
             // Recalcular esfuerzos del item padre si tiene tasks

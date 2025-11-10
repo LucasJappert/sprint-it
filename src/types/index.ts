@@ -33,6 +33,8 @@ export interface Task {
     assignedUser: string | null; // user id (nullable)
     order: number;
     createdAt: Date;
+    createdBy: string; // user id who created this task
+    deletedAt: Date | null; // soft delete timestamp (nullable)
 }
 
 export interface Item {
@@ -47,6 +49,8 @@ export interface Item {
     tasks: Task[];
     order: number;
     createdAt: Date;
+    createdBy: string; // user id who created this item
+    deletedAt: Date | null; // soft delete timestamp (nullable)
 }
 
 export interface Sprint {

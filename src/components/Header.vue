@@ -49,6 +49,9 @@
                     <v-icon>mdi-logout</v-icon>
                     <span>Logout</span>
                 </div>
+                <div class="menu-item version">
+                    <span>v{{ appVersion }}</span>
+                </div>
             </div>
         </v-menu>
     </v-app-bar>
@@ -62,6 +65,8 @@ import { useSprintStore } from "@/stores/sprint";
 import { createFileInput, processImportedItems } from "@/utils/itemImport";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
+
+const appVersion = "1.1.6";
 
 const authStore = useAuthStore();
 const sprintStore = useSprintStore();
@@ -255,12 +260,58 @@ const importItems = async () => {
     justify-content: space-between;
     align-items: center;
     gap: 16px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
 .sprint-container-1 {
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .v-app-bar {
+        width: 100vw; /* Full viewport width on mobile */
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
+        padding: 0 8px; /* Add padding to prevent content from touching edges */
+        box-sizing: border-box;
+    }
+
+    .sprint-container-1 {
+        justify-content: center;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .sprint-container-1 > div {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-header {
+        gap: 4px;
+        padding: 0 4px;
+    }
+
+    .sprint-container-1 {
+        gap: 2px;
+    }
+
+    .sprint-container-1 > div {
+        min-width: 100px;
+    }
 }
 
 .sprint-dates {
@@ -313,6 +364,14 @@ const importItems = async () => {
 .menu-item span {
     font-size: 0.9rem;
     color: $text;
+}
+
+.version {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    text-align: center;
+    cursor: default;
+    padding: 4px 16px;
 }
 
 .avatar {

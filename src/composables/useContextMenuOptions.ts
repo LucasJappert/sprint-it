@@ -80,7 +80,7 @@ export const useContextMenuOptions = () => {
         }));
     };
 
-    const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void, duplicateTaskFn: (taskId: string, itemId: string) => void) => {
+    const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void, duplicateTaskFn: (taskId: string, itemId: string) => void, softDeleteTaskFn: (taskId: string, item: Item) => void) => {
         const updateTaskAssignedUser = async (userId: string) => {
             const oldValue = task.assignedUser || "";
             await sprintStore.updateTask(task.id, item.id, { assignedUser: userId });
@@ -89,8 +89,24 @@ export const useContextMenuOptions = () => {
 
         const updateTaskState = async (state: string) => {
             const oldValue = task.state;
-            await sprintStore.updateTask(task.id, item.id, { state: state as any });
+            const newState = state as any;
+
+            // Si el estado anterior era "To Do" y el nuevo es diferente, asignar el usuario logueado
+            const shouldAssignUser = oldValue === "To Do" && newState !== "To Do";
+            const updates: any = { state: newState };
+            if (shouldAssignUser) {
+                updates.assignedUser = authStore.user?.id || null;
+            }
+
+            await sprintStore.updateTask(task.id, item.id, updates);
+
+            // Guardar cambios para el estado
             await saveChange(task.id, "task", "state", oldValue, state);
+
+            // Si se asignó usuario, guardar ese cambio también
+            if (shouldAssignUser) {
+                await saveChange(task.id, "task", "assignedUser", task.assignedUser || "", authStore.user?.id || "");
+            }
         };
 
         const updateTaskPriority = async (priority: string) => {
@@ -144,14 +160,14 @@ export const useContextMenuOptions = () => {
                         "warning",
                     );
                     if (confirmed) {
-                        deleteTaskFn(task.id, item);
+                        softDeleteTaskFn(task.id, item);
                     }
                 },
             },
         ];
     };
 
-    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void) => {
+    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void, softDeleteItemFn: (itemId: string) => void, sortTasksFn: (itemId: string) => void) => {
         const updateItemAssignedUser = async (userId: string) => {
             const oldValue = item.assignedUser || "";
             await sprintStore.updateItem(item.id, { assignedUser: userId });
@@ -160,8 +176,24 @@ export const useContextMenuOptions = () => {
 
         const updateItemState = async (state: string) => {
             const oldValue = item.state;
-            await sprintStore.updateItem(item.id, { state: state as any });
+            const newState = state as any;
+
+            // Si el estado anterior era "To Do" y el nuevo es diferente, asignar el usuario logueado
+            const shouldAssignUser = oldValue === "To Do" && newState !== "To Do";
+            const updates: any = { state: newState };
+            if (shouldAssignUser) {
+                updates.assignedUser = authStore.user?.id || null;
+            }
+
+            await sprintStore.updateItem(item.id, updates);
+
+            // Guardar cambios para el estado
             await saveChange(item.id, "item", "state", oldValue, state);
+
+            // Si se asignó usuario, guardar ese cambio también
+            if (shouldAssignUser) {
+                await saveChange(item.id, "item", "assignedUser", item.assignedUser || "", authStore.user?.id || "");
+            }
         };
 
         const updateItemPriority = async (priority: string) => {
@@ -195,6 +227,14 @@ export const useContextMenuOptions = () => {
                 color: "yellow",
                 action: () => {
                     openAddTaskDialogFn(item);
+                },
+            },
+            {
+                key: "sort-tasks",
+                label: "Sort Tasks",
+                icon: "mdi-sort-variant",
+                action: () => {
+                    sortTasksFn(item.id);
                 },
             },
             {
@@ -266,7 +306,7 @@ export const useContextMenuOptions = () => {
                         "warning",
                     );
                     if (confirmed) {
-                        await sprintStore.deleteItem(item.id);
+                        softDeleteItemFn(item.id);
                     }
                 },
             },

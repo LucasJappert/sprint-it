@@ -1,1 +1,4 @@
-seguir viendo el tema de comments
+-   seguir viendo el tema de comments
+-   El config.json capaz podamos buscarle una vuelta para directamente usar todo desde el .env
+-   Revisar y dejar bien configurado el README
+-   Agregar screenshot en el README
