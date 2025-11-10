@@ -28,21 +28,19 @@
                 <div class="item-col cols-priority">Priority</div>
             </div>
 
-            <div class="list">
-                <ItemCard
-                    v-for="it in items"
-                    :key="it.id"
-                    :item="it"
-                    :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
-                    :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
-                    :isContextMenuOpen="contextMenuItemId === it.id"
-                    :isExpanded="expandedItems.has(it.id)"
-                    @contextMenuOpened="onContextMenuOpened"
-                    @contextMenuClosed="onContextMenuClosed"
-                    @taskReceived="onTaskReceived"
-                    @toggleExpanded="onToggleExpanded"
-                />
-            </div>
+            <ItemCard
+                v-for="it in items"
+                :key="it.id"
+                :item="it"
+                :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
+                :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
+                :isContextMenuOpen="contextMenuItemId === it.id"
+                :isExpanded="expandedItems.has(it.id)"
+                @contextMenuOpened="onContextMenuOpened"
+                @contextMenuClosed="onContextMenuClosed"
+                @taskReceived="onTaskReceived"
+                @toggleExpanded="onToggleExpanded"
+            />
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
@@ -398,7 +396,7 @@ const toggleAllTasks = () => {
 }
 
 /* Mobile responsive */
-@media (max-width: 768px) {
+@media (max-width: $mobile-resolution) {
     .board {
         overflow-x: auto; /* Enable horizontal scrolling */
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
@@ -415,11 +413,6 @@ const toggleAllTasks = () => {
     font-weight: bold;
     color: $text;
     min-width: fit-content; /* Allow natural width based on content */
-}
-
-.list {
-    display: flex;
-    flex-direction: column;
 }
 
 /* Responsive */
@@ -439,15 +432,6 @@ const toggleAllTasks = () => {
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         padding: 4px;
     }
-
-    .header-row {
-        min-width: 600px; /* Minimum width to prevent cramping, allows scrolling */
-        padding: 6px;
-    }
-
-    .list {
-        min-width: 600px; /* Match header for consistent scrolling */
-    }
 }
 
 @media (max-width: 480px) {
@@ -464,10 +448,6 @@ const toggleAllTasks = () => {
         min-width: 550px;
         padding: 4px;
         font-size: 0.75rem;
-    }
-
-    .list {
-        min-width: 550px;
     }
 }
 </style>
