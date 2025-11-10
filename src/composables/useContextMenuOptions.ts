@@ -89,8 +89,24 @@ export const useContextMenuOptions = () => {
 
         const updateTaskState = async (state: string) => {
             const oldValue = task.state;
-            await sprintStore.updateTask(task.id, item.id, { state: state as any });
+            const newState = state as any;
+
+            // Si el estado anterior era "To Do" y el nuevo es diferente, asignar el usuario logueado
+            const shouldAssignUser = oldValue === "To Do" && newState !== "To Do";
+            const updates: any = { state: newState };
+            if (shouldAssignUser) {
+                updates.assignedUser = authStore.user?.id || null;
+            }
+
+            await sprintStore.updateTask(task.id, item.id, updates);
+
+            // Guardar cambios para el estado
             await saveChange(task.id, "task", "state", oldValue, state);
+
+            // Si se asignó usuario, guardar ese cambio también
+            if (shouldAssignUser) {
+                await saveChange(task.id, "task", "assignedUser", task.assignedUser || "", authStore.user?.id || "");
+            }
         };
 
         const updateTaskPriority = async (priority: string) => {
@@ -160,8 +176,24 @@ export const useContextMenuOptions = () => {
 
         const updateItemState = async (state: string) => {
             const oldValue = item.state;
-            await sprintStore.updateItem(item.id, { state: state as any });
+            const newState = state as any;
+
+            // Si el estado anterior era "To Do" y el nuevo es diferente, asignar el usuario logueado
+            const shouldAssignUser = oldValue === "To Do" && newState !== "To Do";
+            const updates: any = { state: newState };
+            if (shouldAssignUser) {
+                updates.assignedUser = authStore.user?.id || null;
+            }
+
+            await sprintStore.updateItem(item.id, updates);
+
+            // Guardar cambios para el estado
             await saveChange(item.id, "item", "state", oldValue, state);
+
+            // Si se asignó usuario, guardar ese cambio también
+            if (shouldAssignUser) {
+                await saveChange(item.id, "item", "assignedUser", item.assignedUser || "", authStore.user?.id || "");
+            }
         };
 
         const updateItemPriority = async (priority: string) => {
