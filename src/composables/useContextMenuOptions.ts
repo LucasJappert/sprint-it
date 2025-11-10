@@ -167,7 +167,7 @@ export const useContextMenuOptions = () => {
         ];
     };
 
-    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void, softDeleteItemFn: (itemId: string) => void, sortTasksFn: (itemId: string) => void) => {
+    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void, softDeleteItemFn: (itemId: string) => void, sortTasksFn: (itemId: string) => void, copyItemWithTaskSplitFn: (itemId: string) => void) => {
         const updateItemAssignedUser = async (userId: string) => {
             const oldValue = item.assignedUser || "";
             await sprintStore.updateItem(item.id, { assignedUser: userId });
@@ -219,7 +219,13 @@ export const useContextMenuOptions = () => {
                 }));
         };
 
-        return [
+        // Verificar condición: al menos 1 task Done y al menos 1 task en otro estado, y al menos 2 tasks totales
+        const hasDoneTasks = item.tasks.some(task => task.state === "Done");
+        const hasOtherTasks = item.tasks.some(task => task.state !== "Done");
+        const hasAtLeastTwoTasks = item.tasks.length >= 2;
+        const shouldShowFinalizeOption = hasDoneTasks && hasOtherTasks && hasAtLeastTwoTasks;
+
+        const menuOptions = [
             {
                 key: "add-task",
                 label: "Add task",
@@ -237,6 +243,34 @@ export const useContextMenuOptions = () => {
                     sortTasksFn(item.id);
                 },
             },
+        ];
+
+        // Solo agregar la opción "Finalize Item" si cumple la condición
+        if (shouldShowFinalizeOption) {
+            menuOptions.push({
+                key: "finalize-item",
+                label: "Finalize Item",
+                icon: "mdi-check-circle-outline",
+                color: "success",
+                action: async () => {
+                    const doneCount = item.tasks.filter(task => task.state === "Done").length;
+                    const otherCount = item.tasks.filter(task => task.state !== "Done").length;
+                    const confirmed = await MyAlerts.confirmAsync(
+                        "Finalize Item",
+                        `This will create a copy of "${item.title}" with "${item.title} Copy" as title.<br><br>` +
+                        `<strong>Original item</strong> will keep ${doneCount} completed task(s).<br>` +
+                        `<strong>Copy</strong> will receive ${otherCount} pending task(s).<br><br>` +
+                        `Both items will have their tasks sorted by state and priority.`
+                    );
+                    if (confirmed) {
+                        copyItemWithTaskSplitFn(item.id);
+                    }
+                },
+            });
+        }
+
+        // Agregar las opciones restantes
+        menuOptions.push(
             {
                 key: "duplicate",
                 label: "Duplicate Item",
@@ -269,31 +303,31 @@ export const useContextMenuOptions = () => {
                         }
                     }
                 },
-            },
+            } as any,
             {
                 key: "reassign",
                 label: "Assign to",
                 icon: "mdi-account-switch",
                 submenu: await createUserOptions(updateItemAssignedUser),
-            },
+            } as any,
             {
                 key: "change-state",
                 label: "Change state",
                 icon: "mdi-swap-horizontal",
                 submenu: createStateOptions(updateItemState),
-            },
+            } as any,
             {
                 key: "change-priority",
                 label: "Change priority",
                 icon: "mdi-flag-variant",
                 submenu: createPriorityOptions(updateItemPriority),
-            },
+            } as any,
             {
                 key: "move-to-sprint",
                 label: "Move to sprint",
                 icon: "mdi-arrow-right-bold",
                 submenu: createSprintOptions(),
-            },
+            } as any,
             {
                 key: "delete",
                 label: "Delete",
@@ -309,8 +343,10 @@ export const useContextMenuOptions = () => {
                         softDeleteItemFn(item.id);
                     }
                 },
-            },
-        ];
+            } as any
+        );
+
+        return menuOptions;
     };
 
     return {

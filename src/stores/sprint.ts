@@ -501,6 +501,87 @@ export const useSprintStore = defineStore("sprint", () => {
         await updateItem(itemId, { tasks: item.tasks });
     };
 
+    const copyItemWithTaskSplit = async (itemId: string) => {
+        if (!currentSprint.value) return;
+
+        const originalItem = currentSprint.value.items.find(i => i.id === itemId);
+        if (!originalItem) return;
+
+        // Separar tasks: Done quedan en original, otras van a la copia
+        const doneTasks = originalItem.tasks.filter(task => task.state === "Done");
+        const otherTasks = originalItem.tasks.filter(task => task.state !== "Done");
+
+        // Encontrar la posición del item original
+        const originalIndex = currentSprint.value.items.findIndex(i => i.id === itemId);
+        if (originalIndex === -1) return;
+
+        // Crear item copiado
+        const copiedItem: Item = {
+            ...originalItem,
+            id: `item-copy-${Date.now()}`,
+            title: `${originalItem.title} Copy`,
+            order: originalItem.order + 1, // Orden siguiente al original
+            createdAt: new Date(),
+            createdBy: authStore.user?.id || "",
+            tasks: otherTasks.map((task) => ({
+                ...task,
+                id: `task-copy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                createdAt: new Date(),
+                createdBy: authStore.user?.id || ""
+            }))
+        };
+
+        // Actualizar item original con solo tasks Done
+        originalItem.tasks = doneTasks;
+
+        // Ordenar tasks en ambos items usando la lógica de sortTasksByState
+        const sortTasks = (tasks: any[]) => {
+            const stateOrder = ["Done", "Ready For Test", "Waiting", "In Progress", "To Do"];
+            const priorityOrder = ["High", "Medium", "Normal"];
+
+            tasks.sort((a, b) => {
+                const aStateIndex = stateOrder.indexOf(a.state);
+                const bStateIndex = stateOrder.indexOf(b.state);
+                if (aStateIndex !== bStateIndex) {
+                    return aStateIndex - bStateIndex;
+                }
+
+                const aPriorityIndex = priorityOrder.indexOf(a.priority);
+                const bPriorityIndex = priorityOrder.indexOf(b.priority);
+                if (aPriorityIndex !== bPriorityIndex) {
+                    return aPriorityIndex - bPriorityIndex;
+                }
+
+                return a.order - b.order;
+            });
+
+            tasks.forEach((task, index) => {
+                task.order = index + 1;
+            });
+        };
+
+        if (doneTasks.length > 0) {
+            sortTasks(originalItem.tasks);
+        }
+        if (otherTasks.length > 0) {
+            sortTasks(copiedItem.tasks);
+        }
+
+        // Insertar el item copiado justo después del original
+        currentSprint.value.items.splice(originalIndex + 1, 0, copiedItem);
+
+        // Reordenar todos los items que vienen después
+        for (let i = originalIndex + 2; i < currentSprint.value.items.length; i++) {
+            currentSprint.value.items[i].order = currentSprint.value.items[i - 1].order + 1;
+        }
+
+        // Guardar cambios
+        if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+            await saveSprint(currentSprint.value);
+            notifyOk("Item finalized", `Item "${originalItem.title}" has been finalized. Tasks in "Done" state remain in the original item, others have been moved to the copy.`);
+        }
+    };
+
     const updateSprintDiasHabiles = async (diasHabiles: number) => {
         if (currentSprint.value) {
             currentSprint.value.diasHabiles = diasHabiles;
@@ -530,5 +611,6 @@ export const useSprintStore = defineStore("sprint", () => {
         moveItemToSprint,
         duplicateItem,
         duplicateTask,
+        copyItemWithTaskSplit,
     };
 });
