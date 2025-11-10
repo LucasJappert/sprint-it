@@ -6,6 +6,7 @@ const sprintsCollection = collection(db, "sprints");
 const usersCollection = collection(db, "users");
 const commentsCollection = collection(db, "comments");
 const changesCollection = collection(db, "changes");
+const backupsCollection = collection(db, "backups");
 
 /**
  * Convierte un timestamp de Firestore a un objeto Date de JavaScript
@@ -262,4 +263,28 @@ export const exportAllData = async () => {
         changes,
         exportedAt: new Date().toISOString(),
     };
+};
+
+export const updateLastBackupDate = async (userId: string) => {
+    const now = new Date();
+    const today = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+    const backupDocRef = doc(backupsCollection, userId);
+    await setDoc(backupDocRef, {
+        userId,
+        lastBackupDate: today,
+        updatedAt: now,
+    });
+};
+
+export const getLastBackupDate = async (userId: string): Promise<string | null> => {
+    const backupDocRef = doc(backupsCollection, userId);
+    const docSnap = await getDoc(backupDocRef);
+
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        return data.lastBackupDate || null;
+    }
+
+    return null;
 };

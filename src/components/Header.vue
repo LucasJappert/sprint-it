@@ -29,7 +29,7 @@
         <v-spacer />
         <v-menu>
             <template #activator="{ props }">
-                <v-avatar v-bind="props" size="40" class="avatar primary">
+                <v-avatar v-bind="props" size="40" :class="['avatar', 'primary', { pulse: needsBackupPulse }]">
                     <span class="avatar-text">{{ authStore.user?.name?.charAt(0).toUpperCase() }}</span>
                 </v-avatar>
             </template>
@@ -37,9 +37,10 @@
                 <div class="menu-item">
                     <span>Hello {{ authStore.user?.name }}!</span>
                 </div>
-                <div class="menu-item" @click="exportData">
+                <div class="menu-item" @click="exportData" :title="getExportDataTitle">
                     <v-icon>mdi-download</v-icon>
                     <span>Export Data</span>
+                    <v-icon v-if="needsBackupPulse" size="16" class="ml-2 warning" :class="{ pulse: needsBackupPulse }">mdi-alert-circle</v-icon>
                 </div>
                 <div class="menu-item" @click="importItems">
                     <v-icon>mdi-upload</v-icon>
@@ -59,7 +60,7 @@
 
 <script setup lang="ts">
 import MyAlerts from "@/plugins/my-alerts";
-import { exportAllData } from "@/services/firestore";
+import { exportAllData, getLastBackupDate, updateLastBackupDate } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import { createFileInput, processImportedItems } from "@/utils/itemImport";
@@ -74,6 +75,7 @@ const router = useRouter();
 
 const isVisible = ref(true);
 let lastScrollY = 0;
+const needsBackupPulse = ref(false);
 
 const handleScroll = () => {
     const currentScrollY = window.scrollY;
@@ -85,8 +87,15 @@ const handleScroll = () => {
     lastScrollY = currentScrollY;
 };
 
+const getExportDataTitle = computed(() => {
+    if (!needsBackupPulse.value) return "";
+
+    return "Backup your data to stay safe!";
+});
+
 onMounted(() => {
     window.addEventListener("scroll", handleScroll);
+    checkBackupStatus();
 });
 
 onUnmounted(() => {
@@ -158,6 +167,29 @@ const createNewSprint = async () => {
     await sprintStore.createNewSprint();
 };
 
+const checkBackupStatus = async () => {
+    if (!authStore.user?.id) return;
+
+    try {
+        const lastBackupDate = await getLastBackupDate(authStore.user.id);
+        const today = new Date()
+            .toLocaleDateString("es-AR", {
+                timeZone: "America/Argentina/Buenos_Aires",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+            })
+            .split("/")
+            .reverse()
+            .join("-"); // YYYY-MM-DD format
+
+        needsBackupPulse.value = lastBackupDate !== today;
+    } catch (error) {
+        console.error("Error checking backup status:", error);
+        needsBackupPulse.value = true; // Default to pulse if error
+    }
+};
+
 const logout = async () => {
     await authStore.logout();
     router.push("/");
@@ -175,6 +207,12 @@ const exportData = async () => {
         linkElement.setAttribute("href", dataUri);
         linkElement.setAttribute("download", exportFileDefaultName);
         linkElement.click();
+
+        // Update last backup date in database
+        if (authStore.user?.id) {
+            await updateLastBackupDate(authStore.user.id);
+            await checkBackupStatus(); // Refresh pulse status
+        }
     } catch (error) {
         console.error("Error exporting data:", error);
         alert("Error exporting data. Please try again.");
@@ -366,6 +404,29 @@ const importItems = async () => {
     color: $text;
 }
 
+@keyframes menu-pulse {
+    0% {
+        background-color: rgba(255, 152, 0, 0.1);
+    }
+    50% {
+        background-color: rgba(255, 152, 0, 0.2);
+    }
+    100% {
+        background-color: rgba(255, 152, 0, 0.1);
+    }
+}
+
+@keyframes blink {
+    0%,
+    50% {
+        opacity: 1;
+    }
+    51%,
+    100% {
+        opacity: 0.3;
+    }
+}
+
 .version {
     font-size: 0.7rem;
     opacity: 0.6;
@@ -378,11 +439,34 @@ const importItems = async () => {
     margin-right: 5px;
     border: 2px solid rgba($primary, 0.5);
     box-shadow: 0 0 5px rgba($primary, 0.5);
+    &.pulse {
+        border: 2px solid rgba($warning, 0.5);
+        box-shadow: 0 0 5px rgba($warning, 0.5);
+        .avatar-text {
+            color: $warning;
+        }
+    }
 }
 
 .avatar-text {
     color: $primary;
     font-size: 18px;
     font-weight: bold;
+}
+
+.pulse {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 </style>
