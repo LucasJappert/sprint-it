@@ -66,8 +66,7 @@ import { useSprintStore } from "@/stores/sprint";
 import { createFileInput, processImportedItems } from "@/utils/itemImport";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
-
-const appVersion = "1.1.6";
+import { version as appVersion } from "../../package.json";
 
 const authStore = useAuthStore();
 const sprintStore = useSprintStore();
