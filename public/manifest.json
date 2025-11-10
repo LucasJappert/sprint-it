@@ -1,24 +1,23 @@
 {
 	"name": "Sprint It",
 	"short_name": "SprintIt",
-	"description": "Aplicación de gestión de sprints para equipos",
-	"theme_color": "#33c7ff",
-	"background_color": "#121212",
-	"display": "standalone",
-	"orientation": "portrait",
-	"scope": "/",
-	"start_url": "/",
+	"description": "Aplicación para gestionar sprints para equipos",
+	"version": "1.0",
+	"manifest_version": 2,
 	"icons": [
 		{
-			"src": "/favicon.svg",
-			"sizes": "any",
-			"type": "image/svg+xml",
-			"purpose": "any maskable"
+			"src": "images/pwa-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "images/pwa-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png"
 		}
 	],
-	"categories": [
-		"productivity",
-		"business"
-	],
-	"lang": "es"
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#121212",
+	"theme_color": "#33c7ff"
 }

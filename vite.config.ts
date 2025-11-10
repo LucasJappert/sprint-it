@@ -14,7 +14,7 @@ export default defineConfig({
         vuetify({ autoImport: true }),
         VitePWA({
             registerType: "autoUpdate",
-            includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+            includeAssets: ["images/pwa-192x192.png", "apple-touch-icon.png", "masked-icon.svg"],
             manifest: {
                 name: "Sprint It",
                 short_name: "SprintIt",
@@ -27,17 +27,17 @@ export default defineConfig({
                 start_url: "/",
                 icons: [
                     {
-                        src: "pwa-192x192.png",
+                        src: "images/pwa-192x192.png",
                         sizes: "192x192",
                         type: "image/png",
                     },
                     {
-                        src: "pwa-512x512.png",
+                        src: "images/pwa-512x512.png",
                         sizes: "512x512",
                         type: "image/png",
                     },
                     {
-                        src: "pwa-512x512.png",
+                        src: "images/pwa-512x512.png",
                         sizes: "512x512",
                         type: "image/png",
                         purpose: "any maskable",

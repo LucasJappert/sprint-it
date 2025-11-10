@@ -506,5 +506,5 @@ watch(
 </script>
 
 <style scoped lang="scss">
-@import "@/styles/dialog-form.scss";
+@use "@/styles/dialog-form.scss";
 </style>

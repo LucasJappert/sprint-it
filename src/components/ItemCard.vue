@@ -189,6 +189,7 @@ const loadContextMenuOptions = async () => {
         sprintStore.duplicateItem,
         sprintStore.softDeleteItem,
         sprintStore.sortTasksByState,
+        sprintStore.copyItemWithTaskSplit,
     );
 };
 
