@@ -167,7 +167,7 @@ export const useContextMenuOptions = () => {
         ];
     };
 
-    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void, softDeleteItemFn: (itemId: string) => void) => {
+    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void, softDeleteItemFn: (itemId: string) => void, sortTasksFn: (itemId: string) => void) => {
         const updateItemAssignedUser = async (userId: string) => {
             const oldValue = item.assignedUser || "";
             await sprintStore.updateItem(item.id, { assignedUser: userId });
@@ -227,6 +227,14 @@ export const useContextMenuOptions = () => {
                 color: "yellow",
                 action: () => {
                     openAddTaskDialogFn(item);
+                },
+            },
+            {
+                key: "sort-tasks",
+                label: "Sort Tasks",
+                icon: "mdi-sort-variant",
+                action: () => {
+                    sortTasksFn(item.id);
                 },
             },
             {

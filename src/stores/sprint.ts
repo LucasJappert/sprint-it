@@ -195,6 +195,47 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    const sortTasksByState = async (itemId: string) => {
+        const item = currentSprint.value?.items.find((i) => i.id === itemId);
+        if (!item || !currentSprint.value) return;
+
+        // Define the order: Done, Ready for test, Waiting, In Progress, To Do
+        const stateOrder = ["Done", "Ready For Test", "Waiting", "In Progress", "To Do"];
+
+        // Define priority order: High, Medium, Normal (higher priority first)
+        const priorityOrder = ["High", "Medium", "Normal"];
+
+        // Sort tasks based on state order, then by priority, then by original order
+        item.tasks.sort((a, b) => {
+            const aStateIndex = stateOrder.indexOf(a.state);
+            const bStateIndex = stateOrder.indexOf(b.state);
+            if (aStateIndex !== bStateIndex) {
+                return aStateIndex - bStateIndex;
+            }
+
+            // Same state, sort by priority
+            const aPriorityIndex = priorityOrder.indexOf(a.priority);
+            const bPriorityIndex = priorityOrder.indexOf(b.priority);
+            if (aPriorityIndex !== bPriorityIndex) {
+                return aPriorityIndex - bPriorityIndex;
+            }
+
+            // Same state and priority, maintain original order
+            return a.order - b.order;
+        });
+
+        // Update order property for each task
+        item.tasks.forEach((task, index) => {
+            task.order = index + 1;
+        });
+
+        // Save the changes
+        if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+            await saveSprint(currentSprint.value);
+            notifyOk("Tasks sorted", `Tasks in "${item.title}" have been sorted by state and priority`);
+        }
+    };
+
     const createNewSprint = async () => {
         const lastSprintNumber = sprints.value.length > 0
             ? Math.max(...sprints.value.map(s => {
@@ -474,6 +515,7 @@ export const useSprintStore = defineStore("sprint", () => {
         softDeleteTask,
         moveTask,
         reorderTasks,
+        sortTasksByState,
         createNewSprint,
         recalculateSprintDates,
         updateSprintDiasHabiles,

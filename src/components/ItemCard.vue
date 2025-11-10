@@ -183,7 +183,13 @@ const { createItemContextMenuOptions } = useContextMenuOptions();
 const contextMenuOptions = ref<ContextMenuOption[]>([]);
 
 const loadContextMenuOptions = async () => {
-    contextMenuOptions.value = await createItemContextMenuOptions(props.item, openAddTaskDialog, sprintStore.duplicateItem, sprintStore.softDeleteItem);
+    contextMenuOptions.value = await createItemContextMenuOptions(
+        props.item,
+        openAddTaskDialog,
+        sprintStore.duplicateItem,
+        sprintStore.softDeleteItem,
+        sprintStore.sortTasksByState,
+    );
 };
 
 onMounted(() => {
