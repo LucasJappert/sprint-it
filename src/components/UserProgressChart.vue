@@ -84,7 +84,8 @@ const userTotals = computed(() => {
     if (!sprintStore.currentSprint) return {};
 
     const users: Record<string, number> = {};
-    const items = sprintStore.currentSprint.items;
+    // Filtrar items no eliminados
+    const items = sprintStore.currentSprint.items.filter((item) => item.deletedAt === null);
 
     // Procesar items y tasks para calcular totales por usuario
     items.forEach((item) => {
@@ -96,13 +97,16 @@ const userTotals = computed(() => {
         }
 
         // Procesar las tasks del item (independientemente de si el item tiene usuario asignado)
-        item.tasks.forEach((task) => {
-            if (task.assignedUser) {
-                // Usar el ID directamente por ahora, luego resolveremos los usernames
-                if (!users[task.assignedUser]) users[task.assignedUser] = 0;
-                users[task.assignedUser]! += task.actualEffort;
-            }
-        });
+        // Filtrar tasks no eliminadas
+        item.tasks
+            .filter((task) => task.deletedAt === null)
+            .forEach((task) => {
+                if (task.assignedUser) {
+                    // Usar el ID directamente por ahora, luego resolveremos los usernames
+                    if (!users[task.assignedUser]) users[task.assignedUser] = 0;
+                    users[task.assignedUser]! += task.actualEffort;
+                }
+            });
     });
 
     return users;
