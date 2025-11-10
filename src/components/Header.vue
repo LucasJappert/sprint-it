@@ -49,6 +49,9 @@
                     <v-icon>mdi-logout</v-icon>
                     <span>Logout</span>
                 </div>
+                <div class="menu-item version">
+                    <span>v{{ appVersion }}</span>
+                </div>
             </div>
         </v-menu>
     </v-app-bar>
@@ -62,6 +65,8 @@ import { useSprintStore } from "@/stores/sprint";
 import { createFileInput, processImportedItems } from "@/utils/itemImport";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
+
+const appVersion = "1.1.6";
 
 const authStore = useAuthStore();
 const sprintStore = useSprintStore();
@@ -359,6 +364,14 @@ const importItems = async () => {
 .menu-item span {
     font-size: 0.9rem;
     color: $text;
+}
+
+.version {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    text-align: center;
+    cursor: default;
+    padding: 4px 16px;
 }
 
 .avatar {

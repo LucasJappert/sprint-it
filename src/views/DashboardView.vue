@@ -137,7 +137,7 @@ const items = computed<Item[]>(() => {
     // Convertir de objeto a array si es necesario (compatibilidad con Firestore)
     const itemsArray = Array.isArray(currentItems) ? currentItems : Object.values(currentItems || {});
     // Filtrar elementos marcados como borrados (soft delete)
-    return itemsArray.filter((item: any) => item.deletedAt === null);
+    return (itemsArray as Item[]).filter((item) => item.deletedAt === null);
 });
 
 // Logs de debug removidos para simplificar la lógica
@@ -383,7 +383,6 @@ const toggleAllTasks = () => {
     width: 100%;
     box-sizing: border-box;
 }
-
 .board-header {
     display: flex;
     justify-content: flex-start;
