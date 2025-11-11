@@ -336,6 +336,11 @@ export const useSprintStore = defineStore("sprint", () => {
             if (index !== -1 && currentSprint.value.items[index]) {
                 // Marcar como borrado en lugar de eliminar físicamente
                 currentSprint.value.items[index].deletedAt = new Date();
+                // Reordenar los ítems activos restantes
+                const activeItems = currentSprint.value.items.filter((item) => item.deletedAt === null);
+                activeItems.forEach((item, idx) => {
+                    item.order = idx + 1;
+                });
                 if (await validateSprintItemsBeforeSave(currentSprint.value)) {
                     await saveSprint(currentSprint.value);
                 }
@@ -348,6 +353,10 @@ export const useSprintStore = defineStore("sprint", () => {
             const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
             if (index !== -1) {
                 currentSprint.value.items.splice(index, 1);
+                // Reordenar los ítems restantes
+                currentSprint.value.items.forEach((item, idx) => {
+                    item.order = idx + 1;
+                });
                 if (await validateSprintItemsBeforeSave(currentSprint.value)) {
                     await saveSprint(currentSprint.value);
                 }
@@ -377,6 +386,10 @@ export const useSprintStore = defineStore("sprint", () => {
 
             // Remover del sprint actual
             currentSprint.items.splice(itemIndex, 1);
+            // Reordenar los ítems restantes en el sprint actual
+            currentSprint.items.forEach((item, idx) => {
+                item.order = idx + 1;
+            });
             if (await validateSprintItemsBeforeSave(currentSprint)) {
                 await saveSprint(currentSprint);
             }
