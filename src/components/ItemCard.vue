@@ -25,14 +25,11 @@
                 <v-icon size="24">mdi-drag</v-icon>
             </span>
             <v-btn v-if="activeTasks.length > 0" icon size="x-small" @click.stop="onToggleTasks" @mousedown.stop>
-                <v-icon size="16" :style="{ color: getStateColor(item.state || STATE_VALUES.TODO) }">{{
-                    showTasks || props.isExpanded ? "mdi-chevron-up" : "mdi-chevron-down"
-                }}</v-icon>
+                <v-icon size="16" class="text">{{ showTasks || props.isExpanded ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
             </v-btn>
         </div>
 
-        <div class="item-col cols-order" :title="item.order.toString()" :style="{ color: getStateColor(item.state || STATE_VALUES.TODO) }">
-            <v-icon :style="{ color: getStateColor(item.state || STATE_VALUES.TODO) }" class="mr-1" size="16">mdi-clipboard-text</v-icon>
+        <div class="item-col cols-order" :title="item.order.toString()">
             {{ item.order }}
         </div>
         <div class="item-col cols-assigned">
@@ -40,6 +37,7 @@
         </div>
         <div class="item-col cols-title text-left">
             <!-- <span v-if="taskCountDisplay" class="mr-1">{{ taskCountDisplay }}</span> -->
+            <v-icon class="mr-1 text" size="16">mdi-clipboard-text</v-icon>
             {{ item.title }}
             <div class="task-indicators" v-if="activeTasks.length > 0">
                 <div v-for="task in activeTasks" :key="task.id" class="task-indicator" :style="{ backgroundColor: getStateColor(task.state) }"></div>

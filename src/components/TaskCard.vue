@@ -25,7 +25,7 @@
             </span>
         </div>
 
-        <div class="item-col cols-order" :style="{ color: getStateColor(task.state || 'To Do') }">
+        <div class="item-col cols-order">
             <!-- <v-icon :style="{ color: getStateColor(task.state || 'To Do') }" class="mr-1" size="16">mdi-clipboard-check-outline</v-icon> -->
             {{ task.order }}
         </div>
@@ -327,6 +327,12 @@ const onDragEnd = () => {
         background: rgba($bg-secondary, 0.3);
         border: 1px solid rgba($gray, 0.5);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .cols-actions {
+        flex: 0 0 30px;
+        max-width: 30px;
+        text-align: left;
     }
 }
 
