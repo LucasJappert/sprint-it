@@ -22,7 +22,7 @@ export default defineConfig({
             includeAssets: [`images/pwa-192x192.png?v=${pkg.version}`, "apple-touch-icon.png", "masked-icon.svg"],
             manifest: {
                 name: "Sprint It",
-                short_name: "SprintIt",
+                short_name: "Sprint-It",
                 description: "Application for managing sprints for teams",
                 theme_color: "#05759eff",
                 background_color: "#121212",

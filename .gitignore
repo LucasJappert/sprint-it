@@ -5,3 +5,4 @@ dist
 .env.production
 .env.development
 config.json
+dev-dist/

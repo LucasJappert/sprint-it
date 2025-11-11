@@ -19,6 +19,7 @@
         :inputmode="inputModeAttr"
         :pattern="patternAttr"
         :step="stepAttr"
+        tabindex="-1"
         variant="solo"
         flat
         hide-details
