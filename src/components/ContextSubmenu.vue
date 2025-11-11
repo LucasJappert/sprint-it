@@ -51,8 +51,30 @@ const positionX = ref(0);
 const positionY = ref(0);
 
 const show = (x: number, y: number) => {
-    positionX.value = x;
-    positionY.value = y;
+    // Calcular posición ajustada para mantener el submenu dentro de la pantalla
+    const submenuWidth = 170; // min-width del submenu
+    const submenuHeight = props.options.length * 40 + 8; // aproximado: items * altura + padding
+
+    let adjustedX = x;
+    let adjustedY = y;
+
+    // Ajustar horizontalmente si se sale por la derecha
+    if (x + submenuWidth > window.innerWidth) {
+        adjustedX = window.innerWidth - submenuWidth - 10; // margen de 10px
+    }
+
+    // Ajustar verticalmente si se sale por abajo
+    if (y + submenuHeight > window.innerHeight) {
+        adjustedY = window.innerHeight - submenuHeight - 10; // mostrar arriba
+    }
+
+    // Ajustar verticalmente si se sale por arriba (y < 0)
+    if (adjustedY < 10) {
+        adjustedY = 10;
+    }
+
+    positionX.value = Math.max(10, adjustedX); // mínimo margen izquierdo
+    positionY.value = Math.max(10, adjustedY); // mínimo margen superior
     isVisible.value = true;
 
     // Agregar listener para cerrar submenu al hacer click fuera
@@ -98,7 +120,7 @@ defineExpose({
     background: $bg-primary;
     border-radius: 4px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    min-width: 120px;
+    min-width: 180px;
     padding: 4px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 1001;

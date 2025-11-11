@@ -57,7 +57,7 @@ const currentSubmenuOptions = ref<ContextMenuOption[]>([]);
 
 const show = async (x: number, y: number) => {
     // Calcular posición ajustada para mantener el menú dentro de la pantalla
-    const menuWidth = 120; // min-width del menú
+    const menuWidth = 170; // min-width del menú (incrementado para texto largo)
     const menuHeight = props.options.length * 40 + 8; // aproximado: items * altura + padding
 
     let adjustedX = x;
@@ -191,7 +191,15 @@ const showSubmenu = (option: ContextMenuOption) => {
 
     if (menuElement && submenuRef.value && menuItems.length > 0) {
         const rect = menuElement.getBoundingClientRect();
-        const submenuX = rect.right; // Sin separación para evitar problemas de hover
+        const submenuWidth = 170;
+
+        // Decidir si mostrar a la derecha o izquierda del menú principal
+        let submenuX: number;
+        if (rect.right + submenuWidth <= window.innerWidth) {
+            submenuX = rect.right; // Mostrar a la derecha
+        } else {
+            submenuX = rect.left - submenuWidth; // Mostrar a la izquierda
+        }
 
         // Encontrar el índice de la opción actual para calcular la posición vertical
         let optionIndex = -1;
@@ -205,7 +213,16 @@ const showSubmenu = (option: ContextMenuOption) => {
         // Calcular la posición Y centrada con la opción
         // Cada item del menú mide aproximadamente 40px de alto
         const itemHeight = 40;
-        const submenuY = rect.top + optionIndex * itemHeight;
+        let submenuY = rect.top + optionIndex * itemHeight;
+
+        // Ajustar la posición Y del submenu si se sale por abajo
+        const submenuHeight = option.submenu.length * 40 + 8;
+        if (submenuY + submenuHeight > window.innerHeight) {
+            submenuY = window.innerHeight - submenuHeight - 10;
+        }
+        if (submenuY < 10) {
+            submenuY = 10;
+        }
 
         // Configurar opciones del submenu
         currentSubmenuOptions.value = option.submenu;
@@ -228,7 +245,7 @@ defineExpose({
     background: $bg-primary;
     border-radius: 4px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    min-width: 120px;
+    min-width: 180px;
     padding: 4px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 1000;
