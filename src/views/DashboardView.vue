@@ -21,7 +21,6 @@
                     </v-btn>
                 </div>
                 <div class="item-col cols-order flex-center">#</div>
-                <div class="item-col cols-state">State</div>
                 <div class="item-col cols-assigned">Assigned</div>
                 <div class="item-col cols-title text-left">Title</div>
                 <div class="item-col cols-effort flex-center" title="Estimated/Real">Efforts</div>
@@ -388,11 +387,14 @@ const toggleAllTasks = () => {
     font-size: 0.9rem;
     width: 100%;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .board-header {
     display: flex;
     justify-content: flex-start;
-    margin-bottom: 8px;
+    width: 100%;
 }
 
 .board {
@@ -400,6 +402,7 @@ const toggleAllTasks = () => {
     border-radius: 8px;
     background: rgba(0, 0, 0, 0.05);
     width: 100%;
+    max-width: 1100px;
     box-sizing: border-box;
 }
 

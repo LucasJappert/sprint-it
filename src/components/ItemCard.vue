@@ -14,25 +14,31 @@
         @drop.prevent="onDrop"
     >
         <div class="cols-actions text-left">
-            <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
+            <span
+                class="drag-handle"
+                :style="{ color: getStateColor(item.state || STATE_VALUES.TODO) }"
+                :draggable="true"
+                @dragstart.stop="onDragStart"
+                @dragend="onDragEnd"
+                @click.stop
+            >
                 <v-icon size="24">mdi-drag</v-icon>
             </span>
             <v-btn v-if="activeTasks.length > 0" icon size="x-small" @click.stop="onToggleTasks" @mousedown.stop>
-                <v-icon size="16">{{ showTasks || props.isExpanded ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
+                <v-icon size="16" :style="{ color: getStateColor(item.state || STATE_VALUES.TODO) }">{{
+                    showTasks || props.isExpanded ? "mdi-chevron-up" : "mdi-chevron-down"
+                }}</v-icon>
             </v-btn>
         </div>
 
-        <div class="item-col cols-order" :title="item.order.toString()">
+        <div class="item-col cols-order" :title="item.order.toString()" :style="{ color: getStateColor(item.state || STATE_VALUES.TODO) }">
+            <v-icon :style="{ color: getStateColor(item.state || STATE_VALUES.TODO) }" class="mr-1" size="16">mdi-clipboard-text</v-icon>
             {{ item.order }}
-        </div>
-        <div class="item-col cols-state state-cell">
-            <span class="state-content" v-html="getStateHtml(item.state || STATE_VALUES.TODO)"></span>
         </div>
         <div class="item-col cols-assigned">
             {{ assignedUserName }}
         </div>
         <div class="item-col cols-title text-left">
-            <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
             <!-- <span v-if="taskCountDisplay" class="mr-1">{{ taskCountDisplay }}</span> -->
             {{ item.title }}
             <div class="task-indicators" v-if="activeTasks.length > 0">
