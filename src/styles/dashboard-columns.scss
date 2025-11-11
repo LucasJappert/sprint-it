@@ -18,6 +18,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .cols-actions {
@@ -27,15 +30,15 @@
 }
 
 .cols-order {
-    flex: 0 0 65px;
-    max-width: 65px;
+    flex: 0 0 45px;
+    max-width: 45px;
     text-align: center;
 }
 
 .cols-title {
     flex: 1;
-    min-width: 500px;
-    max-width: 500px;
+    min-width: 600px;
+    max-width: 600px;
     text-align: left;
     @media (max-width: $mobile-resolution) {
         flex: 0 0 300px;
@@ -66,4 +69,11 @@ $col-state-width: 120px;
     flex: 0 0 80px;
     max-width: 80px;
     text-align: center;
+}
+.state-circle {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-right: 6px;
 }

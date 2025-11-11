@@ -1,7 +1,7 @@
 const TODO_COLOR = "#bdbdbdff";
 const IN_PROGRESS_COLOR = "#3096fbff";
 const WAITING_COLOR = "#b151b3ff";
-const READY_FOR_TEST_COLOR = "#eeff00ff";
+const READY_FOR_TEST_COLOR = "#b2bf01ff";
 const DONE_COLOR = "#269b2cff";
 
 const TODO_NAME = "To Do";

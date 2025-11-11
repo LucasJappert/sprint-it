@@ -13,23 +13,27 @@
         @drop.prevent="onDrop"
     >
         <div class="cols-actions text-left">
-            <span class="drag-handle" :draggable="true" @dragstart.stop="onDragStart" @dragend="onDragEnd" @click.stop>
+            <span
+                class="drag-handle"
+                :draggable="true"
+                @dragstart.stop="onDragStart"
+                @dragend="onDragEnd"
+                @click.stop
+                :style="{ color: getStateColor(task.state || 'To Do') }"
+            >
                 <v-icon size="24">mdi-drag</v-icon>
             </span>
         </div>
 
-        <div class="item-col cols-order">
+        <div class="item-col cols-order" :style="{ color: getStateColor(task.state || 'To Do') }">
+            <!-- <v-icon :style="{ color: getStateColor(task.state || 'To Do') }" class="mr-1" size="16">mdi-clipboard-check-outline</v-icon> -->
             {{ task.order }}
         </div>
         <div class="item-col cols-assigned">
             {{ assignedUserName }}
         </div>
-        <div class="item-col cols-state state-cell">
-            <span class="state-content" v-html="getStateHtml(task.state || STATE_VALUES.TODO)"></span>
-        </div>
         <div class="item-col cols-title text-left">
-            <v-icon class="yellow mr-1" size="16">mdi-clipboard-check-outline</v-icon>
-            {{ task.title }}
+            <span class="ellipsis">{{ task.title }}</span>
         </div>
         <div class="item-col cols-effort">{{ task.estimatedEffort }} - {{ task.actualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
@@ -55,7 +59,7 @@
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { PRIORITY_OPTIONS } from "@/constants/priorities";
-import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
+import { STATE_OPTIONS } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
@@ -91,6 +95,11 @@ const getStateHtml = (state: string | undefined) => {
     if (!state) return "To Do"; // Default fallback
     const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
     return option ? option.name : state;
+};
+
+const getStateColor = (state: string) => {
+    const option = STATE_OPTIONS.find((opt) => opt.value === state);
+    return option ? option.color : "#000";
 };
 
 const assignedUserName = ref("");

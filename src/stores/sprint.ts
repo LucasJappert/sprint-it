@@ -203,14 +203,17 @@ export const useSprintStore = defineStore("sprint", () => {
         const item = currentSprint.value?.items.find((i) => i.id === itemId);
         if (!item || !currentSprint.value) return;
 
+        // Filter active tasks
+        const activeTasks = item.tasks.filter(task => task.deletedAt === null);
+
         // Define the order: Done, Ready for test, Waiting, In Progress, To Do
         const stateOrder = ["Done", "Ready For Test", "Waiting", "In Progress", "To Do"];
 
         // Define priority order: High, Medium, Normal (higher priority first)
         const priorityOrder = ["High", "Medium", "Normal"];
 
-        // Sort tasks based on state order, then by priority, then by original order
-        item.tasks.sort((a, b) => {
+        // Sort active tasks based on state order, then by priority, then by original order
+        activeTasks.sort((a, b) => {
             const aStateIndex = stateOrder.indexOf(a.state);
             const bStateIndex = stateOrder.indexOf(b.state);
             if (aStateIndex !== bStateIndex) {
@@ -228,10 +231,16 @@ export const useSprintStore = defineStore("sprint", () => {
             return a.order - b.order;
         });
 
-        // Update order property for each task
-        item.tasks.forEach((task, index) => {
+        // Update order property for each active task
+        activeTasks.forEach((task, index) => {
             task.order = index + 1;
         });
+
+        // Separate deleted tasks
+        const deletedTasks = item.tasks.filter(task => task.deletedAt !== null);
+
+        // Reorder item.tasks: sorted active tasks first, then deleted tasks
+        item.tasks = [...activeTasks, ...deletedTasks];
 
         // Save the changes
         if (await validateSprintItemsBeforeSave(currentSprint.value)) {
@@ -449,9 +458,10 @@ export const useSprintStore = defineStore("sprint", () => {
         const originalItem = currentSprint.value.items.find(i => i.id === itemId);
         if (!originalItem) return;
 
-        // Calcular el nuevo orden (al final de la lista)
-        const maxOrder = currentSprint.value.items.length > 0
-            ? Math.max(...currentSprint.value.items.map(item => item.order))
+        // Calcular el nuevo orden (al final de la lista de items activos)
+        const activeItems = currentSprint.value.items.filter(item => item.deletedAt === null);
+        const maxOrder = activeItems.length > 0
+            ? Math.max(...activeItems.map(item => item.order))
             : 0;
 
         const duplicatedItem: Item = {
@@ -481,6 +491,12 @@ export const useSprintStore = defineStore("sprint", () => {
 
         // Marcar como borrado en lugar de eliminar físicamente
         item.tasks[taskIndex].deletedAt = new Date();
+
+        // Reordenar las tasks activas restantes
+        const activeTasks = item.tasks.filter((task) => task.deletedAt === null);
+        activeTasks.forEach((task, idx) => {
+            task.order = idx + 1;
+        });
 
         await updateItem(item.id, { tasks: item.tasks });
     };
@@ -546,6 +562,7 @@ export const useSprintStore = defineStore("sprint", () => {
 
         // Actualizar item original con solo tasks Done
         originalItem.tasks = doneTasks;
+        originalItem.state = "Done";
 
         // Ordenar tasks en ambos items usando la lógica de sortTasksByState
         const sortTasks = (tasks: any[]) => {

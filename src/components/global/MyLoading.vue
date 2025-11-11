@@ -24,7 +24,8 @@ defineProps<{
     padding: 20px;
     background: var(--panel);
     border-radius: 8px;
-    min-width: 600px;
+    width: 600px;
+    max-width: 95%;
     border: 1px solid rgba($primary, 0.4);
     box-shadow: 0 0 15px rgba($primary, 0.4);
 }
