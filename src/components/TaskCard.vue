@@ -26,7 +26,7 @@
         </div>
 
         <div class="item-col cols-order" :style="{ color: getStateColor(task.state || 'To Do') }">
-            <v-icon :style="{ color: getStateColor(task.state || 'To Do') }" class="mr-1" size="16">mdi-clipboard-check-outline</v-icon>
+            <!-- <v-icon :style="{ color: getStateColor(task.state || 'To Do') }" class="mr-1" size="16">mdi-clipboard-check-outline</v-icon> -->
             {{ task.order }}
         </div>
         <div class="item-col cols-assigned">
