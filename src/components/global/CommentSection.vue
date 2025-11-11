@@ -41,7 +41,6 @@
                         v-model="editCommentContent"
                         :height="'80px'"
                         density="compact"
-                        @keydown.enter.exact.prevent="saveCommentEditAsync"
                         @keydown.escape="cancelCommentEdit"
                         placeholder="Write a comment"
                     />
