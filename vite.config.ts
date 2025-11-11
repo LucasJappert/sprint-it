@@ -7,6 +7,9 @@ import { VitePWA } from "vite-plugin-pwa";
 import vuetify from "vite-plugin-vuetify";
 import pkg from "./package.json";
 
+// Inject version into environment for HTML replacement
+process.env.VITE_APP_VERSION = pkg.version;
+
 export default defineConfig({
     base: "/",
     publicDir: "public",
@@ -47,6 +50,7 @@ export default defineConfig({
                 ],
             },
             workbox: {
+                cleanupOutdatedCaches: true,
                 globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
                 runtimeCaching: [
                     {
