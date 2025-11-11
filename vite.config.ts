@@ -5,6 +5,7 @@ import Components from "unplugin-vue-components/vite";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import vuetify from "vite-plugin-vuetify";
+import pkg from "./package.json";
 
 export default defineConfig({
     base: "/",
@@ -14,12 +15,13 @@ export default defineConfig({
         vuetify({ autoImport: true }),
         VitePWA({
             registerType: "autoUpdate",
-            includeAssets: ["images/pwa-192x192.png", "apple-touch-icon.png", "masked-icon.svg"],
+            manifestFilename: 'manifest.json',
+            includeAssets: [`images/pwa-192x192.png?v=${pkg.version}`, "apple-touch-icon.png", "masked-icon.svg"],
             manifest: {
                 name: "Sprint It",
                 short_name: "SprintIt",
                 description: "Application for managing sprints for teams",
-                theme_color: "#33c7ff",
+                theme_color: "#05759eff",
                 background_color: "#121212",
                 display: "standalone",
                 orientation: "portrait",
@@ -27,17 +29,17 @@ export default defineConfig({
                 start_url: "/",
                 icons: [
                     {
-                        src: "images/pwa-192x192.png",
+                        src: `images/pwa-192x192.png?v=${pkg.version}`,
                         sizes: "192x192",
                         type: "image/png",
                     },
                     {
-                        src: "images/pwa-512x512.png",
+                        src: `images/pwa-512x512.png?v=${pkg.version}`,
                         sizes: "512x512",
                         type: "image/png",
                     },
                     {
-                        src: "images/pwa-512x512.png",
+                        src: `images/pwa-512x512.png?v=${pkg.version}`,
                         sizes: "512x512",
                         type: "image/png",
                         purpose: "any maskable",
