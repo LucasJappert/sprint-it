@@ -64,7 +64,7 @@ export const useTaskManagement = () => {
             }
         } else {
             // Agregar nueva task
-            task.order = currentItem.value.tasks.length + 1;
+            task.order = currentItem.value.tasks.filter(t => t.deletedAt === null).length + 1;
             task.createdBy = authStore.user?.id || "";
             currentItem.value.tasks.push(task);
 
