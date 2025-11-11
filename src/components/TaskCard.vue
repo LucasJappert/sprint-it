@@ -21,11 +21,11 @@
         <div class="item-col cols-order">
             {{ task.order }}
         </div>
-        <div class="item-col cols-assigned">
-            {{ assignedUserName }}
-        </div>
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(task.state || STATE_VALUES.TODO)"></span>
+        </div>
+        <div class="item-col cols-assigned">
+            {{ assignedUserName }}
         </div>
         <div class="item-col cols-title text-left">
             <v-icon class="yellow mr-1" size="16">mdi-clipboard-check-outline</v-icon>

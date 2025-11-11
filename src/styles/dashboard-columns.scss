@@ -18,6 +18,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .cols-actions {
@@ -27,8 +30,8 @@
 }
 
 .cols-order {
-    flex: 0 0 65px;
-    max-width: 65px;
+    flex: 0 0 45px;
+    max-width: 45px;
     text-align: center;
 }
 

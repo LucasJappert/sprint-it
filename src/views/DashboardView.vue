@@ -21,8 +21,8 @@
                     </v-btn>
                 </div>
                 <div class="item-col cols-order flex-center">#</div>
-                <div class="item-col cols-assigned">Assigned</div>
                 <div class="item-col cols-state">State</div>
+                <div class="item-col cols-assigned">Assigned</div>
                 <div class="item-col cols-title text-left">Title</div>
                 <div class="item-col cols-effort flex-center" title="Estimated/Real">Efforts</div>
                 <div class="item-col cols-priority">Priority</div>

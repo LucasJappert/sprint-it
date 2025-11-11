@@ -25,15 +25,19 @@
         <div class="item-col cols-order" :title="item.order.toString()">
             {{ item.order }}
         </div>
-        <div class="item-col cols-assigned">
-            {{ assignedUserName }}
-        </div>
         <div class="item-col cols-state state-cell">
             <span class="state-content" v-html="getStateHtml(item.state || STATE_VALUES.TODO)"></span>
         </div>
+        <div class="item-col cols-assigned">
+            {{ assignedUserName }}
+        </div>
         <div class="item-col cols-title text-left">
             <v-icon class="blue mr-1" size="16">mdi-clipboard-text</v-icon>
-            <span v-if="activeTasks.length" class="mr-1">({{ activeTasks.length }})</span>{{ item.title }}
+            <!-- <span v-if="taskCountDisplay" class="mr-1">{{ taskCountDisplay }}</span> -->
+            {{ item.title }}
+            <div class="task-indicators" v-if="activeTasks.length > 0">
+                <div v-for="task in activeTasks" :key="task.id" class="task-indicator" :style="{ backgroundColor: getStateColor(task.state) }"></div>
+            </div>
         </div>
         <div class="item-col cols-effort">{{ calculatedEstimatedEffort }} - {{ calculatedActualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
@@ -114,6 +118,13 @@ const assignedUserName = ref("");
 
 const activeTasks = computed(() => {
     return props.item.tasks.filter((task) => task.deletedAt === null);
+});
+
+const taskCountDisplay = computed(() => {
+    const total = activeTasks.value.length;
+    if (total === 0) return "";
+    const nonToDo = activeTasks.value.filter((task) => task.state !== STATE_VALUES.TODO).length;
+    return `(${nonToDo}-${total})`;
 });
 
 const calculatedEstimatedEffort = computed(() => {
@@ -213,6 +224,11 @@ const getStateHtml = (state: string | undefined) => {
     if (!state) return "To Do"; // Default fallback
     const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
     return option ? option.name : state;
+};
+
+const getStateColor = (state: string) => {
+    const option = STATE_OPTIONS.find((opt) => opt.value === state);
+    return option ? option.color : "#000";
 };
 
 // Funciones de simulación removidas completamente
@@ -421,7 +437,7 @@ const onDrop = (e: DragEvent) => {
     color: $text;
     display: flex;
     align-items: center;
-    padding: 3px 8px;
+    padding: 0 8px;
     height: 40px;
     border: 1px solid rgba($gray, 0.3);
     border-radius: 8px;
@@ -601,5 +617,22 @@ const onDrop = (e: DragEvent) => {
     height: 10px;
     border-radius: 50%;
     flex-shrink: 0;
+}
+
+.item-col.cols-title {
+    position: relative;
+}
+
+.task-indicators {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+}
+
+.task-indicator {
+    width: 16px;
+    height: 3px;
+    border: 1px solid black;
 }
 </style>
