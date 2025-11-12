@@ -2,11 +2,51 @@ import type { ChangeHistory, Comment, Sprint, User } from "@/types";
 import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
 import { db } from "./firebase";
 
+// Global cache for user display names to avoid multiple Firestore calls
+const userDisplayNameCache = new Map<string, string>();
+
 const sprintsCollection = collection(db, "sprints");
 const usersCollection = collection(db, "users");
 const commentsCollection = collection(db, "comments");
 const changesCollection = collection(db, "changes");
 const backupsCollection = collection(db, "backups");
+
+/**
+ * Get user display name from cache or Firestore (async, private)
+ */
+const _getUserDisplayName = async (userId: string): Promise<string> => {
+    if (userDisplayNameCache.has(userId)) {
+        return userDisplayNameCache.get(userId)!;
+    }
+
+    try {
+        const user = await getUser(userId);
+        if (user && (user as any).name && (user as any).lastName) {
+            const displayName = `${(user as any).name} ${(user as any).lastName}`;
+            userDisplayNameCache.set(userId, displayName);
+            return displayName;
+        }
+    } catch (error) {
+        console.warn(`Error getting user display name for ${userId}:`, error);
+    }
+
+    return userId; // Fallback to ID if name cannot be obtained
+};
+
+/**
+ * Get user display name (async)
+ * Returns first name only for brevity in UI
+ * If not in cache, fetches from Firestore and caches it
+ */
+export const getUserDisplayNameAsync = async (userId: string): Promise<string> => {
+    if (!userDisplayNameCache.has(userId)) {
+        // If not in cache, fetch it
+        await _getUserDisplayName(userId);
+    }
+    const fullName = userDisplayNameCache.get(userId) || userId;
+    console.log(`Got user display name for ${userId}:`, fullName);
+    return fullName.split(" ")[0].replace("Sebastian", "Seba"); // Return first name only
+};
 
 /**
  * Convierte un timestamp de Firestore a un objeto Date de JavaScript

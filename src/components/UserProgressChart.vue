@@ -1,29 +1,29 @@
 <template>
     <div class="user-progress-chart">
-        <h3 class="chart-title">Progreso de Usuarios en el Sprint</h3>
+        <h3 class="chart-title">User Progress in the Sprint</h3>
 
-        <!-- Información de capacidad total -->
+        <!-- Total capacity information -->
         <div class="capacity-info">
-            <h4>Capacidad Total del Sprint: {{ debugValues.totalCapacity }} horas</h4>
+            <h4>Total Sprint Capacity: {{ debugValues.totalCapacity }} hours</h4>
         </div>
 
-        <!-- Información por usuario -->
+        <!-- User information -->
         <div class="user-info">
-            <h4>Horas Acumuladas por Usuario:</h4>
+            <h4>Accumulated Hours per User:</h4>
             <div v-for="(hours, userId) in debugValues.userTotals" :key="userId" class="user-item">
-                <span class="user-name">{{ getUserDisplayNameSync(userId) || userId }}: </span>
-                <span class="user-hours">{{ hours }} horas</span>
+                <span class="user-name">{{ userDisplayNames[userId] || userId }}: </span>
+                <span class="user-hours">{{ hours }} hours</span>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { getUser } from "@/services/firestore";
+import { getUserDisplayNameAsync } from "@/services/firestore";
 import { useSprintStore } from "@/stores/sprint";
 import { computed, ref, watch } from "vue";
 
-// Colores para usuarios (mismos que CommentSection)
+// Colors for users (same as CommentSection)
 const AUTHOR_COLORS = ["#1bc0fcaa", "#1ea958aa"];
 
 const getUserColor = (userId: string): string => {
@@ -33,10 +33,10 @@ const getUserColor = (userId: string): string => {
 
 const sprintStore = useSprintStore();
 
-// Cache de usernames para evitar múltiples llamadas a Firestore
-const usernameCache = ref<Record<string, string>>({});
+// Display names for users in the UI
+const userDisplayNames = ref<Record<string, string>>({});
 
-// Calcular días hábiles del sprint actual
+// Calculate current sprint working days
 const sprintDays = computed(() => {
     if (!sprintStore.currentSprint) return [];
     const days = [];
@@ -45,7 +45,7 @@ const sprintDays = computed(() => {
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-        // Solo días hábiles (lunes a viernes)
+        // Only working days (Monday to Friday)
         if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
             days.push(currentDate.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }));
         }
@@ -54,55 +54,30 @@ const sprintDays = computed(() => {
     return days.slice(0, sprintStore.currentSprint.diasHabiles);
 });
 
-// Función para obtener nombre completo desde cache o Firestore
-const getUserDisplayName = async (userId: string): Promise<string> => {
-    if (usernameCache.value[userId]) {
-        return usernameCache.value[userId];
-    }
-
-    try {
-        const user = await getUser(userId);
-        if (user && user.name && user.lastName) {
-            const displayName = `${user.name} ${user.lastName}`;
-            usernameCache.value[userId] = displayName;
-            return displayName;
-        }
-    } catch (error) {
-        console.warn(`Error getting user display name for ${userId}:`, error);
-    }
-
-    return userId; // Fallback al ID si no se puede obtener el nombre
-};
-
-// Función síncrona para obtener nombre desde cache (para template)
-const getUserDisplayNameSync = (userId: string): string => {
-    return usernameCache.value[userId] || userId;
-};
-
-// Calcular totales por usuario
+// Calculate totals per user
 const userTotals = computed(() => {
     if (!sprintStore.currentSprint) return {};
 
     const users: Record<string, number> = {};
-    // Filtrar items no eliminados
+    // Filter non-deleted items
     const items = sprintStore.currentSprint.items.filter((item) => item.deletedAt === null);
 
-    // Procesar items y tasks para calcular totales por usuario
+    // Process items and tasks to calculate totals per user
     items.forEach((item) => {
-        // Procesar el esfuerzo del item si no tiene tasks y está asignado a un usuario
+        // Process item effort if it has no tasks and is assigned to a user
         if (item.tasks.length === 0 && item.assignedUser) {
-            // Usar el ID directamente por ahora, luego resolveremos los usernames
+            // Use ID directly for now, we'll resolve usernames later
             if (!users[item.assignedUser]) users[item.assignedUser] = 0;
             users[item.assignedUser]! += item.actualEffort;
         }
 
-        // Procesar las tasks del item (independientemente de si el item tiene usuario asignado)
-        // Filtrar tasks no eliminadas
+        // Process item tasks (regardless of whether the item has an assigned user)
+        // Filter non-deleted tasks
         item.tasks
             .filter((task) => task.deletedAt === null)
             .forEach((task) => {
                 if (task.assignedUser) {
-                    // Usar el ID directamente por ahora, luego resolveremos los usernames
+                    // Use ID directly for now, we'll resolve usernames later
                     if (!users[task.assignedUser]) users[task.assignedUser] = 0;
                     users[task.assignedUser]! += task.actualEffort;
                 }
@@ -112,17 +87,17 @@ const userTotals = computed(() => {
     return users;
 });
 
-// Calcular valores para debug
+// Calculate values for debug
 const debugValues = computed(() => {
-    const totalCapacity = sprintDays.value.length * 8; // 8 horas por día hábil
-    // console.log("=== DEBUG Valores del Gráfico ===");
-    // console.log("Días hábiles del sprint:", sprintDays.value.length);
-    // console.log("Capacidad total disponible:", totalCapacity, "horas");
-    // console.log("Totales por usuario:", userTotals.value);
+    const totalCapacity = sprintDays.value.length * 8; // 8 hours per working day
+    // console.log("=== DEBUG Chart Values ===");
+    // console.log("Sprint working days:", sprintDays.value.length);
+    // console.log("Total available capacity:", totalCapacity, "hours");
+    // console.log("Totals per user:", userTotals.value);
     return { totalCapacity, userTotals: userTotals.value };
 });
 
-// Calcular el día actual del sprint
+// Calculate current sprint day
 const currentSprintDay = computed(() => {
     if (!sprintStore.currentSprint) return 0;
 
@@ -130,22 +105,22 @@ const currentSprintDay = computed(() => {
     const sprintStart = new Date(sprintStore.currentSprint.fechaDesde);
     const sprintEnd = new Date(sprintStore.currentSprint.fechaHasta);
 
-    // Si hoy es antes del inicio del sprint, usar el primer día
+    // If today is before sprint start, use first day
     if (today < sprintStart) {
         return 0;
     }
 
-    // Si hoy es después del fin del sprint, usar el último día
+    // If today is after sprint end, use last day
     if (today > sprintEnd) {
         return sprintDays.value.length - 1;
     }
 
-    // Contar días hábiles desde el inicio hasta hoy
+    // Count working days from start to today
     let dayIndex = 0;
     const currentDate = new Date(sprintStart);
 
     while (currentDate <= today && dayIndex < sprintDays.value.length) {
-        // Solo contar días hábiles (lunes a viernes)
+        // Only count working days (Monday to Friday)
         if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
             dayIndex++;
         }
@@ -155,24 +130,24 @@ const currentSprintDay = computed(() => {
     return Math.min(dayIndex - 1, sprintDays.value.length - 1);
 });
 
-// Estado reactivo para las series del gráfico
+// Reactive state for chart series
 const chartSeries = ref<any[]>([]);
 
-// Función para actualizar las series cuando cambien los datos
+// Function to update series when data changes
 const updateChartSeries = async () => {
     const series = [];
     const dayCount = sprintDays.value.length;
 
-    // Línea ideal: esfuerzo total disponible (8h por día, acumulado)
+    // Ideal line: total available effort (8h per day, accumulated)
     const idealLine = sprintDays.value.map((_, index) => (index + 1) * 8);
     series.push({
-        name: "Capacidad Total Disponible",
+        name: "Total Available Capacity",
         data: idealLine,
         color: "#9E9E9E",
         dashArray: 5,
     });
 
-    // Datos por usuario: puntos en el día actual con total acumulado real
+    // User data: points on current day with actual accumulated total
     for (const userId of Object.keys(userTotals.value)) {
         const totalEffort = userTotals.value[userId];
 
@@ -180,11 +155,12 @@ const updateChartSeries = async () => {
             continue;
         }
 
-        // Obtener el nombre completo real
-        const username = await getUserDisplayName(userId);
+        // Get the real full name
+        const username = await getUserDisplayNameAsync(userId);
+        userDisplayNames.value[userId] = username; // Update for template
         const userColor = getUserColor(userId);
 
-        // Crear array con null para todos los días, excepto el día actual
+        // Create array with null for all days, except current day
         const dataPoints = Array(dayCount).fill(null);
         dataPoints[currentSprintDay.value] = totalEffort;
 
@@ -198,23 +174,17 @@ const updateChartSeries = async () => {
     chartSeries.value = series;
 };
 
-// Actualizar series cuando cambien los datos
+// Update series when data changes
 watch([userTotals, sprintDays, currentSprintDay], updateChartSeries, { immediate: true });
 
-// Mapa de usernames a nombres reales
-const userNameMap: Record<string, string> = {
-    ljappert: "Lucas",
-    srotschy: "Seba",
-};
-
-// Opciones del gráfico para ApexCharts
+// Chart options for ApexCharts
 const chartOptions = computed(() => ({
     chart: {
         type: "line",
         height: 400,
         background: "transparent",
         animations: {
-            enabled: false, // Deshabilitar animaciones para mejor rendimiento
+            enabled: false, // Disable animations for better performance
         },
     },
     markers: {
@@ -241,7 +211,7 @@ const chartOptions = computed(() => ({
     xaxis: {
         categories: sprintDays.value,
         title: {
-            text: "Días del Sprint",
+            text: "Sprint Days",
             style: {
                 color: "#ffffff",
             },
@@ -260,7 +230,7 @@ const chartOptions = computed(() => ({
     },
     yaxis: {
         title: {
-            text: "Horas",
+            text: "Hours",
             style: {
                 color: "#ffffff",
             },
