@@ -1,5 +1,6 @@
 <template>
     <div class="working-days-toggles">
+        <span class="text">Working Days</span>
         <div class="toggles-container">
             <div
                 v-for="(isWorking, index) in workingDays"
@@ -79,8 +80,6 @@ const getDayTooltip = (index: number) => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     width: 100%;
 }

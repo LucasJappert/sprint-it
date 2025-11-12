@@ -7,10 +7,6 @@
 
         <!-- Lista de items -->
         <div class="board" @dragover="onItemDragOver" @drop="onBoardDrop">
-            <!-- Working Days Toggles -->
-            <div class="working-days-section" v-if="sprintStore.currentSprint">
-                <WorkingDaysToggles :workingDays="currentSprintWorkingDays" @update="onWorkingDaysUpdate" @toggle="onWorkingDayToggle" />
-            </div>
             <!-- Cabecera de columnas -->
             <div class="header-row">
                 <div class="item-col cols-actions text-left">
@@ -47,6 +43,14 @@
                 @taskReceived="onTaskReceived"
                 @toggleExpanded="onToggleExpanded"
             />
+
+            <!-- Working Days Toggles -->
+            <div class="working-days-section mt-4" v-if="sprintStore.currentSprint">
+                <WorkingDaysToggles :workingDays="currentSprintWorkingDays" @update="onWorkingDaysUpdate" @toggle="onWorkingDayToggle" />
+            </div>
+
+            <!-- Gráfico de progreso de usuarios -->
+            <UserProgressChart v-if="chartReady" class="mt-1" />
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
@@ -71,9 +75,6 @@
             @close="closeDialogs"
             @save="saveTask"
         />
-
-        <!-- Gráfico de progreso de usuarios -->
-        <UserProgressChart v-if="chartReady" />
     </div>
 </template>
 
@@ -83,7 +84,6 @@ import ItemCard from "@/components/ItemCard.vue";
 import ItemDialog from "@/components/ItemDialog.vue";
 import TaskDialog from "@/components/TaskDialog.vue";
 import UserProgressChart from "@/components/UserProgressChart.vue";
-import WorkingDaysToggles from "@/components/WorkingDaysToggles.vue";
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { saveSprint } from "@/services/firestore";
