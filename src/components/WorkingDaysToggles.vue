@@ -5,7 +5,11 @@
                 v-for="(isWorking, index) in workingDays"
                 :key="index"
                 class="day-toggle"
-                :class="{ active: isWorking, inactive: !isWorking }"
+                :class="{
+                    active: isWorking,
+                    inactive: !isWorking,
+                    'current-day': index === currentDayIndex,
+                }"
                 @click="toggleDay(index)"
                 :title="getDayTooltip(index)"
             >
@@ -16,6 +20,9 @@
 </template>
 
 <script setup lang="ts">
+import { useSprintStore } from "@/stores/sprint";
+import { computed } from "vue";
+
 interface Props {
     workingDays: boolean[];
     onToggle?: (index: number) => void;
@@ -30,6 +37,26 @@ const emit = defineEmits<{
     toggle: [index: number];
     update: [workingDays: boolean[]];
 }>();
+
+const sprintStore = useSprintStore();
+
+// Calculate which day of the 10-day sprint is today (0-9 index)
+const currentDayIndex = computed(() => {
+    if (!sprintStore.currentSprint) return -1;
+
+    const today = new Date();
+    const sprintStart = new Date(sprintStore.currentSprint.fechaDesde);
+
+    // Calculate days since sprint start
+    const daysSinceStart = Math.floor((today.getTime() - sprintStart.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Return the day index (0-9), or -1 if outside sprint range
+    if (daysSinceStart >= 0 && daysSinceStart < 10) {
+        return daysSinceStart;
+    }
+
+    return -1;
+});
 
 const toggleDay = (index: number) => {
     const newWorkingDays = [...props.workingDays];
@@ -81,9 +108,9 @@ const getDayTooltip = (index: number) => {
     user-select: none;
 
     &.active {
-        background: $primary;
-        color: white;
-        border-color: color.adjust($primary, $lightness: -10%);
+        background: rgba($primary, 0.3);
+        color: black;
+        border-color: rgba($primary, 0.3);
 
         &:hover {
             background: color.adjust($primary, $lightness: 5%);
@@ -93,13 +120,25 @@ const getDayTooltip = (index: number) => {
     }
 
     &.inactive {
-        background: rgba(128, 128, 128, 0.2);
-        color: rgba(255, 255, 255, 0.5);
-        border-color: rgba(128, 128, 128, 0.3);
+        background: rgba(128, 128, 128, 0.2) !important;
+        color: $text !important;
+        border-color: rgba(128, 128, 128, 0.3) !important;
 
         &:hover {
             background: rgba(128, 128, 128, 0.3);
             border-color: rgba(128, 128, 128, 0.4);
+            transform: scale(1.05);
+        }
+    }
+
+    &.current-day {
+        background: $primary;
+        color: black;
+        border-color: color.adjust($primary, $lightness: -10%);
+
+        &:hover {
+            background: color.adjust($primary, $lightness: 5%);
+            border-color: color.adjust($primary, $lightness: -15%);
             transform: scale(1.05);
         }
     }
