@@ -28,7 +28,7 @@ const initialSprintConfig = {
     titulo: 'Sprint 79',
     fechaDesde: new Date(2025, 9, 27), // 27 de octubre de 2025 (mes 9 porque enero es 0)
     fechaHasta: new Date(2025, 10, 10), // 2 semanas después: 10 de noviembre de 2025
-    diasHabiles: 10,
+    workingDays: [true, true, true, true, true, true, true, true, true, true], // All 10 days are working days
     items: []
 };
 
@@ -58,7 +58,7 @@ async function recreateSprints() {
         console.log(`   Título: ${initialSprintConfig.titulo}`);
         console.log(`   Fecha Desde: ${initialSprintConfig.fechaDesde.toLocaleDateString('es-ES')}`);
         console.log(`   Fecha Hasta: ${initialSprintConfig.fechaHasta.toLocaleDateString('es-ES')}`);
-        console.log(`   Días Hábiles: ${initialSprintConfig.diasHabiles}`);
+        console.log(`   Working Days: ${initialSprintConfig.workingDays.filter(d => d).length} of ${initialSprintConfig.workingDays.length}`);
         console.log('');
 
         await sprintsRef.doc(initialSprintConfig.id).set(initialSprintConfig);

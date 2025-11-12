@@ -36,22 +36,24 @@ const sprintStore = useSprintStore();
 // Display names for users in the UI
 const userDisplayNames = ref<Record<string, string>>({});
 
-// Calculate current sprint working days
+// Calculate current sprint working days based on workingDays array
 const sprintDays = computed(() => {
     if (!sprintStore.currentSprint) return [];
+
+    const workingDays = sprintStore.currentSprint.workingDays;
     const days = [];
     const startDate = new Date(sprintStore.currentSprint.fechaDesde);
-    const endDate = new Date(sprintStore.currentSprint.fechaHasta);
     const currentDate = new Date(startDate);
 
-    while (currentDate <= endDate) {
-        // Only working days (Monday to Friday)
-        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+    // Generate day labels for the 10 days of the sprint
+    for (let i = 0; i < 10; i++) {
+        if (workingDays[i]) {
             days.push(currentDate.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }));
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
-    return days.slice(0, sprintStore.currentSprint.diasHabiles);
+
+    return days;
 });
 
 // Calculate totals per user
@@ -97,37 +99,33 @@ const debugValues = computed(() => {
     return { totalCapacity, userTotals: userTotals.value };
 });
 
-// Calculate current sprint day
+// Calculate current sprint day based on workingDays
 const currentSprintDay = computed(() => {
     if (!sprintStore.currentSprint) return 0;
 
     const today = new Date();
     const sprintStart = new Date(sprintStore.currentSprint.fechaDesde);
-    const sprintEnd = new Date(sprintStore.currentSprint.fechaHasta);
+    const workingDays = sprintStore.currentSprint.workingDays;
 
-    // If today is before sprint start, use first day
+    // If today is before sprint start, use first working day
     if (today < sprintStart) {
         return 0;
     }
 
-    // If today is after sprint end, use last day
-    if (today > sprintEnd) {
-        return sprintDays.value.length - 1;
-    }
-
     // Count working days from start to today
-    let dayIndex = 0;
+    let workingDayIndex = 0;
     const currentDate = new Date(sprintStart);
 
-    while (currentDate <= today && dayIndex < sprintDays.value.length) {
-        // Only count working days (Monday to Friday)
-        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            dayIndex++;
+    for (let i = 0; i < 10; i++) {
+        if (currentDate <= today && workingDays[i]) {
+            workingDayIndex++;
+        } else if (currentDate > today) {
+            break;
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    return Math.min(dayIndex - 1, sprintDays.value.length - 1);
+    return Math.min(workingDayIndex - 1, sprintDays.value.length - 1);
 });
 
 // Reactive state for chart series

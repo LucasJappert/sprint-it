@@ -22,9 +22,28 @@ export const useSprintStore = defineStore("sprint", () => {
 
     /**
      * Convierte las propiedades createdAt de items y tasks de timestamps de Firestore a objetos Date
+     * También migra diasHabiles a workingDays si es necesario
      */
-    const processSprintItems = (sprint: Sprint): Sprint => {
+    const processSprintItems = (sprint: any): Sprint => {
         const processedSprint = { ...sprint };
+
+        // Migrar diasHabiles a workingDays si existe la propiedad antigua
+        if (processedSprint.diasHabiles !== undefined && !processedSprint.workingDays) {
+            const diasHabiles = processedSprint.diasHabiles;
+            processedSprint.workingDays = Array.from({ length: 10 }, (_, i) => i < diasHabiles);
+            delete processedSprint.diasHabiles; // Remover propiedad antigua
+        }
+
+        // Asegurar que workingDays tenga exactamente 10 elementos
+        if (!Array.isArray(processedSprint.workingDays)) {
+            processedSprint.workingDays = Array(10).fill(true);
+        } else if (processedSprint.workingDays.length !== 10) {
+            // Si tiene menos de 10, completar con true; si tiene más, truncar
+            processedSprint.workingDays = processedSprint.workingDays.slice(0, 10);
+            while (processedSprint.workingDays.length < 10) {
+                processedSprint.workingDays.push(true);
+            }
+        }
 
         if (Array.isArray(processedSprint.items)) {
             processedSprint.items = processedSprint.items.map((item: Item) => {
@@ -67,7 +86,7 @@ export const useSprintStore = defineStore("sprint", () => {
                     titulo: "Sprint 1",
                     fechaDesde: sprint1Start,
                     fechaHasta: sprint1End,
-                    diasHabiles: 10,
+                    workingDays: Array(10).fill(true), // All 10 days are working days by default
                     items: [],
                 };
                 await saveSprint(sprint1);
@@ -272,7 +291,7 @@ export const useSprintStore = defineStore("sprint", () => {
             titulo: `Sprint ${newSprintNumber}`,
             fechaDesde: newStart,
             fechaHasta: newEnd,
-            diasHabiles: 10,
+            workingDays: Array(10).fill(true), // All 10 days are working days by default
             items: [],
         };
 
@@ -612,13 +631,19 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
-    const updateSprintDiasHabiles = async (diasHabiles: number) => {
+    const updateSprintWorkingDays = async (workingDays: boolean[]) => {
         if (currentSprint.value) {
-            currentSprint.value.diasHabiles = diasHabiles;
+            currentSprint.value.workingDays = [...workingDays];
             if (await validateSprintItemsBeforeSave(currentSprint.value)) {
                 await saveSprint(currentSprint.value);
             }
         }
+    };
+
+    // Legacy function for backward compatibility (will be removed)
+    const updateSprintDiasHabiles = async (diasHabiles: number) => {
+        const workingDays = Array.from({ length: 10 }, (_, i) => i < diasHabiles);
+        await updateSprintWorkingDays(workingDays);
     };
 
     return {
@@ -636,7 +661,8 @@ export const useSprintStore = defineStore("sprint", () => {
         sortTasksByState,
         createNewSprint,
         recalculateSprintDates,
-        updateSprintDiasHabiles,
+        updateSprintDiasHabiles, // Legacy function
+        updateSprintWorkingDays,
         updateTask,
         moveItemToSprint,
         duplicateItem,
