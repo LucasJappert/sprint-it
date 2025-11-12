@@ -207,7 +207,7 @@ export const useSprintStore = defineStore("sprint", () => {
         const activeTasks = item.tasks.filter(task => task.deletedAt === null);
 
         // Define the order: Done, Ready for test, Waiting, In Progress, To Do
-        const stateOrder = ["Done", "Ready For Test", "Waiting", "In Progress", "To Do"];
+        const stateOrder = ["Done", "Ready For Test", "In Progress", "To Do", "Waiting"];
 
         // Define priority order: High, Medium, Normal (higher priority first)
         const priorityOrder = ["High", "Medium", "Normal"];

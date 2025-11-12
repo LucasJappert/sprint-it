@@ -152,19 +152,6 @@ const isMouseOverMenu = () => {
     return menuElement && menuElement.matches(":hover");
 };
 
-const isMouseOverMenuItem = (option: ContextMenuOption) => {
-    // Verificar si el mouse está sobre el item específico del menú
-    const menuItems = document.querySelectorAll(".context-menu-item");
-    for (const item of menuItems) {
-        if (item.matches(":hover")) {
-            // Verificar si este item corresponde a la opción
-            const textElement = item.querySelector(".context-menu-text");
-            return textElement && textElement.textContent === option.label;
-        }
-    }
-    return false;
-};
-
 const closeOnClickOutside = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     // Solo cerrar si el click no fue dentro del menú
