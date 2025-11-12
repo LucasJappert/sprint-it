@@ -2,17 +2,51 @@
     <div class="user-progress-chart">
         <h3 class="chart-title">User Progress in the Sprint</h3>
 
-        <!-- Total capacity information -->
-        <div class="capacity-info">
-            <h4>Total Sprint Capacity: {{ debugValues.totalCapacity }} hours</h4>
+        <!-- Sprint information -->
+        <div class="sprint-info">
+            <div class="info-item">
+                <span class="label">Working Days:</span>
+                <span class="value">{{ sprintDays.length }} / 10</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Current Day:</span>
+                <span class="value">{{ elapsedWorkingDays }} / {{ sprintDays.length }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Expected Hours/Day:</span>
+                <span class="value">8h</span>
+            </div>
         </div>
 
-        <!-- User information -->
-        <div class="user-info">
-            <h4>Accumulated Hours per User:</h4>
-            <div v-for="(hours, userId) in debugValues.userTotals" :key="userId" class="user-item">
-                <span class="user-name">{{ userDisplayNames[userId] || userId }}: </span>
-                <span class="user-hours">{{ hours }} hours</span>
+        <!-- Progress bars per user -->
+        <div class="progress-container mt-2">
+            <div v-for="(progress, userId) in userProgress" :key="userId" class="user-progress-item">
+                <div class="user-header">
+                    <span class="user-name">{{ userDisplayNames[userId] || userId }}</span>
+                </div>
+
+                <div class="progress-bar-container">
+                    <!-- Total sprint capacity (gray background) -->
+                    <div class="progress-total" :style="{ width: '100%' }"></div>
+
+                    <!-- Actual user hours (blue) -->
+                    <div
+                        class="progress-actual"
+                        :style="{ width: progress.actualPercentage + '%' }"
+                        :class="{
+                            'over-target': progress.actual > progress.expected,
+                            'on-target': progress.actual <= progress.expected,
+                        }"
+                    ></div>
+
+                    <!-- Expected progress indicator line (vertical black line) -->
+                    <div class="progress-expected-line" :style="{ left: progress.expectedPercentage + '%' }"></div>
+                </div>
+
+                <div class="progress-info">
+                    <span class="progress-text">{{ progress.actual }}h / {{ progress.expected }}h / {{ progress.total }}h</span>
+                    <span class="progress-percentage">{{ Math.round(progress.actualPercentage) }}%</span>
+                </div>
             </div>
         </div>
     </div>
@@ -23,35 +57,29 @@ import { getUserDisplayNameAsync } from "@/services/firestore";
 import { useSprintStore } from "@/stores/sprint";
 import { computed, ref, watch } from "vue";
 
-// Colors for users (same as CommentSection)
-const AUTHOR_COLORS = ["#1bc0fcaa", "#1ea958aa"];
-
-const getUserColor = (userId: string): string => {
-    const index = userId.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % AUTHOR_COLORS.length;
-    return AUTHOR_COLORS[index]!;
-};
-
 const sprintStore = useSprintStore();
 
 // Display names for users in the UI
 const userDisplayNames = ref<Record<string, string>>({});
 
-// Calculate current sprint working days
+// Calculate current sprint working days based on workingDays array
 const sprintDays = computed(() => {
     if (!sprintStore.currentSprint) return [];
+
+    const workingDays = sprintStore.currentSprint.workingDays;
     const days = [];
     const startDate = new Date(sprintStore.currentSprint.fechaDesde);
-    const endDate = new Date(sprintStore.currentSprint.fechaHasta);
     const currentDate = new Date(startDate);
 
-    while (currentDate <= endDate) {
-        // Only working days (Monday to Friday)
-        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+    // Generate day labels for the 10 days of the sprint
+    for (let i = 0; i < 10; i++) {
+        if (workingDays[i]) {
             days.push(currentDate.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }));
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
-    return days.slice(0, sprintStore.currentSprint.diasHabiles);
+
+    return days;
 });
 
 // Calculate totals per user
@@ -87,192 +115,95 @@ const userTotals = computed(() => {
     return users;
 });
 
-// Calculate values for debug
-const debugValues = computed(() => {
-    const totalCapacity = sprintDays.value.length * 8; // 8 hours per working day
-    // console.log("=== DEBUG Chart Values ===");
-    // console.log("Sprint working days:", sprintDays.value.length);
-    // console.log("Total available capacity:", totalCapacity, "hours");
-    // console.log("Totals per user:", userTotals.value);
-    return { totalCapacity, userTotals: userTotals.value };
-});
-
-// Calculate current sprint day
-const currentSprintDay = computed(() => {
+// Calculate elapsed working days up to today (excluding holidays)
+const elapsedWorkingDays = computed(() => {
     if (!sprintStore.currentSprint) return 0;
 
+    const workingDays = sprintStore.currentSprint.workingDays;
     const today = new Date();
     const sprintStart = new Date(sprintStore.currentSprint.fechaDesde);
-    const sprintEnd = new Date(sprintStore.currentSprint.fechaHasta);
 
-    // If today is before sprint start, use first day
-    if (today < sprintStart) {
-        return 0;
-    }
-
-    // If today is after sprint end, use last day
-    if (today > sprintEnd) {
-        return sprintDays.value.length - 1;
-    }
-
-    // Count working days from start to today
-    let dayIndex = 0;
+    let count = 0;
     const currentDate = new Date(sprintStart);
 
-    while (currentDate <= today && dayIndex < sprintDays.value.length) {
-        // Only count working days (Monday to Friday)
-        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            dayIndex++;
+    for (let i = 0; i < 10; i++) {
+        if (currentDate <= today && workingDays[i]) {
+            count++;
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    return Math.min(dayIndex - 1, sprintDays.value.length - 1);
+    return count;
 });
 
-// Reactive state for chart series
-const chartSeries = ref<any[]>([]);
+// Calculate total sprint capacity (all working days * 8 hours)
+const totalSprintHours = computed(() => {
+    return sprintDays.value.length * 8; // 8 hours per working day
+});
 
-// Function to update series when data changes
-const updateChartSeries = async () => {
-    const series = [];
-    const dayCount = sprintDays.value.length;
+// Calculate expected hours per user up to current day
+const expectedHoursPerUser = computed(() => {
+    const hoursPerDay = 8; // Assuming 8 hours per working day
+    return elapsedWorkingDays.value * hoursPerDay;
+});
 
-    // Ideal line: total available effort (8h per day, accumulated)
-    const idealLine = sprintDays.value.map((_, index) => (index + 1) * 8);
-    series.push({
-        name: "Total Available Capacity",
-        data: idealLine,
-        color: "#9E9E9E",
-        dashArray: 5,
-    });
-
-    // User data: points on current day with actual accumulated total
-    for (const userId of Object.keys(userTotals.value)) {
-        const totalEffort = userTotals.value[userId];
-
-        if (totalEffort === undefined) {
-            continue;
+// Calculate progress per user with 3-layer information
+const userProgress = computed(() => {
+    const result: Record<
+        string,
+        {
+            actual: number;
+            expected: number;
+            total: number;
+            actualPercentage: number;
+            expectedPercentage: number;
         }
+    > = {};
 
-        // Get the real full name
-        const username = await getUserDisplayNameAsync(userId);
-        userDisplayNames.value[userId] = username; // Update for template
-        const userColor = getUserColor(userId);
+    for (const [userId, actualHours] of Object.entries(userTotals.value)) {
+        const expected = expectedHoursPerUser.value;
+        const total = totalSprintHours.value;
 
-        // Create array with null for all days, except current day
-        const dataPoints = Array(dayCount).fill(null);
-        dataPoints[currentSprintDay.value] = totalEffort;
-
-        series.push({
-            name: `${username} - Real`,
-            data: dataPoints,
-            color: userColor,
-        });
+        result[userId] = {
+            actual: actualHours,
+            expected,
+            total,
+            actualPercentage: total > 0 ? (actualHours / total) * 100 : 0,
+            expectedPercentage: total > 0 ? (expected / total) * 100 : 0,
+        };
     }
 
-    chartSeries.value = series;
-};
+    return result;
+});
 
-// Update series when data changes
-watch([userTotals, sprintDays, currentSprintDay], updateChartSeries, { immediate: true });
-
-// Chart options for ApexCharts
-const chartOptions = computed(() => ({
-    chart: {
-        type: "line",
-        height: 400,
-        background: "transparent",
-        animations: {
-            enabled: false, // Disable animations for better performance
-        },
+// Update user display names when userTotals changes
+watch(
+    userTotals,
+    async (newTotals) => {
+        for (const userId of Object.keys(newTotals)) {
+            if (!userDisplayNames.value[userId]) {
+                try {
+                    const username = await getUserDisplayNameAsync(userId);
+                    userDisplayNames.value[userId] = username;
+                } catch (error) {
+                    userDisplayNames.value[userId] = userId; // Fallback to ID
+                }
+            }
+        }
     },
-    markers: {
-        size: 8,
-        colors: undefined,
-        strokeColors: "#fff",
-        strokeWidth: 3,
-        strokeOpacity: 1,
-        strokeDashArray: 0,
-        fillOpacity: 1,
-        discrete: [],
-        shape: "circle",
-        radius: 2,
-        offsetX: 0,
-        offsetY: 0,
-        onClick: undefined,
-        onDblClick: undefined,
-        showNullDataPoints: true,
-        hover: {
-            size: 10,
-            sizeOffset: 3,
-        },
-    },
-    xaxis: {
-        categories: sprintDays.value,
-        title: {
-            text: "Sprint Days",
-            style: {
-                color: "#ffffff",
-            },
-        },
-        labels: {
-            style: {
-                colors: "#ffffff",
-            },
-        },
-        axisBorder: {
-            color: "#333333",
-        },
-        axisTicks: {
-            color: "#333333",
-        },
-    },
-    yaxis: {
-        title: {
-            text: "Hours",
-            style: {
-                color: "#ffffff",
-            },
-        },
-        labels: {
-            style: {
-                colors: "#ffffff",
-            },
-        },
-    },
-    legend: {
-        position: "top",
-        labels: {
-            colors: "#ffffff",
-        },
-    },
-    grid: {
-        borderColor: "#333333",
-        xaxis: {
-            lines: {
-                show: true,
-            },
-        },
-        yaxis: {
-            lines: {
-                show: true,
-            },
-        },
-    },
-    tooltip: {
-        theme: "dark",
-    },
-}));
+    { immediate: true },
+);
 </script>
 
 <style scoped lang="scss">
+@use "sass:color";
+
 .user-progress-chart {
+    width: 100%;
     padding: 20px;
     background: #1e1e1e;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    margin-top: 20px;
     overflow-x: auto; /* Enable horizontal scrolling on mobile */
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
@@ -284,28 +215,162 @@ const chartOptions = computed(() => ({
     font-weight: bold;
 }
 
+.sprint-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .label {
+        font-size: 0.9em;
+        color: $text;
+        opacity: 0.7;
+    }
+
+    .value {
+        font-size: 1.1em;
+        color: #ffffff;
+        font-weight: 500;
+    }
+}
+
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-progress-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .user-name {
+        font-weight: 500;
+        color: #ffffff;
+    }
+
+    .progress-text {
+        font-size: 0.9em;
+        color: $text;
+        opacity: 0.8;
+    }
+}
+
+.progress-bar-container {
+    position: relative;
+    height: 24px;
+    background: rgba(128, 128, 128, 0.2); /* Gray background for total sprint capacity */
+    border-radius: 12px;
+}
+
+.progress-total {
+    position: absolute;
+    height: 100%;
+    background: rgba(128, 128, 128, 0.3); /* Gray for total capacity */
+    border-radius: 12px;
+}
+
+.progress-expected-line {
+    position: absolute;
+    top: -5px; /* Extend 3px above */
+    bottom: -5px; /* Extend 3px below */
+    width: 4px; /* 2px wide */
+    background: #00000090; /* Black color */
+    z-index: 10; /* Ensure it appears above other elements */
+}
+
+.progress-actual {
+    position: absolute;
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+
+    &.over-target {
+        background: linear-gradient(90deg, #4caf50 0%, #45a049 100%); /* Green for over target */
+    }
+
+    &.on-target {
+        background: linear-gradient(90deg, $primary 0%, color.adjust($primary, $lightness: 10%) 100%); /* Blue for on target */
+    }
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .progress-text {
+        font-size: 0.9em;
+        color: $text;
+        opacity: 0.8;
+    }
+
+    .progress-percentage {
+        font-size: 0.9em;
+        color: $text;
+        opacity: 0.8;
+        font-weight: 500;
+    }
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .user-progress-chart {
         padding: 16px;
-        margin-top: 16px;
     }
 
     .chart-title {
         font-size: 1.1em;
         margin-bottom: 16px;
     }
+
+    .sprint-info {
+        gap: 16px;
+    }
+
+    .user-progress-item {
+        padding: 12px;
+    }
+
+    .progress-bar-container {
+        height: 20px;
+    }
 }
 
 @media (max-width: 480px) {
     .user-progress-chart {
         padding: 12px;
-        margin-top: 12px;
     }
 
     .chart-title {
         font-size: 1em;
         margin-bottom: 12px;
+    }
+
+    .sprint-info {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .user-progress-item {
+        padding: 10px;
+    }
+
+    .progress-bar-container {
+        height: 18px;
     }
 }
 </style>

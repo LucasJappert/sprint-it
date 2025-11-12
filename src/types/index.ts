@@ -58,7 +58,7 @@ export interface Sprint {
     titulo: string;
     fechaDesde: Date;
     fechaHasta: Date;
-    diasHabiles: number;
+    workingDays: boolean[]; // Array of 10 booleans representing working days (true) or holidays (false)
     items: Item[];
 }
 

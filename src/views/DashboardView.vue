@@ -1,13 +1,9 @@
 <template>
     <Header />
+
     <div class="dashboard">
         <!-- Botón para agregar nuevo item -->
-        <div class="board-header">
-            <MyButton class="ml-2" @click="showAddItemDialog = true" btn-class="px-2" accent="blue" density="comfortable" :opacity="0.8">
-                <v-icon left class="mr-2 blue">mdi-clipboard-text</v-icon>
-                New Item
-            </MyButton>
-        </div>
+        <div class="board-header"></div>
 
         <!-- Lista de items -->
         <div class="board" @dragover="onItemDragOver" @drop="onBoardDrop">
@@ -22,7 +18,14 @@
                 </div>
                 <div class="item-col cols-order flex-center">#</div>
                 <div class="item-col cols-assigned">Assigned</div>
-                <div class="item-col cols-title text-left">Title</div>
+                <div class="item-col cols-title text-left">
+                    Title
+
+                    <MyButton class="ml-4" @click="showAddItemDialog = true" btn-class="px-2" accent="blue" density="comfortable" :opacity="0.8">
+                        <v-icon left class="mr-2 blue">mdi-clipboard-text</v-icon>
+                        New Item
+                    </MyButton>
+                </div>
                 <div class="item-col cols-effort flex-center" title="Estimated/Real">Efforts</div>
                 <div class="item-col cols-priority">Priority</div>
             </div>
@@ -40,6 +43,14 @@
                 @taskReceived="onTaskReceived"
                 @toggleExpanded="onToggleExpanded"
             />
+
+            <!-- Working Days Toggles -->
+            <div class="working-days-section mt-4" v-if="sprintStore.currentSprint">
+                <WorkingDaysToggles :workingDays="currentSprintWorkingDays" @update="onWorkingDaysUpdate" @toggle="onWorkingDayToggle" />
+            </div>
+
+            <!-- Gráfico de progreso de usuarios -->
+            <UserProgressChart v-if="chartReady" class="mt-1" />
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
@@ -64,9 +75,6 @@
             @close="closeDialogs"
             @save="saveTask"
         />
-
-        <!-- Gráfico de progreso de usuarios -->
-        <UserProgressChart v-if="chartReady" />
     </div>
 </template>
 
@@ -139,6 +147,26 @@ const items = computed<Item[]>(() => {
     // Filtrar elementos marcados como borrados (soft delete)
     return (itemsArray as Item[]).filter((item) => item.deletedAt === null);
 });
+
+// Working days of current sprint
+const currentSprintWorkingDays = computed({
+    get: () => sprintStore.currentSprint?.workingDays || Array(10).fill(true),
+    set: (value: boolean[]) => {
+        if (sprintStore.currentSprint) {
+            sprintStore.currentSprint.workingDays = [...value];
+        }
+    },
+});
+
+const onWorkingDayToggle = async (index: number) => {
+    const newWorkingDays = [...currentSprintWorkingDays.value];
+    newWorkingDays[index] = !newWorkingDays[index];
+    await sprintStore.updateSprintWorkingDays(newWorkingDays);
+};
+
+const onWorkingDaysUpdate = async (workingDays: boolean[]) => {
+    await sprintStore.updateSprintWorkingDays(workingDays);
+};
 
 // Logs de debug removidos para simplificar la lógica
 
@@ -381,9 +409,18 @@ const toggleAllTasks = () => {
 
 <style scoped lang="scss">
 @use "@/styles/dashboard-columns.scss" as *;
+
+.working-days-section {
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
 .dashboard {
     padding: 6px;
-    padding-top: 66px; /* Adjusted for 50px header + 16px padding */
+    padding-top: 50px; /* Adjusted for 50px header + 16px padding */
     font-size: 0.9rem;
     width: 100%;
     box-sizing: border-box;
@@ -427,11 +464,11 @@ const toggleAllTasks = () => {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: $mobile-resolution) {
     .dashboard {
-        padding: 4px;
-        padding-top: 66px;
         font-size: 0.8rem;
+        padding-left: 0px;
+        padding-right: 0px;
     }
 
     .board-header {
@@ -442,23 +479,6 @@ const toggleAllTasks = () => {
         overflow-x: auto; /* Enable horizontal scrolling on mobile */
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         padding: 4px;
-    }
-}
-
-@media (max-width: 480px) {
-    .dashboard {
-        padding: 2px;
-        padding-top: 66px;
-    }
-
-    .board {
-        padding: 2px;
-    }
-
-    .header-row {
-        min-width: 550px;
-        padding: 4px;
-        font-size: 0.75rem;
     }
 }
 </style>

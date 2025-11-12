@@ -36,5 +36,6 @@ declare module 'vue' {
     TaskDialog: typeof import('./components/TaskDialog.vue')['default']
     UserProgressChart: typeof import('./components/UserProgressChart.vue')['default']
     VersionUpdateNotification: typeof import('./components/VersionUpdateNotification.vue')['default']
+    WorkingDaysToggles: typeof import('./components/WorkingDaysToggles.vue')['default']
   }
 }

@@ -11,19 +11,6 @@
                         :show-clear-selection="false"
                     />
                 </div>
-
-                <div style="width: 120px">
-                    <MyInput
-                        v-model="currentSprintDiasHabilesString"
-                        type="number"
-                        label="Working Days"
-                        :min="1"
-                        :max="10"
-                        @blur="updateDiasHabiles"
-                        centered
-                        density="compact"
-                    />
-                </div>
             </div>
         </div>
         <v-spacer />
@@ -124,30 +111,6 @@ const sprintOptions = computed(() => {
         }),
     ];
 });
-
-// Días hábiles del sprint actual
-const currentSprintDiasHabiles = computed({
-    get: () => sprintStore.currentSprint?.diasHabiles || 10,
-    set: (value: number) => {
-        if (sprintStore.currentSprint) {
-            sprintStore.currentSprint.diasHabiles = value;
-        }
-    },
-});
-
-const currentSprintDiasHabilesString = computed({
-    get: () => currentSprintDiasHabiles.value.toString(),
-    set: (value: string) => {
-        const num = parseInt(value);
-        if (!isNaN(num)) {
-            currentSprintDiasHabiles.value = num;
-        }
-    },
-});
-
-const updateDiasHabiles = async () => {
-    await sprintStore.updateSprintDiasHabiles(currentSprintDiasHabiles.value);
-};
 
 const onSprintOptionsChange = (options: any[]) => {
     const selectedOption = options.find((opt) => opt.checked);
@@ -305,50 +268,7 @@ const importItems = async () => {
     gap: 8px;
     align-items: center;
     flex-wrap: wrap; /* Allow wrapping on small screens */
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .v-app-bar {
-        width: 100vw; /* Full viewport width on mobile */
-        max-width: 100vw;
-        box-sizing: border-box;
-    }
-
-    .dashboard-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        width: 100%;
-        padding: 0 8px; /* Add padding to prevent content from touching edges */
-        box-sizing: border-box;
-    }
-
-    .sprint-container-1 {
-        justify-content: center;
-        gap: 4px;
-        width: 100%;
-    }
-
-    .sprint-container-1 > div {
-        flex: 1;
-        min-width: 120px;
-    }
-}
-
-@media (max-width: 480px) {
-    .dashboard-header {
-        gap: 4px;
-        padding: 0 4px;
-    }
-
-    .sprint-container-1 {
-        gap: 2px;
-    }
-
-    .sprint-container-1 > div {
-        min-width: 100px;
-    }
+    justify-content: start;
 }
 
 .sprint-dates {
