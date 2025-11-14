@@ -381,8 +381,9 @@ export const useSprintStore = defineStore("sprint", () => {
             const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
             if (index !== -1) {
                 currentSprint.value.items.splice(index, 1);
-                // Reordenar los ítems restantes
-                currentSprint.value.items.forEach((item, idx) => {
+                // Reordenar solo los ítems activos (no eliminados)
+                const activeItems = currentSprint.value.items.filter((item) => item.deletedAt === null);
+                activeItems.forEach((item, idx) => {
                     item.order = idx + 1;
                 });
                 if (await validateSprintItemsBeforeSave(currentSprint.value)) {
@@ -414,8 +415,9 @@ export const useSprintStore = defineStore("sprint", () => {
 
             // Remover del sprint actual
             currentSprint.items.splice(itemIndex, 1);
-            // Reordenar los ítems restantes en el sprint actual
-            currentSprint.items.forEach((item, idx) => {
+            // Reordenar solo los ítems activos en el sprint actual
+            const activeItems = currentSprint.items.filter((item) => item.deletedAt === null);
+            activeItems.forEach((item, idx) => {
                 item.order = idx + 1;
             });
             if (await validateSprintItemsBeforeSave(currentSprint)) {
@@ -619,10 +621,11 @@ export const useSprintStore = defineStore("sprint", () => {
         // Insertar el item copiado justo después del original
         currentSprint.value.items.splice(originalIndex + 1, 0, copiedItem);
 
-        // Reordenar todos los items que vienen después
-        for (let i = originalIndex + 2; i < currentSprint.value.items.length; i++) {
-            currentSprint.value.items[i].order = currentSprint.value.items[i - 1].order + 1;
-        }
+        // Reordenar solo los items activos que vienen después
+        const activeItems = currentSprint.value.items.filter((item) => item.deletedAt === null);
+        activeItems.forEach((item, idx) => {
+            item.order = idx + 1;
+        });
 
         // Guardar cambios
         if (await validateSprintItemsBeforeSave(currentSprint.value)) {
