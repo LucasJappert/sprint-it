@@ -6,3 +6,4 @@ dist
 .env.development
 config.json
 dev-dist/
+dev-dist/sw.js
