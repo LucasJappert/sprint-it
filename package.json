@@ -1,6 +1,6 @@
 {
     "name": "sprint-it",
-    "version": "1.1.14",
+    "version": "1.1.15",
     "main": "index.js",
     "scripts": {
         "dev": "node scripts/validate-config.js && vite --port 5180",
