@@ -62,19 +62,22 @@ const sprintStore = useSprintStore();
 // Display names for users in the UI
 const userDisplayNames = ref<Record<string, string>>({});
 
-// Calculate current sprint working days based on workingDays array
+// Calculate current sprint working days dates (10 weekdays over 2 weeks)
 const sprintDays = computed(() => {
     if (!sprintStore.currentSprint) return [];
 
-    const workingDays = sprintStore.currentSprint.workingDays;
     const days = [];
     const startDate = new Date(sprintStore.currentSprint.fechaDesde);
     const currentDate = new Date(startDate);
+    let dayIndex = 0;
 
-    // Generate day labels for the 10 days of the sprint
-    for (let i = 0; i < 10; i++) {
-        if (workingDays[i]) {
+    // Collect dates for the 10 weekdays in the sprint period
+    while (dayIndex < 10) {
+        const dayOfWeek = currentDate.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            // Lunes a viernes
             days.push(currentDate.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }));
+            dayIndex++;
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -115,19 +118,20 @@ const userTotals = computed(() => {
     return users;
 });
 
-// Calculate elapsed working days up to today (excluding holidays)
+// Calculate elapsed working days up to today (count of weekdays passed)
 const elapsedWorkingDays = computed(() => {
     if (!sprintStore.currentSprint) return 0;
 
-    const workingDays = sprintStore.currentSprint.workingDays;
     const today = new Date();
     const sprintStart = new Date(sprintStore.currentSprint.fechaDesde);
 
     let count = 0;
     const currentDate = new Date(sprintStart);
 
-    for (let i = 0; i < 10; i++) {
-        if (currentDate <= today && workingDays[i]) {
+    while (currentDate <= today && count < 10) {
+        const dayOfWeek = currentDate.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            // Lunes a viernes
             count++;
         }
         currentDate.setDate(currentDate.getDate() + 1);

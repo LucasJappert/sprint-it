@@ -41,22 +41,31 @@ const emit = defineEmits<{
 
 const sprintStore = useSprintStore();
 
-// Calculate which day of the 10-day sprint is today (0-9 index)
-const currentDayIndex = computed(() => {
-    if (!sprintStore.currentSprint) return -1;
+// Calculate elapsed working days up to today (count of weekdays passed)
+const elapsedWorkingDays = computed(() => {
+    if (!sprintStore.currentSprint) return 0;
 
     const today = new Date();
     const sprintStart = new Date(sprintStore.currentSprint.fechaDesde);
 
-    // Calculate days since sprint start
-    const daysSinceStart = Math.floor((today.getTime() - sprintStart.getTime()) / (1000 * 60 * 60 * 24));
+    let count = 0;
+    const currentDate = new Date(sprintStart);
 
-    // Return the day index (0-9), or -1 if outside sprint range
-    if (daysSinceStart >= 0 && daysSinceStart < 10) {
-        return daysSinceStart;
+    while (currentDate <= today && count < 10) {
+        const dayOfWeek = currentDate.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            // Lunes a viernes
+            count++;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    return -1;
+    return count;
+});
+
+// Calculate which working day is active (0-based index of the current working day)
+const currentDayIndex = computed(() => {
+    return elapsedWorkingDays.value - 1;
 });
 
 const toggleDay = (index: number) => {
