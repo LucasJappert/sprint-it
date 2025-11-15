@@ -190,6 +190,18 @@ export const useSprintStore = defineStore("sprint", () => {
                                 item.actualEffort = item.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
                             }
 
+                            // Verificar si todas las tasks activas están en "Done"
+                            const activeTasks = item.tasks.filter(t => t.deletedAt === null);
+                            const allTasksDone = activeTasks.length > 0 && activeTasks.every(t => t.state === "Done");
+                            if (allTasksDone) {
+                                item.state = "Done";
+                            }
+
+                            // Si la task cambió a "In Progress" y el item está en "To Do" o "Done", marcar item como "In Progress"
+                            if (updatedTask.state === "In Progress" && (item.state === "To Do" || item.state === "Done")) {
+                                item.state = "In Progress";
+                            }
+
                             if (await validateSprintItemsBeforeSave(currentSprint.value)) {
                                 await saveSprint(currentSprint.value);
                             }

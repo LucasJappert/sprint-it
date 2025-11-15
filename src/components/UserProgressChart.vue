@@ -20,6 +20,36 @@
 
         <!-- Progress bars per user -->
         <div class="progress-container mt-2">
+            <!-- Total sprint progress bar -->
+            <div class="user-progress-item total-progress-item">
+                <div class="user-header">
+                    <span class="user-name">Total Sprint Progress</span>
+                </div>
+
+                <div class="progress-bar-container">
+                    <!-- Total sprint capacity (gray background) -->
+                    <div class="progress-total" :style="{ width: '100%' }"></div>
+
+                    <!-- Actual total hours -->
+                    <div
+                        class="progress-actual"
+                        :style="{ width: totalProgress.actualPercentage + '%' }"
+                        :class="{
+                            'over-target': totalProgress.actual >= totalProgress.expected,
+                            'on-target': totalProgress.actual < totalProgress.expected,
+                        }"
+                    ></div>
+
+                    <!-- Expected progress indicator line -->
+                    <div class="progress-expected-line" :style="{ left: totalProgress.expectedPercentage + '%' }"></div>
+                </div>
+
+                <div class="progress-info">
+                    <span class="progress-text">{{ totalProgress.actual }}h / {{ totalProgress.expected }}h / {{ totalProgress.total }}h</span>
+                    <span class="progress-percentage">{{ Math.round(totalProgress.actualPercentage) }}%</span>
+                </div>
+            </div>
+
             <div v-for="(progress, userId) in userProgress" :key="userId" class="user-progress-item">
                 <div class="user-header">
                     <span class="user-name">{{ userDisplayNames[userId] || userId }}</span>
@@ -62,7 +92,7 @@ const sprintStore = useSprintStore();
 // Display names for users in the UI
 const userDisplayNames = ref<Record<string, string>>({});
 
-// Calculate current sprint working days dates (10 weekdays over 2 weeks)
+// Calculate current sprint working days dates (based on workingDays toggles)
 const sprintDays = computed(() => {
     if (!sprintStore.currentSprint) return [];
 
@@ -71,12 +101,14 @@ const sprintDays = computed(() => {
     const currentDate = new Date(startDate);
     let dayIndex = 0;
 
-    // Collect dates for the 10 weekdays in the sprint period
+    // Collect dates for the working days that are active in the sprint period
     while (dayIndex < 10) {
         const dayOfWeek = currentDate.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
         if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-            // Lunes a viernes
-            days.push(currentDate.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }));
+            // Lunes a viernes - check if this working day is active
+            if (sprintStore.currentSprint.workingDays[dayIndex]) {
+                days.push(currentDate.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }));
+            }
             dayIndex++;
         }
         currentDate.setDate(currentDate.getDate() + 1);
@@ -118,7 +150,7 @@ const userTotals = computed(() => {
     return users;
 });
 
-// Calculate elapsed working days up to today (count of weekdays passed)
+// Calculate elapsed working days up to today (count of active working days passed)
 const elapsedWorkingDays = computed(() => {
     if (!sprintStore.currentSprint) return 0;
 
@@ -127,12 +159,16 @@ const elapsedWorkingDays = computed(() => {
 
     let count = 0;
     const currentDate = new Date(sprintStart);
+    let dayIndex = 0;
 
-    while (currentDate <= today && count < 10) {
+    while (currentDate <= today && dayIndex < 10) {
         const dayOfWeek = currentDate.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
         if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-            // Lunes a viernes
-            count++;
+            // Lunes a viernes - check if this working day is active
+            if (sprintStore.currentSprint.workingDays[dayIndex]) {
+                count++;
+            }
+            dayIndex++;
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -178,6 +214,25 @@ const userProgress = computed(() => {
     }
 
     return result;
+});
+
+// Calculate total sprint progress
+const totalProgress = computed(() => {
+    const numUsers = Object.keys(userTotals.value).length;
+    const totalActual = Object.values(userTotals.value).reduce((sum, val) => sum + val, 0);
+    const expectedPerUser = expectedHoursPerUser.value;
+    const totalPerUser = totalSprintHours.value;
+
+    const totalExpected = numUsers * expectedPerUser;
+    const totalTotal = numUsers * totalPerUser;
+
+    return {
+        actual: totalActual,
+        expected: totalExpected,
+        total: totalTotal,
+        actualPercentage: totalTotal > 0 ? (totalActual / totalTotal) * 100 : 0,
+        expectedPercentage: totalTotal > 0 ? (totalExpected / totalTotal) * 100 : 0,
+    };
 });
 
 // Update user display names when userTotals changes
@@ -275,7 +330,7 @@ watch(
 
 .progress-bar-container {
     position: relative;
-    height: 24px;
+    height: 5px;
     background: rgba(128, 128, 128, 0.2); /* Gray background for total sprint capacity */
     border-radius: 12px;
 }
@@ -327,54 +382,6 @@ watch(
         color: $text;
         opacity: 0.8;
         font-weight: 500;
-    }
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .user-progress-chart {
-        padding: 16px;
-    }
-
-    .chart-title {
-        font-size: 1.1em;
-        margin-bottom: 16px;
-    }
-
-    .sprint-info {
-        gap: 16px;
-    }
-
-    .user-progress-item {
-        padding: 12px;
-    }
-
-    .progress-bar-container {
-        height: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    .user-progress-chart {
-        padding: 12px;
-    }
-
-    .chart-title {
-        font-size: 1em;
-        margin-bottom: 12px;
-    }
-
-    .sprint-info {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .user-progress-item {
-        padding: 10px;
-    }
-
-    .progress-bar-container {
-        height: 18px;
     }
 }
 </style>

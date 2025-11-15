@@ -37,7 +37,7 @@
         </div>
         <div class="item-col cols-title text-left">
             <!-- <span v-if="taskCountDisplay" class="mr-1">{{ taskCountDisplay }}</span> -->
-            <v-icon class="mr-1 text" size="16">mdi-clipboard-text</v-icon>
+            <!-- <v-icon class="mr-1 text" size="16">mdi-clipboard-text</v-icon> -->
             {{ item.title }}
             <div class="task-indicators" v-if="activeTasks.length > 0">
                 <div v-for="task in activeTasks" :key="task.id" class="task-indicator" :style="{ backgroundColor: getStateColor(task.state) }"></div>
