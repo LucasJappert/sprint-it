@@ -64,7 +64,9 @@ export const useTaskManagement = () => {
             }
         } else {
             // Agregar nueva task
-            task.order = currentItem.value.tasks.filter(t => t.deletedAt === null).length + 1;
+            // Calcular el orden solo para tasks activas (no eliminadas)
+            const activeTasks = currentItem.value.tasks.filter(t => t.deletedAt === null);
+            task.order = activeTasks.length + 1;
             task.createdBy = authStore.user?.id || "";
             currentItem.value.tasks.push(task);
 
@@ -91,8 +93,9 @@ export const useTaskManagement = () => {
 
     const deleteTask = (taskId: string, item: Item) => {
         item.tasks = item.tasks.filter((task) => task.id !== taskId);
-        // Reordenar las tasks restantes
-        item.tasks.forEach((task, idx) => {
+        // Reordenar solo las tasks activas (no eliminadas)
+        const activeTasks = item.tasks.filter((task) => task.deletedAt === null);
+        activeTasks.forEach((task, idx) => {
             task.order = idx + 1;
         });
 

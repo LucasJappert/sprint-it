@@ -70,6 +70,13 @@ export const useSprintStore = defineStore("sprint", () => {
         return processedSprint;
     };
 
+    /**
+     * Todos los 10 días del sprint son hábiles (lunes a viernes de 2 semanas)
+     */
+    const calculateWorkingDays = (): boolean[] => {
+        return Array(10).fill(true);
+    };
+
     const generateSprints = async () => {
         loadingStore.setLoading(true);
         try {
@@ -86,7 +93,7 @@ export const useSprintStore = defineStore("sprint", () => {
                     titulo: "Sprint 1",
                     fechaDesde: sprint1Start,
                     fechaHasta: sprint1End,
-                    workingDays: Array(10).fill(true), // All 10 days are working days by default
+                    workingDays: calculateWorkingDays(), // Todos los 10 días son hábiles
                     items: [],
                 };
                 await saveSprint(sprint1);
@@ -107,6 +114,7 @@ export const useSprintStore = defineStore("sprint", () => {
                 // Fallback al primer sprint si no hay ninguno actual
                 currentSprintId.value = allSprints[0]?.id || "sprint-1";
             }
+
 
             // Log para debug: mostrar sprints y items obtenidos
             // allSprints.forEach(sprint => {
@@ -180,6 +188,18 @@ export const useSprintStore = defineStore("sprint", () => {
                             if (item.tasks.length > 0) {
                                 item.estimatedEffort = item.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
                                 item.actualEffort = item.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
+                            }
+
+                            // Verificar si todas las tasks activas están en "Done"
+                            const activeTasks = item.tasks.filter(t => t.deletedAt === null);
+                            const allTasksDone = activeTasks.length > 0 && activeTasks.every(t => t.state === "Done");
+                            if (allTasksDone) {
+                                item.state = "Done";
+                            }
+
+                            // Si la task cambió a "In Progress" y el item está en "To Do" o "Done", marcar item como "In Progress"
+                            if (updatedTask.state === "In Progress" && (item.state === "To Do" || item.state === "Done")) {
+                                item.state = "In Progress";
                             }
 
                             if (await validateSprintItemsBeforeSave(currentSprint.value)) {
@@ -291,7 +311,7 @@ export const useSprintStore = defineStore("sprint", () => {
             titulo: `Sprint ${newSprintNumber}`,
             fechaDesde: newStart,
             fechaHasta: newEnd,
-            workingDays: Array(10).fill(true), // All 10 days are working days by default
+            workingDays: calculateWorkingDays(), // Todos los 10 días son hábiles
             items: [],
         };
 
@@ -381,8 +401,9 @@ export const useSprintStore = defineStore("sprint", () => {
             const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
             if (index !== -1) {
                 currentSprint.value.items.splice(index, 1);
-                // Reordenar los ítems restantes
-                currentSprint.value.items.forEach((item, idx) => {
+                // Reordenar solo los ítems activos (no eliminados)
+                const activeItems = currentSprint.value.items.filter((item) => item.deletedAt === null);
+                activeItems.forEach((item, idx) => {
                     item.order = idx + 1;
                 });
                 if (await validateSprintItemsBeforeSave(currentSprint.value)) {
@@ -414,8 +435,9 @@ export const useSprintStore = defineStore("sprint", () => {
 
             // Remover del sprint actual
             currentSprint.items.splice(itemIndex, 1);
-            // Reordenar los ítems restantes en el sprint actual
-            currentSprint.items.forEach((item, idx) => {
+            // Reordenar solo los ítems activos en el sprint actual
+            const activeItems = currentSprint.items.filter((item) => item.deletedAt === null);
+            activeItems.forEach((item, idx) => {
                 item.order = idx + 1;
             });
             if (await validateSprintItemsBeforeSave(currentSprint)) {
@@ -619,10 +641,11 @@ export const useSprintStore = defineStore("sprint", () => {
         // Insertar el item copiado justo después del original
         currentSprint.value.items.splice(originalIndex + 1, 0, copiedItem);
 
-        // Reordenar todos los items que vienen después
-        for (let i = originalIndex + 2; i < currentSprint.value.items.length; i++) {
-            currentSprint.value.items[i].order = currentSprint.value.items[i - 1].order + 1;
-        }
+        // Reordenar solo los items activos que vienen después
+        const activeItems = currentSprint.value.items.filter((item) => item.deletedAt === null);
+        activeItems.forEach((item, idx) => {
+            item.order = idx + 1;
+        });
 
         // Guardar cambios
         if (await validateSprintItemsBeforeSave(currentSprint.value)) {

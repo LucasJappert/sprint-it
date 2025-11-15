@@ -84,7 +84,7 @@ const sprintStore = useSprintStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
 
-const { deleteTask, showEditTaskDialog, editingTask, openEditTaskDialog, closeDialogs, onSaveEditTask } = useTaskManagement();
+const { showEditTaskDialog, editingTask, openEditTaskDialog, closeDialogs, onSaveEditTask } = useTaskManagement();
 
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
@@ -160,7 +160,7 @@ const { createTaskContextMenuOptions } = useContextMenuOptions();
 const contextMenuOptions = ref<ContextMenuOption[]>([]);
 
 const loadContextMenuOptions = async () => {
-    contextMenuOptions.value = await createTaskContextMenuOptions(props.task, props.item, deleteTask, sprintStore.duplicateTask, sprintStore.softDeleteTask);
+    contextMenuOptions.value = await createTaskContextMenuOptions(props.task, props.item, sprintStore.duplicateTask, sprintStore.softDeleteTask);
 };
 
 watch(

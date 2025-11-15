@@ -315,26 +315,33 @@ const calculateInsertIndex = (mouseY: number, allItems: Item[]): number => {
 };
 
 const moveItemToPosition = async (item: Item, targetIndex: number) => {
-    const currentIndex = items.value.findIndex((i) => i.id === item.id);
+    const fullItems = sprintStore.currentSprint?.items || [];
+    const activeItems = fullItems.filter((item) => item.deletedAt === null);
+    const currentIndex = activeItems.findIndex((i) => i.id === item.id);
     if (currentIndex === -1) return;
 
-    // Crear nueva lista con el item movido
-    const newList = [...items.value];
-    newList.splice(currentIndex, 1); // Remover del índice actual
-    newList.splice(targetIndex, 0, item); // Insertar en nueva posición
+    // Crear nueva lista de items activos con el item movido
+    const newActiveList = [...activeItems];
+    newActiveList.splice(currentIndex, 1); // Remover del índice actual
+    newActiveList.splice(targetIndex, 0, item); // Insertar en nueva posición
 
-    // Actualizar el orden de todos los items
-    newList.forEach((it, idx) => {
+    // Reconstruir la lista completa con items activos reordenados y eliminados
+    const deletedItems = fullItems.filter((item) => item.deletedAt !== null);
+    const newList = [...newActiveList, ...deletedItems];
+
+    // Recalcular órdenes solo para items activos
+    newActiveList.forEach((it, idx) => {
         it.order = idx + 1;
     });
 
     // Guardar cambios usando la mutación directa y saveSprint
-    if (sprintStore.currentSprint) {
-        sprintStore.currentSprint.items = newList;
+    const sprintIndex = sprintStore.sprints.findIndex((s) => s.id === sprintStore.currentSprintId);
+    if (sprintIndex !== -1) {
+        sprintStore.sprints[sprintIndex].items = newList;
         // Usar la función de validación del store (accediendo internamente)
-        const isValid = await (sprintStore as any).validateSprintItemsBeforeSave(sprintStore.currentSprint);
+        const isValid = await (sprintStore as any).validateSprintItemsBeforeSave(sprintStore.sprints[sprintIndex]);
         if (isValid) {
-            saveSprint(sprintStore.currentSprint);
+            saveSprint(sprintStore.sprints[sprintIndex]);
         }
     }
 };

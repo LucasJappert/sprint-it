@@ -80,7 +80,7 @@ export const useContextMenuOptions = () => {
         }));
     };
 
-    const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void, duplicateTaskFn: (taskId: string, itemId: string) => void, softDeleteTaskFn: (taskId: string, item: Item) => void) => {
+    const createTaskContextMenuOptions = async (task: Task, item: Item, duplicateTaskFn: (taskId: string, itemId: string) => void, softDeleteTaskFn: (taskId: string, item: Item) => void) => {
         const updateTaskAssignedUser = async (userId: string) => {
             const oldValue = task.assignedUser || "";
             await sprintStore.updateTask(task.id, item.id, { assignedUser: userId });
@@ -220,9 +220,11 @@ export const useContextMenuOptions = () => {
         };
 
         // Verificar condición: al menos 1 task Done y al menos 1 task en otro estado, y al menos 2 tasks totales
-        const hasDoneTasks = item.tasks.some(task => task.state === "Done");
-        const hasOtherTasks = item.tasks.some(task => task.state !== "Done");
-        const hasAtLeastTwoTasks = item.tasks.length >= 2;
+        // Solo considerar tareas activas (no eliminadas)
+        const activeTasks = item.tasks.filter(task => task.deletedAt === null);
+        const hasDoneTasks = activeTasks.some(task => task.state === "Done");
+        const hasOtherTasks = activeTasks.some(task => task.state !== "Done");
+        const hasAtLeastTwoTasks = activeTasks.length >= 2;
         const shouldShowFinalizeOption = hasDoneTasks && hasOtherTasks && hasAtLeastTwoTasks;
 
         const menuOptions = [

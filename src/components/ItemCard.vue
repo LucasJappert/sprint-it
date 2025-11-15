@@ -37,7 +37,7 @@
         </div>
         <div class="item-col cols-title text-left">
             <!-- <span v-if="taskCountDisplay" class="mr-1">{{ taskCountDisplay }}</span> -->
-            <v-icon class="mr-1 text" size="16">mdi-clipboard-text</v-icon>
+            <!-- <v-icon class="mr-1 text" size="16">mdi-clipboard-text</v-icon> -->
             {{ item.title }}
             <div class="task-indicators" v-if="activeTasks.length > 0">
                 <div v-for="task in activeTasks" :key="task.id" class="task-indicator" :style="{ backgroundColor: getStateColor(task.state) }"></div>
@@ -122,13 +122,6 @@ const assignedUserName = ref("");
 
 const activeTasks = computed(() => {
     return props.item.tasks.filter((task) => task.deletedAt === null);
-});
-
-const taskCountDisplay = computed(() => {
-    const total = activeTasks.value.length;
-    if (total === 0) return "";
-    const nonToDo = activeTasks.value.filter((task) => task.state !== STATE_VALUES.TODO).length;
-    return `(${nonToDo}-${total})`;
 });
 
 const calculatedEstimatedEffort = computed(() => {
@@ -222,12 +215,6 @@ watch(
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
     return option ? option.name : priority;
-};
-
-const getStateHtml = (state: string | undefined) => {
-    if (!state) return "To Do"; // Default fallback
-    const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
-    return option ? option.name : state;
 };
 
 const getStateColor = (state: string) => {
@@ -414,11 +401,16 @@ const handleItemDrop = (e: DragEvent) => {
     newList.splice(currentIndex, 1);
     newList.splice(insertIndex, 0, dragDropStore.dragItem!);
 
-    newList.forEach((it, idx) => {
-        it.order = idx + 1;
+    // Recalcular órdenes solo para items activos
+    const activeItems = newList.filter((item) => item.deletedAt === null);
+    activeItems.forEach((item, idx) => {
+        item.order = idx + 1;
     });
 
-    currentSprint.items = newList;
+    const sprintIndex = sprintStore.sprints.findIndex((s) => s.id === currentSprint.id);
+    if (sprintIndex !== -1) {
+        sprintStore.sprints[sprintIndex].items = newList;
+    }
     saveSprint(currentSprint);
     dragDropStore.clearDragStateAsync();
 };
