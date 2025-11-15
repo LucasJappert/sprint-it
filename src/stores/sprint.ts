@@ -73,7 +73,7 @@ export const useSprintStore = defineStore("sprint", () => {
     /**
      * Todos los 10 días del sprint son hábiles (lunes a viernes de 2 semanas)
      */
-    const calculateWorkingDays = (fechaDesde: Date): boolean[] => {
+    const calculateWorkingDays = (): boolean[] => {
         return Array(10).fill(true);
     };
 
@@ -93,7 +93,7 @@ export const useSprintStore = defineStore("sprint", () => {
                     titulo: "Sprint 1",
                     fechaDesde: sprint1Start,
                     fechaHasta: sprint1End,
-                    workingDays: calculateWorkingDays(sprint1Start), // Solo días de semana hábiles por defecto
+                    workingDays: calculateWorkingDays(), // Todos los 10 días son hábiles
                     items: [],
                 };
                 await saveSprint(sprint1);
@@ -299,7 +299,7 @@ export const useSprintStore = defineStore("sprint", () => {
             titulo: `Sprint ${newSprintNumber}`,
             fechaDesde: newStart,
             fechaHasta: newEnd,
-            workingDays: calculateWorkingDays(newStart), // Solo días de semana hábiles por defecto
+            workingDays: calculateWorkingDays(), // Todos los 10 días son hábiles
             items: [],
         };
 

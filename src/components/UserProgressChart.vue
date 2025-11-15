@@ -34,8 +34,8 @@
                         class="progress-actual"
                         :style="{ width: progress.actualPercentage + '%' }"
                         :class="{
-                            'over-target': progress.actual > progress.expected,
-                            'on-target': progress.actual <= progress.expected,
+                            'over-target': progress.actual >= progress.expected,
+                            'on-target': progress.actual < progress.expected,
                         }"
                     ></div>
 

@@ -80,7 +80,7 @@ export const useContextMenuOptions = () => {
         }));
     };
 
-    const createTaskContextMenuOptions = async (task: Task, item: Item, deleteTaskFn: (taskId: string, item: Item) => void, duplicateTaskFn: (taskId: string, itemId: string) => void, softDeleteTaskFn: (taskId: string, item: Item) => void) => {
+    const createTaskContextMenuOptions = async (task: Task, item: Item, duplicateTaskFn: (taskId: string, itemId: string) => void, softDeleteTaskFn: (taskId: string, item: Item) => void) => {
         const updateTaskAssignedUser = async (userId: string) => {
             const oldValue = task.assignedUser || "";
             await sprintStore.updateTask(task.id, item.id, { assignedUser: userId });
