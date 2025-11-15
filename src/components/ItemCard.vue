@@ -124,13 +124,6 @@ const activeTasks = computed(() => {
     return props.item.tasks.filter((task) => task.deletedAt === null);
 });
 
-const taskCountDisplay = computed(() => {
-    const total = activeTasks.value.length;
-    if (total === 0) return "";
-    const nonToDo = activeTasks.value.filter((task) => task.state !== STATE_VALUES.TODO).length;
-    return `(${nonToDo}-${total})`;
-});
-
 const calculatedEstimatedEffort = computed(() => {
     if (activeTasks.value.length === 0) return props.item.estimatedEffort;
     return activeTasks.value.reduce((sum, task) => sum + task.estimatedEffort, 0);
@@ -222,12 +215,6 @@ watch(
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
     return option ? option.name : priority;
-};
-
-const getStateHtml = (state: string | undefined) => {
-    if (!state) return "To Do"; // Default fallback
-    const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
-    return option ? option.name : state;
 };
 
 const getStateColor = (state: string) => {
@@ -414,11 +401,16 @@ const handleItemDrop = (e: DragEvent) => {
     newList.splice(currentIndex, 1);
     newList.splice(insertIndex, 0, dragDropStore.dragItem!);
 
-    newList.forEach((it, idx) => {
-        it.order = idx + 1;
+    // Recalcular órdenes solo para items activos
+    const activeItems = newList.filter((item) => item.deletedAt === null);
+    activeItems.forEach((item, idx) => {
+        item.order = idx + 1;
     });
 
-    currentSprint.items = newList;
+    const sprintIndex = sprintStore.sprints.findIndex((s) => s.id === currentSprint.id);
+    if (sprintIndex !== -1) {
+        sprintStore.sprints[sprintIndex].items = newList;
+    }
     saveSprint(currentSprint);
     dragDropStore.clearDragStateAsync();
 };
