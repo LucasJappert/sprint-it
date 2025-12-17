@@ -45,6 +45,11 @@ export const useSprintStore = defineStore("sprint", () => {
             }
         }
 
+        // Inicializar userWorkingDays si no existe
+        if (!processedSprint.userWorkingDays) {
+            processedSprint.userWorkingDays = {};
+        }
+
         if (Array.isArray(processedSprint.items)) {
             processedSprint.items = processedSprint.items.map((item: Item) => {
                 const processedItem = {
@@ -94,6 +99,7 @@ export const useSprintStore = defineStore("sprint", () => {
                     fechaDesde: sprint1Start,
                     fechaHasta: sprint1End,
                     workingDays: calculateWorkingDays(), // Todos los 10 días son hábiles
+                    userWorkingDays: {}, // Inicializar vacío
                     items: [],
                 };
                 await saveSprint(sprint1);
@@ -312,6 +318,7 @@ export const useSprintStore = defineStore("sprint", () => {
             fechaDesde: newStart,
             fechaHasta: newEnd,
             workingDays: calculateWorkingDays(), // Todos los 10 días son hábiles
+            userWorkingDays: {}, // Inicializar vacío
             items: [],
         };
 
@@ -669,6 +676,15 @@ export const useSprintStore = defineStore("sprint", () => {
         await updateSprintWorkingDays(workingDays);
     };
 
+    const updateUserWorkingDays = async (userId: string, workingDays: boolean[]) => {
+        if (currentSprint.value) {
+            currentSprint.value.userWorkingDays[userId] = [...workingDays];
+            if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                await saveSprint(currentSprint.value);
+            }
+        }
+    };
+
     return {
         sprints,
         currentSprintId,
@@ -686,6 +702,7 @@ export const useSprintStore = defineStore("sprint", () => {
         recalculateSprintDates,
         updateSprintDiasHabiles, // Legacy function
         updateSprintWorkingDays,
+        updateUserWorkingDays,
         updateTask,
         moveItemToSprint,
         duplicateItem,

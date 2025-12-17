@@ -59,6 +59,7 @@ export interface Sprint {
     fechaDesde: Date;
     fechaHasta: Date;
     workingDays: boolean[]; // Array of 10 booleans representing working days (true) or holidays (false)
+    userWorkingDays: Record<string, boolean[]>; // Per-user working days, keyed by user ID
     items: Item[];
 }
 

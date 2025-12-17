@@ -53,6 +53,7 @@
             <div v-for="(progress, userId) in userProgress" :key="userId" class="user-progress-item">
                 <div class="user-header">
                     <span class="user-name">{{ userDisplayNames[userId] || userId }}</span>
+                    <UserWorkingDaysToggles :user-id="userId" :working-days="getUserWorkingDays(userId)" @update="updateUserWorkingDays(userId, $event)" />
                 </div>
 
                 <div class="progress-bar-container">
@@ -83,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import UserWorkingDaysToggles from "@/components/UserWorkingDaysToggles.vue";
 import { getUserDisplayNameAsync } from "@/services/firestore";
 import { useSprintStore } from "@/stores/sprint";
 import { computed, ref, watch } from "vue";
@@ -91,6 +93,17 @@ const sprintStore = useSprintStore();
 
 // Display names for users in the UI
 const userDisplayNames = ref<Record<string, string>>({});
+
+// Get user working days, defaulting to global working days if not set
+const getUserWorkingDays = (userId: string): boolean[] => {
+    if (!sprintStore.currentSprint) return Array(10).fill(true);
+    return sprintStore.currentSprint.userWorkingDays[userId] || [...sprintStore.currentSprint.workingDays];
+};
+
+// Update user working days
+const updateUserWorkingDays = async (userId: string, workingDays: boolean[]) => {
+    await sprintStore.updateUserWorkingDays(userId, workingDays);
+};
 
 // Calculate current sprint working days dates (based on workingDays toggles)
 const sprintDays = computed(() => {
@@ -201,8 +214,11 @@ const userProgress = computed(() => {
     > = {};
 
     for (const [userId, actualHours] of Object.entries(userTotals.value)) {
-        const expected = expectedHoursPerUser.value;
-        const total = totalSprintHours.value;
+        const userWorkingDays = getUserWorkingDays(userId);
+        const userElapsedDays = calculateElapsedWorkingDaysForUser(userWorkingDays);
+        const userTotalDays = userWorkingDays.filter((day) => day).length;
+        const expected = userElapsedDays * 8;
+        const total = userTotalDays * 8;
 
         result[userId] = {
             actual: actualHours,
@@ -216,15 +232,45 @@ const userProgress = computed(() => {
     return result;
 });
 
+// Helper function to calculate elapsed working days for a specific user
+const calculateElapsedWorkingDaysForUser = (userWorkingDays: boolean[]): number => {
+    if (!sprintStore.currentSprint) return 0;
+
+    const today = new Date();
+    const sprintStart = new Date(sprintStore.currentSprint.fechaDesde);
+
+    let count = 0;
+    const currentDate = new Date(sprintStart);
+    let dayIndex = 0;
+
+    while (currentDate <= today && dayIndex < 10) {
+        const dayOfWeek = currentDate.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            // Lunes a viernes - check if this working day is active for the user
+            if (userWorkingDays[dayIndex]) {
+                count++;
+            }
+            dayIndex++;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return count;
+};
+
 // Calculate total sprint progress
 const totalProgress = computed(() => {
-    const numUsers = Object.keys(userTotals.value).length;
     const totalActual = Object.values(userTotals.value).reduce((sum, val) => sum + val, 0);
-    const expectedPerUser = expectedHoursPerUser.value;
-    const totalPerUser = totalSprintHours.value;
+    let totalExpected = 0;
+    let totalTotal = 0;
 
-    const totalExpected = numUsers * expectedPerUser;
-    const totalTotal = numUsers * totalPerUser;
+    for (const userId of Object.keys(userTotals.value)) {
+        const userWorkingDays = getUserWorkingDays(userId);
+        const userElapsedDays = calculateElapsedWorkingDaysForUser(userWorkingDays);
+        const userTotalDays = userWorkingDays.filter((day) => day).length;
+        totalExpected += userElapsedDays * 8;
+        totalTotal += userTotalDays * 8;
+    }
 
     return {
         actual: totalActual,
