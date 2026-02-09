@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { useUrlManagement } from "@/composables/useUrlManagement";
 import MyAlerts from "@/plugins/my-alerts";
 import { exportAllData, getLastBackupDate, updateLastBackupDate } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
@@ -54,6 +55,15 @@ import { createFileInput, processImportedItems } from "@/utils/itemImport";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { version as appVersion } from "../../package.json";
+
+// Tipo para las opciones del selector de sprint
+interface SprintSelectOption {
+    name: string;
+    checked: boolean;
+    isAction?: boolean;
+    value?: string;
+    href?: string; // Optional href for link behavior
+}
 
 const authStore = useAuthStore();
 const sprintStore = useSprintStore();
@@ -89,33 +99,68 @@ onUnmounted(() => {
 });
 
 // Selector de sprint
-const sprintOptions = computed(() => {
+const sprintOptions = computed((): SprintSelectOption[] => {
     const now = new Date();
-    return [
+
+    // Separar sprint actual de los demás
+    const currentSprint = sprintStore.sprints.find((s) => now >= s.fechaDesde && now <= s.fechaHasta);
+
+    const otherSprints = sprintStore.sprints.filter((s) => s.id !== currentSprint?.id);
+
+    // Ordenar los demás sprints por fechaDesde (más reciente primero)
+    otherSprints.sort((a, b) => b.fechaDesde.getTime() - a.fechaDesde.getTime());
+
+    // Construir opciones: New Sprint + Sprint Actual (si existe) + Otros sprints ordenados
+    const options: SprintSelectOption[] = [
         {
             name: "+ New Sprint",
             checked: false,
             isAction: true,
         },
-        ...sprintStore.sprints.map((sprint) => {
+    ];
+
+    // Agregar sprint actual primero (si existe)
+    if (currentSprint) {
+        const desde = currentSprint.fechaDesde.toLocaleDateString("es-ES");
+        const hasta = currentSprint.fechaHasta.toLocaleDateString("es-ES");
+        const datePart = `<span style="font-size: 0.8rem; font-weight: 500; opacity: 0.4;" class="text"> (${desde}-${hasta})</span>`;
+        const name = `<span style="font-weight: 500;" class="primary">${currentSprint.titulo}</span> ${datePart}`;
+
+        options.push({
+            name,
+            checked: currentSprint.id === sprintStore.currentSprintId,
+            value: currentSprint.id,
+            href: `/dashboard?sprintId=${currentSprint.id}`,
+        });
+    }
+
+    // Agregar los demás sprints ordenados
+    options.push(
+        ...otherSprints.map((sprint) => {
             const desde = sprint.fechaDesde.toLocaleDateString("es-ES");
             const hasta = sprint.fechaHasta.toLocaleDateString("es-ES");
-            const isCurrent = now >= sprint.fechaDesde && now <= sprint.fechaHasta;
             const datePart = `<span style="font-size: 0.8rem; font-weight: 500; opacity: 0.4;" class="text"> (${desde}-${hasta})</span>`;
-            const name = isCurrent ? `<span style="font-weight: 500;" class="primary">${sprint.titulo}</span> ${datePart}` : `${sprint.titulo} ${datePart}`;
+            const name = `${sprint.titulo} ${datePart}`;
+
             return {
                 name,
                 checked: sprint.id === sprintStore.currentSprintId,
                 value: sprint.id,
+                href: `/dashboard?sprintId=${sprint.id}`,
             };
         }),
-    ];
+    );
+
+    return options;
 });
 
 const onSprintOptionsChange = (options: any[]) => {
     const selectedOption = options.find((opt) => opt.checked);
     if (selectedOption) {
         sprintStore.currentSprintId = selectedOption.value;
+        // Update URL with selected sprintId
+        const { setSprintUrl } = useUrlManagement(router);
+        setSprintUrl(selectedOption.value);
     }
 };
 
@@ -286,7 +331,9 @@ const importItems = async () => {
 .menu {
     background: $bg-primary;
     border-radius: 4px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
     min-width: 200px;
     padding: 4px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);

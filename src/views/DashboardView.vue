@@ -97,7 +97,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const sprintStore = useSprintStore();
 const dragDropStore = useDragDropStore();
-const { getTaskIdFromUrl, getItemIdFromUrl } = useUrlManagement(router);
+const { getTaskIdFromUrl, getItemIdFromUrl, getSprintIdFromUrl } = useUrlManagement(router);
 
 // Estado para controlar cuándo mostrar el gráfico (solo después de carga inicial)
 const chartReady = ref(false);
@@ -170,14 +170,27 @@ const onWorkingDaysUpdate = async (workingDays: boolean[]) => {
 
 // Logs de debug removidos para simplificar la lógica
 
-// Asegurar que los sprints estén generados
+// Ensure sprints are generated
 onMounted(async () => {
     try {
         if (sprintStore.sprints.length === 0) {
             await sprintStore.generateSprints();
         }
 
-        // Actualizar el título de la página con el sprint actual
+        // Check if sprintId exists in URL, otherwise use date-based selection
+        const urlSprintId = getSprintIdFromUrl();
+
+        if (urlSprintId) {
+            // Validate that the sprint exists before selecting it
+            const sprintExists = sprintStore.sprints.some((s) => s.id === urlSprintId);
+            if (sprintExists) {
+                sprintStore.currentSprintId = urlSprintId;
+            }
+            // If sprint doesn't exist, fallback to date-based selection (already done in generateSprints)
+        }
+        // If no sprintId in URL, the generateSprints already selected based on date
+
+        // Update page title with current sprint
         document.title = `Sprint It - ${sprintStore.currentSprint?.titulo}`;
 
         // Marcar el gráfico como listo después de la carga inicial
@@ -223,7 +236,7 @@ onMounted(async () => {
 watch(
     () => sprintStore.currentSprint,
     (newSprint) => {
-        document.title = `Sprint It - ${newSprint?.titulo}`;
+        document.title = `${newSprint?.titulo}`;
     },
     { immediate: true },
 );

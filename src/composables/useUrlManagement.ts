@@ -54,11 +54,33 @@ export const useUrlManagement = (router: any) => {
         return null;
     };
 
+    const setSprintUrl = (sprintId: string): void => {
+        const r = getRouter();
+        if (r && r.currentRoute) {
+            const route = r.currentRoute.value;
+            r.replace({ query: { ...route.query, sprintId } });
+        }
+    };
+
+    const getSprintIdFromUrl = (): string | null => {
+        try {
+            const r = getRouter();
+            if (r && r.currentRoute) {
+                return r.currentRoute.value.query.sprintId as string || null;
+            }
+        } catch (e) {
+            console.warn("Error getting sprintId from URL:", e);
+        }
+        return null;
+    };
+
     return {
         setTaskUrl,
         setItemUrl,
+        setSprintUrl,
         clearQueryParams,
         getTaskIdFromUrl,
         getItemIdFromUrl,
+        getSprintIdFromUrl,
     };
 };
