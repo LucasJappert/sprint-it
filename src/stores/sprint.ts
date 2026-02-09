@@ -452,6 +452,8 @@ export const useSprintStore = defineStore("sprint", () => {
             }
 
             // Agregar al sprint destino
+            // Actualizar backup antes de modificar para evitar falsa alerta de pérdida de items
+            sprintItemsBackup.value = [...targetSprint.items];
             targetSprint.items.push(item);
             // Recalcular órdenes para TODOS los items (incluyendo el item movido)
             const targetActiveItems = targetSprint.items.filter((it) => it.deletedAt === null);
