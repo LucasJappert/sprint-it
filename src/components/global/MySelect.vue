@@ -43,17 +43,32 @@
         <Teleport to="body">
             <transition name="fade">
                 <div v-show="expanded" ref="dropdownRef" :style="dropdownStyle" class="dropdown-body text-left" :class="[accentClass, $attrs.class]">
-                    <div
-                        v-for="(option, index) in internalOptions"
-                        :key="option.name || index"
-                        class="dropdown-item"
-                        :class="{ selected: option.checked, action: option.isAction }"
-                        @click="onOptionClick(index)"
-                        :title="option.name"
-                    >
-                        <span class="dropdown-item-content">
-                            <span v-html="option.name"></span>
-                        </span>
+                    <div v-for="(option, index) in internalOptions" :key="option.name || index" class="dropdown-item-wrapper">
+                        <a
+                            v-if="option.href"
+                            :href="option.href"
+                            target="_self"
+                            class="dropdown-item-anchor"
+                            @click.self.prevent="onOptionClick(index)"
+                            @auxclick.self="onOptionClick(index)"
+                        >
+                            <div class="dropdown-item" :class="{ selected: option.checked, action: option.isAction }">
+                                <span class="dropdown-item-content">
+                                    <span v-html="option.name"></span>
+                                </span>
+                            </div>
+                        </a>
+                        <div
+                            v-else
+                            class="dropdown-item"
+                            :class="{ selected: option.checked, action: option.isAction }"
+                            @click="onOptionClick(index)"
+                            :title="option.name"
+                        >
+                            <span class="dropdown-item-content">
+                                <span v-html="option.name"></span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </transition>
@@ -70,6 +85,7 @@ export interface ISelectOption {
     checked: boolean;
     color?: string;
     isAction?: boolean;
+    href?: string; // Optional href for link behavior
     [key: string]: any;
 }
 
@@ -284,7 +300,9 @@ $radius: 18px;
     padding: 6px 40px 6px 14px;
     color: var(--sel);
     cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
     border-color: var(--sel-03);
 
     &.expanded {
@@ -409,6 +427,20 @@ $radius: 18px;
     &.action {
         color: rgba($primary, 0.8);
         font-weight: 500;
+    }
+}
+
+.dropdown-item-wrapper {
+    display: block;
+}
+
+.dropdown-item-anchor {
+    display: block;
+    text-decoration: none !important;
+    color: inherit;
+
+    &:hover .dropdown-item {
+        background-color: var(--sel-02) !important;
     }
 }
 

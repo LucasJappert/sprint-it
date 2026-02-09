@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { useUrlManagement } from "@/composables/useUrlManagement";
 import MyAlerts from "@/plugins/my-alerts";
 import { exportAllData, getLastBackupDate, updateLastBackupDate } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
@@ -61,6 +62,7 @@ interface SprintSelectOption {
     checked: boolean;
     isAction?: boolean;
     value?: string;
+    href?: string; // Optional href for link behavior
 }
 
 const authStore = useAuthStore();
@@ -128,6 +130,7 @@ const sprintOptions = computed((): SprintSelectOption[] => {
             name,
             checked: currentSprint.id === sprintStore.currentSprintId,
             value: currentSprint.id,
+            href: `/dashboard?sprintId=${currentSprint.id}`,
         });
     }
 
@@ -143,6 +146,7 @@ const sprintOptions = computed((): SprintSelectOption[] => {
                 name,
                 checked: sprint.id === sprintStore.currentSprintId,
                 value: sprint.id,
+                href: `/dashboard?sprintId=${sprint.id}`,
             };
         }),
     );
@@ -154,6 +158,9 @@ const onSprintOptionsChange = (options: any[]) => {
     const selectedOption = options.find((opt) => opt.checked);
     if (selectedOption) {
         sprintStore.currentSprintId = selectedOption.value;
+        // Update URL with selected sprintId
+        const { setSprintUrl } = useUrlManagement(router);
+        setSprintUrl(selectedOption.value);
     }
 };
 
