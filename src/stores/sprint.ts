@@ -526,12 +526,14 @@ export const useSprintStore = defineStore("sprint", () => {
             order: maxOrder + 1,
             createdAt: new Date(),
             createdBy: authStore.user?.id || "",
+            actualEffort: 0,
             tasks: includeTasks ? originalItem.tasks.map((task) => ({
                 ...task,
                 id: `task-copy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                order: task.order, // Mantener el orden original de las tasks
+                order: task.order,
                 createdAt: new Date(),
-                createdBy: authStore.user?.id || ""
+                createdBy: authStore.user?.id || "",
+                actualEffort: 0
             })) : []
         };
 
