@@ -209,6 +209,7 @@ export const useContextMenuOptions = () => {
         const createSprintOptions = () => {
             return sprintStore.sprints
                 .filter(sprint => sprint.id !== sprintStore.currentSprintId)
+                .sort((a, b) => new Date(b.fechaDesde).getTime() - new Date(a.fechaDesde).getTime())
                 .map(sprint => ({
                     key: `move-to-${sprint.id}`,
                     label: sprint.titulo,

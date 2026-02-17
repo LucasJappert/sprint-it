@@ -119,11 +119,24 @@ defineExpose({
     position: fixed;
     background: $bg-primary;
     border-radius: 4px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
     min-width: 180px;
+    max-height: 300px;
     padding: 4px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 1001;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
 }
 
 .context-menu-item {
