@@ -2,7 +2,7 @@
     <v-app-bar dark height="50" :class="{ 'header-hidden': !isVisible }" class="header-transition">
         <div class="dashboard-header">
             <div class="sprint-container-1">
-                <div style="width: 280px">
+                <div style="width: 250px">
                     <MySelect
                         :options="sprintOptions"
                         @update:options="onSprintOptionsChange"
@@ -11,6 +11,11 @@
                         :show-clear-selection="false"
                     />
                 </div>
+                <v-tooltip location="bottom" :text="getExportSprintTooltip">
+                    <template #activator="{ props }">
+                        <v-icon v-bind="props" class="primary" @click="exportSprintAsync" :disabled="!sprintStore.currentSprint">mdi-file-export</v-icon>
+                    </template>
+                </v-tooltip>
             </div>
         </div>
         <v-spacer />
@@ -29,9 +34,9 @@
                     <span>Export Data</span>
                     <v-icon v-if="needsBackupPulse" size="16" class="ml-2 warning" :class="{ pulse: needsBackupPulse }">mdi-alert-circle</v-icon>
                 </div>
-                <div class="menu-item" @click="importItems">
+                <div class="menu-item no-border" @click="importItems">
                     <v-icon>mdi-upload</v-icon>
-                    <span>Importar items</span>
+                    <span>Import Data</span>
                 </div>
                 <div class="menu-item" @click="logout">
                     <v-icon>mdi-logout</v-icon>
@@ -47,8 +52,15 @@
 
 <script setup lang="ts">
 import { useUrlManagement } from "@/composables/useUrlManagement";
+import { STATE_VALUES } from "@/constants/states";
 import MyAlerts from "@/plugins/my-alerts";
-import { exportAllData, getLastBackupDate, updateLastBackupDate } from "@/services/firestore";
+import {
+    exportAllData,
+    exportSprintData as exportSprintDataAsync,
+    getFilteredSprintData as getFilteredSprintDataAsync,
+    getLastBackupDate,
+    updateLastBackupDate,
+} from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import { createFileInput, processImportedItems } from "@/utils/itemImport";
@@ -87,6 +99,26 @@ const getExportDataTitle = computed(() => {
     if (!needsBackupPulse.value) return "";
 
     return "Backup your data to stay safe!";
+});
+
+const getExportSprintTooltip = computed(() => {
+    const sprint = sprintStore.currentSprint;
+    if (!sprint) return "Select a sprint first";
+
+    // Contar solo items con al menos una task Done
+    const itemsWithDoneTasks = sprint.items.filter((item) => {
+        if (item.deletedAt !== null) return false;
+        const activeTasks = item.tasks.filter((task) => task.deletedAt === null);
+        return activeTasks.some((task) => task.state === STATE_VALUES.DONE);
+    });
+
+    // Contar solo tasks Done
+    let totalDoneTasks = 0;
+    itemsWithDoneTasks.forEach((item) => {
+        totalDoneTasks += item.tasks.filter((task) => task.deletedAt === null && task.state === STATE_VALUES.DONE).length;
+    });
+
+    return `Export ${sprint.titulo}: ${itemsWithDoneTasks.length} items with ${totalDoneTasks} completed tasks`;
 });
 
 onMounted(() => {
@@ -226,6 +258,51 @@ const exportData = async () => {
     }
 };
 
+const exportSprintAsync = async () => {
+    const currentSprint = sprintStore.currentSprint;
+    if (!currentSprint) {
+        return await MyAlerts.okMessageAsync("No sprint selected", "Please select a sprint first.");
+    }
+
+    try {
+        // Obtener datos filtrados para mostrar en la confirmación
+        const { itemsWithDoneTasksOnly } = await getFilteredSprintDataAsync(currentSprint.id);
+
+        let totalDoneTasks = 0;
+        itemsWithDoneTasksOnly.forEach((item) => {
+            totalDoneTasks += item.tasks.length;
+        });
+
+        // Mostrar confirmación antes de exportar
+        const html = `
+            <p>${currentSprint.titulo}</p>
+            <br>
+            <p>Se exportarán:</p>
+            <p><strong>Items:</strong> ${itemsWithDoneTasksOnly.length} (con al menos una tarea ${STATE_VALUES.DONE})</p>
+            <p><strong>Tareas ${STATE_VALUES.DONE}:</strong> ${totalDoneTasks}</p>
+        `;
+
+        const confirmed = await MyAlerts.confirmAsync("Confirmar exportación", html, "info");
+        if (!confirmed) return;
+
+        // Exportar datos
+        const data = await exportSprintDataAsync(currentSprint.id);
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+        const sprintName = currentSprint.titulo.replace(/\s+/g, "-").toLowerCase();
+        const exportFileDefaultName = `${sprintName}-${new Date().toISOString().split("T")[0]}.json`;
+
+        const linkElement = document.createElement("a");
+        linkElement.setAttribute("href", dataUri);
+        linkElement.setAttribute("download", exportFileDefaultName);
+        linkElement.click();
+    } catch (error) {
+        console.error("Error exporting sprint:", error);
+        await MyAlerts.okMessageAsync("Error", `Error exporting sprint: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+};
+
 const importItems = async () => {
     try {
         // Seleccionar archivo
@@ -357,6 +434,10 @@ const importItems = async () => {
 
     &:active {
         background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &.no-border {
+        border-bottom: none;
     }
 }
 
