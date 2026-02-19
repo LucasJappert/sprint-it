@@ -1,3 +1,4 @@
+import { STATE_VALUES } from "@/constants/states";
 import type { ChangeHistory, Comment, Sprint, User } from "@/types";
 import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
 import { db } from "./firebase";
@@ -328,3 +329,101 @@ export const getLastBackupDate = async (userId: string): Promise<string | null> 
 
     return null;
 };
+
+/**
+ * Obtiene los datos filtrados del sprint para exportar (items con tasks Done + solo tasks Done)
+ * Esta función puede usarse tanto para obtener info previa como para la exportación real
+ */
+export const getFilteredSprintData = async (sprintId: string) => {
+    const sprint = await getSprint(sprintId);
+    if (!sprint) {
+        throw new Error("Sprint no encontrado");
+    }
+
+    // Filtrar items activos (no eliminados) que tienen al menos una task en estado Done
+    const itemsWithDoneTasks = (sprint.items || []).filter((item) => {
+        if (item.deletedAt !== null) return false;
+        const activeTasks = item.tasks.filter((task) => task.deletedAt === null);
+        const hasDoneTask = activeTasks.some((task) => task.state === STATE_VALUES.DONE);
+        return hasDoneTask;
+    });
+
+    // Filtrar solo las tasks completas (Done) en cada item
+    const itemsWithDoneTasksOnly = itemsWithDoneTasks.map((item) => {
+        const doneTasks = item.tasks.filter((task) => task.deletedAt === null && task.state === STATE_VALUES.DONE);
+        return {
+            ...item,
+            tasks: doneTasks,
+        };
+    });
+
+    return { sprint, itemsWithDoneTasksOnly };
+};
+
+/**
+ * Exporta los datos del sprint actual sin items ni tareas eliminadas
+ * Solo exporta items que tienen al menos una task completa (Done)
+ * Las tasks exportadas serán solo las completas (Done)
+ * Incluye los comentarios asociados a items y tasks activos
+ */
+export const exportSprintData = async (sprintId: string) => {
+    // Obtener el sprint
+    const sprint = await getSprint(sprintId);
+    if (!sprint) {
+        throw new Error("Sprint no encontrado");
+    }
+
+    // Obtener datos filtrados
+    const { itemsWithDoneTasksOnly } = await getFilteredSprintData(sprintId);
+
+    // Obtener todos los IDs de items y tasks para buscar comentarios
+    const itemIds = itemsWithDoneTasksOnly.map((item) => item.id);
+    const taskIds: string[] = [];
+    itemsWithDoneTasksOnly.forEach((item) => {
+        item.tasks.forEach((task) => taskIds.push(task.id));
+    });
+
+    // Obtener comentarios para los items y tasks
+    let comments: Comment[] = [];
+    if (itemIds.length > 0 || taskIds.length > 0) {
+        const allComments = await getDocs(commentsCollection);
+        comments = allComments.docs
+            .map((doc) => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    associatedId: data.associatedId || "",
+                    associatedType: data.associatedType || "item",
+                    userId: data.userId || "",
+                    description: data.description || "",
+                    createdAt: data.createdAt?.toDate() || new Date(),
+                    updatedAt: data.updatedAt?.toDate() || new Date(),
+                } as Comment;
+            })
+            .filter((comment) => {
+                if (comment.associatedType === "item") {
+                    return itemIds.includes(comment.associatedId);
+                }
+                if (comment.associatedType === "task") {
+                    return taskIds.includes(comment.associatedId);
+                }
+                return false;
+            });
+    }
+
+    // Prompt para ChatGPT
+    const prompt = "Generame un resumen del sprint MUY breve (maximo 10-12 lineas), en formato ideal para WhatsApp. Debe ser facil de entender para colegas que no son del area de sistemas, con bullets cortos, claro y directo. Usar pocos emoticones solo para ayudar a la lectura (sin abusar).";
+
+    // Construir el objeto de exportación
+    const exportData = {
+        prompt,
+        sprint: {
+            ...sprint,
+            items: itemsWithDoneTasksOnly,
+        },
+        comments,
+        exportedAt: new Date().toISOString(),
+    };
+
+    return exportData;
+};;
