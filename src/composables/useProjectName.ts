@@ -2,6 +2,15 @@ import { useSprintStore } from "@/stores/sprint";
 
 const LAST_PROJECT_KEY = "sprint-it-last-project";
 
+// Proyectos por defecto que siempre estarán disponibles
+const DEFAULT_PROJECTS = [
+    "APIX/front",
+    "APIX/back-node",
+    "APIX/back-python",
+    "Agroideas-In/front",
+    "Agroideas-In/back",
+];
+
 /**
  * Composable para gestionar la selección de proyectos en items y tasks.
  * Proporciona una lista de proyectos únicos obtenidos de los últimos 10 sprints
@@ -12,10 +21,10 @@ export const useProjectName = () => {
 
     /**
      * Obtiene todos los proyectos únicos de los últimos 10 sprints,
-     * ordenados alfabéticamente.
+     * más los proyectos por defecto, ordenados alfabéticamente.
      */
     const getAllProjects = (): string[] => {
-        const allProjects = new Set<string>();
+        const allProjects = new Set<string>(DEFAULT_PROJECTS);
 
         // Obtener los últimos 10 sprints ordenados por número
         const sortedSprints = [...sprintStore.sprints].sort((a, b) => {
@@ -26,7 +35,7 @@ export const useProjectName = () => {
 
         const last10Sprints = sortedSprints.slice(0, 10);
 
-        // Recorrer todos los items y tasks para收集 projectNames
+        // Recorrer todos los items y tasks para collect projectNames
         for (const sprint of last10Sprints) {
             if (sprint.items) {
                 for (const item of sprint.items) {

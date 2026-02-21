@@ -33,6 +33,7 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 - **Clasificación de items/tasks por proyectos**: Nueva funcionalidad para clasificar items y tasks por proyecto.
     - Nuevo componente `ProjectSelector.vue` con input editable y autocompletado
     - Las opciones se cargan desde los proyectos usados en los últimos 10 sprints
+    - Proyectos por defecto siempre disponibles: APIX/front, APIX/back-node, APIX/back-python, Agroideas-In/front, Agroideas-In/back
     - Permite crear nuevos proyectos escribiéndolos directamente
     - Selector ubicado a la derecha del select Priority en ItemDialog y TaskDialog
     - Se guarda el último proyecto usado en localStorage para pre-llenar en nuevos items/tasks
