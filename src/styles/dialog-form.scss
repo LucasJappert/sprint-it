@@ -26,32 +26,40 @@
     gap: 12px;
     width: 100%;
     justify-content: space-between;
-    .assigned-user,
+    .assigned-user {
+        min-width: 130px;
+        max-width: 130px;
+    }
     .state,
     .priority {
         min-width: 150px;
         max-width: 150px;
     }
     .state {
-        min-width: 190px;
-        max-width: 190px;
+        min-width: 180px;
+        max-width: 180px;
     }
-    .estimated-effort,
+    .estimated-effort {
+        min-width: 80px;
+        max-width: 80px;
+    }
     .actual-effort {
         min-width: 100px;
         max-width: 100px;
     }
+    .project {
+        min-width: 190px;
+        max-width: 190px;
+    }
     @media (max-width: $mobile-resolution) {
         .assigned-user,
-        .state {
-            min-width: 48%;
-            max-width: 48%;
-        }
+        .state,
         .estimated-effort,
         .actual-effort,
-        .priority {
-            min-width: 30%;
-            max-width: 30%;
+        .priority,
+        .project {
+            min-width: 48%;
+            max-width: 48%;
         }
     }
 }

@@ -36,7 +36,7 @@
                     <div class="assigned-user">
                         <MySelect
                             v-model="assignedUser"
-                            label="Assigned Person"
+                            label="Assigned to"
                             :options="assignedUserOptions"
                             placeholder="Select user..."
                             density="compact"
@@ -54,6 +54,9 @@
                     </div>
                     <div class="priority">
                         <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
+                    </div>
+                    <div class="project">
+                        <ProjectSelector v-model="projectName" label="Project" density="compact" />
                     </div>
                 </div>
 
@@ -87,6 +90,7 @@
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
 import { useClipboard } from "@/composables/useClipboard";
+import { useProjectName } from "@/composables/useProjectName";
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
@@ -129,7 +133,8 @@ const hasChanges = computed(() => {
         state.value !== originalState.value ||
         parseInt(estimatedEffort.value) !== parseInt(originalEstimatedEffort.value) ||
         parseInt(actualEffort.value) !== parseInt(originalActualEffort.value) ||
-        assignedUser.value !== originalAssignedUser.value;
+        assignedUser.value !== originalAssignedUser.value ||
+        projectName.value !== originalProjectName.value;
 
     return changes;
 });
@@ -152,6 +157,7 @@ const state = ref(STATE_VALUES.TODO);
 const estimatedEffort = ref("");
 const actualEffort = ref("");
 const assignedUser = ref("");
+const projectName = ref("");
 
 // Guardar el estado original para comparación
 const originalTitle = ref("");
@@ -160,12 +166,14 @@ const originalPriority = ref(PRIORITY_VALUES.NORMAL);
 const originalState = ref(STATE_VALUES.TODO);
 const originalEstimatedEffort = ref("");
 const originalActualEffort = ref("");
+const originalProjectName = ref("");
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
 
 const router = useRouter();
 const { clearQueryParams } = useUrlManagement(router);
 const { copyToClipboardAsync } = useClipboard();
+const { saveLastProject, getLastProject } = useProjectName();
 const viewMode = ref<"details" | "history">("details");
 const changeHistory = ref<ChangeHistory[]>([]);
 
@@ -241,6 +249,7 @@ const setFormValuesFromTask = (task: Task, assignedUserValue: string) => {
     estimatedEffort.value = task.estimatedEffort.toString();
     actualEffort.value = task.actualEffort.toString();
     assignedUser.value = assignedUserValue;
+    projectName.value = task.projectName || "";
 
     // Guardar valores originales para comparación
     originalTitle.value = task.title;
@@ -250,6 +259,7 @@ const setFormValuesFromTask = (task: Task, assignedUserValue: string) => {
     originalEstimatedEffort.value = task.estimatedEffort.toString();
     originalActualEffort.value = task.actualEffort.toString();
     originalAssignedUser.value = assignedUserValue;
+    originalProjectName.value = task.projectName || "";
 };
 
 const selectAssignedUserOption = (assignedUserValue: string) => {
@@ -373,6 +383,19 @@ const saveChanges = async (oldTask: Task, newTask: Task) => {
         });
     }
 
+    // Track projectName changes
+    if ((oldTask.projectName || "") !== (newTask.projectName || "")) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "projectName",
+            oldValue: oldTask.projectName || "",
+            newValue: newTask.projectName || "",
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
     // Guardar todos los cambios
     for (const change of changes) {
         try {
@@ -401,6 +424,8 @@ const resetFormForEditing = async (task: Task) => {
 };
 
 const resetFormForNew = () => {
+    // Pre-llenar projectName con el último usado
+    const lastProject = getLastProject();
     title.value = "";
     detail.value = "";
     priority.value = PRIORITY_VALUES.NORMAL;
@@ -408,6 +433,7 @@ const resetFormForNew = () => {
     estimatedEffort.value = "";
     actualEffort.value = "";
     assignedUser.value = "";
+    projectName.value = lastProject;
 
     // Limpiar valores originales
     originalTitle.value = "";
@@ -417,6 +443,7 @@ const resetFormForNew = () => {
     originalEstimatedEffort.value = "";
     originalActualEffort.value = "";
     originalAssignedUser.value = "";
+    originalProjectName.value = lastProject;
 
     // Limpiar selección
     assignedUserOptions.value.forEach((option) => {
@@ -500,7 +527,13 @@ const handleSave = async (shouldClose: boolean | MouseEvent = true) => {
             createdAt: props.existingTask?.createdAt || new Date(),
             createdBy: props.existingTask?.createdBy || useAuthStore().user?.id || "",
             deletedAt: props.existingTask?.deletedAt || null,
+            projectName: projectName.value || "",
         };
+
+        // Guardar último proyecto usado
+        if (projectName.value) {
+            saveLastProject(projectName.value);
+        }
 
         // Guardar cambios si es edición
         if (props.existingTask) {

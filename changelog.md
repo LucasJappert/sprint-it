@@ -30,9 +30,20 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
     - Efecto de pulso animado en el borde del diálogo cuando hay cambios sin guardar
     - Se activa cuando: hay cambios en el formulario, se está escribiendo un comentario, o se está editando un comentario
 
+- **Clasificación de items/tasks por proyectos**: Nueva funcionalidad para clasificar items y tasks por proyecto.
+    - Nuevo componente `ProjectSelector.vue` con input editable y autocompletado
+    - Las opciones se cargan desde los proyectos usados en los últimos 10 sprints
+    - Permite crear nuevos proyectos escribiéndolos directamente
+    - Selector ubicado a la derecha del select Priority en ItemDialog y TaskDialog
+    - Se guarda el último proyecto usado en localStorage para pre-llenar en nuevos items/tasks
+    - Campo `projectName` incluido en el historial de cambios
+    - Compatible con Export Data e Import Data
+
 ### Cambios
 
 - **MyDialog**: Agregada prop `pulse` para mostrar indicador visual de cambios pendientes
+
+- **ProjectSelector**: Agregadas propiedades `density` y mejoras en la detección de cambios en tiempo real
 
 ---
 

@@ -35,7 +35,7 @@
                     <div class="assigned-user">
                         <MySelect
                             v-model="newItem.assignedUser"
-                            label="Assigned Person"
+                            label="Assigned to"
                             :options="assignedUserOptions"
                             placeholder="Select user..."
                             density="compact"
@@ -53,6 +53,9 @@
                     </div>
                     <div class="priority">
                         <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
+                    </div>
+                    <div class="project">
+                        <ProjectSelector v-model="newItem.projectName" label="Project" density="compact" />
                     </div>
                 </div>
 
@@ -86,6 +89,7 @@
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
 import { useClipboard } from "@/composables/useClipboard";
+import { useProjectName } from "@/composables/useProjectName";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
@@ -109,6 +113,7 @@ interface NewItemForm {
     estimatedEffort: string;
     actualEffort: string;
     assignedUser: string;
+    projectName?: string;
 }
 
 const props = defineProps<Props>();
@@ -121,6 +126,7 @@ const emit = defineEmits<{
 const loadingStore = useLoadingStore();
 const authStore = useAuthStore();
 const { copyToClipboardAsync } = useClipboard();
+const { saveLastProject, getLastProject } = useProjectName();
 
 const isEditing = computed(() => !!props.existingItem);
 
@@ -136,6 +142,7 @@ const originalPriority = ref(PRIORITY_VALUES.NORMAL as PriorityValue);
 const originalState = ref(STATE_VALUES.TODO as StateValue);
 const originalEstimatedEffort = ref("");
 const originalActualEffort = ref("");
+const originalProjectName = ref("");
 
 const hasChanges = computed(() => {
     if (!props.existingItem) return newItem.value.title.trim() !== ""; // Para nuevos items, habilitar si hay título
@@ -147,7 +154,8 @@ const hasChanges = computed(() => {
         newItem.value.state !== originalState.value ||
         parseInt(newItem.value.estimatedEffort) !== parseInt(originalEstimatedEffort.value) ||
         parseInt(newItem.value.actualEffort) !== parseInt(originalActualEffort.value) ||
-        newItem.value.assignedUser !== originalAssignedUser.value;
+        newItem.value.assignedUser !== originalAssignedUser.value ||
+        newItem.value.projectName !== originalProjectName.value;
 
     return changes;
 });
@@ -231,6 +239,7 @@ const newItem = ref<NewItemForm>({
     estimatedEffort: "",
     actualEffort: "",
     assignedUser: "",
+    projectName: "",
 });
 
 const resetForm = async () => {
@@ -258,6 +267,7 @@ const resetForm = async () => {
                 estimatedEffort: props.existingItem.estimatedEffort.toString(),
                 actualEffort: props.existingItem.actualEffort.toString(),
                 assignedUser: assignedUserValue,
+                projectName: props.existingItem.projectName || "",
             };
 
             // Guardar valores originales para comparación
@@ -268,6 +278,7 @@ const resetForm = async () => {
             originalEstimatedEffort.value = props.existingItem.estimatedEffort.toString();
             originalActualEffort.value = props.existingItem.actualEffort.toString();
             originalAssignedUser.value = assignedUserValue;
+            originalProjectName.value = props.existingItem.projectName || "";
 
             // Esperar a que las opciones estén cargadas si no lo están
             if (assignedUserOptions.value.length === 0) {
@@ -294,6 +305,8 @@ const resetForm = async () => {
             // Cargar historial de cambios
             await loadChangeHistory(props.existingItem.id);
         } else {
+            // Pre-llenar projectName con el último usado
+            const lastProject = getLastProject();
             newItem.value = {
                 title: "",
                 detail: "",
@@ -302,6 +315,7 @@ const resetForm = async () => {
                 estimatedEffort: "",
                 actualEffort: "",
                 assignedUser: "",
+                projectName: lastProject,
             };
 
             // Limpiar valores originales
@@ -312,6 +326,7 @@ const resetForm = async () => {
             originalEstimatedEffort.value = "";
             originalActualEffort.value = "";
             originalAssignedUser.value = "";
+            originalProjectName.value = lastProject;
 
             // Limpiar selección
             assignedUserOptions.value.forEach((option) => {
@@ -465,6 +480,19 @@ const saveChanges = async (oldItem: Item, newItem: Item) => {
         });
     }
 
+    // Track projectName changes
+    if ((oldItem.projectName || "") !== (newItem.projectName || "")) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "projectName",
+            oldValue: oldItem.projectName || "",
+            newValue: newItem.projectName || "",
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
     // Guardar todos los cambios
     for (const change of changes) {
         try {
@@ -507,7 +535,13 @@ const handleSave = async (shouldClose: boolean | MouseEvent = true) => {
             createdAt: props.existingItem?.createdAt || new Date(),
             createdBy: props.existingItem?.createdBy || authStore.user?.id || "",
             deletedAt: props.existingItem?.deletedAt || null,
+            projectName: newItem.value.projectName || "",
         };
+
+        // Guardar último proyecto usado
+        if (newItem.value.projectName) {
+            saveLastProject(newItem.value.projectName);
+        }
 
         // Guardar cambios si es edición
         if (props.existingItem) {
