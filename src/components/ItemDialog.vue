@@ -1,5 +1,5 @@
 <template>
-    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent>
+    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent :pulse="hasPendingChanges">
         <div class="header flex-center justify-space-between">
             <div class="flex-center">
                 <h3 class="text-left flex-center justify-start">
@@ -62,7 +62,14 @@
                 </div>
 
                 <!-- Comments section -->
-                <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" />
+                <CommentSection
+                    v-if="existingItem"
+                    ref="commentSectionRef"
+                    :associated-id="props.existingItem?.id || ''"
+                    associated-type="item"
+                    @writing-comment="onWritingComment"
+                    @editing-comment="onEditingComment"
+                />
             </template>
 
             <template v-else-if="viewMode === 'history'">
@@ -119,6 +126,8 @@ const isEditing = computed(() => !!props.existingItem);
 
 const originalAssignedUser = ref("");
 const titleInputRef = ref();
+const isWritingComment = ref(false);
+const isEditingComment = ref(false);
 
 // Guardar el estado original para comparación
 const originalTitle = ref("");
@@ -150,6 +159,10 @@ const canSave = computed(() => {
     }
     // Para editar: habilitar si hay cambios Y hay título
     return hasChanges.value && newItem.value.title.trim() !== "";
+});
+
+const hasPendingChanges = computed(() => {
+    return hasChanges.value || isWritingComment.value || isEditingComment.value;
 });
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
@@ -194,7 +207,7 @@ onMounted(() => {
 const handleKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === "s") {
         event.preventDefault();
-        if (canSave.value) return handleSave();
+        if (canSave.value) return handleSave(false);
     }
 };
 
@@ -460,7 +473,10 @@ const saveChanges = async (oldItem: Item, newItem: Item) => {
     }
 };
 
-const handleSave = async () => {
+const handleSave = async (shouldClose: boolean | MouseEvent = true) => {
+    // Si el parámetro es un MouseEvent, obtener el valor de debería cerrar
+    const shouldCloseDialog = typeof shouldClose === "boolean" ? shouldClose : true;
+
     if (newItem.value.title.trim()) {
         let assignedUserId = null;
 
@@ -497,12 +513,28 @@ const handleSave = async () => {
         }
 
         emit("save", item);
-        emit("close");
+        if (shouldCloseDialog) {
+            emit("close");
+        }
     }
 };
 const handleClose = () => {
     emit("close");
     resetForm();
+    resetPendingChanges();
+};
+
+const onWritingComment = (isWriting: boolean) => {
+    isWritingComment.value = isWriting;
+};
+
+const onEditingComment = (isEditing: boolean) => {
+    isEditingComment.value = isEditing;
+};
+
+const resetPendingChanges = () => {
+    isWritingComment.value = false;
+    isEditingComment.value = false;
 };
 
 const handleCopyToClipboard = () => {

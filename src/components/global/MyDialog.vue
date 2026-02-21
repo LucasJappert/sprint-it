@@ -1,6 +1,6 @@
 <template>
     <div v-if="visible" class="my-dialog-overlay" @mousedown.self="closeDialog">
-        <div class="my-dialog" :class="{ 'full-size': fullSize, 'bg-transparent': bgTransparent }" :style="myDialogStyles">
+        <div class="my-dialog" :class="{ 'full-size': fullSize, bgTransparent: bgTransparent, pulse: pulse }" :style="myDialogStyles">
             <div :class="{ 'slot-container': hasMinWidth }">
                 <slot />
             </div>
@@ -23,6 +23,7 @@ const props = withDefaults(
         fullSize?: boolean;
         bgTransparent?: boolean;
         persistent?: boolean;
+        pulse?: boolean;
     }>(),
     {
         myDialogStyles: "",
@@ -30,6 +31,7 @@ const props = withDefaults(
         fullSize: false,
         bgTransparent: false,
         persistent: false,
+        pulse: false,
     },
 );
 
@@ -103,7 +105,7 @@ $mobile-resolution: 600px !default;
 
 .my-dialog {
     background-color: $bg-primary;
-    border-radius: 8px;
+    border-radius: 14px;
     width: 1000px;
     min-width: v-bind("formattedMinWidth");
     max-width: 90%;
@@ -164,6 +166,23 @@ $mobile-resolution: 600px !default;
         width: 98%;
         max-width: 98%;
         max-height: 98vh;
+    }
+}
+
+.pulse {
+    animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+$pulse-color: #00a2ff;
+@keyframes pulse-border {
+    0% {
+        box-shadow: 0 0 8px rgba($pulse-color, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 8px rgba($pulse-color, 1);
+    }
+    100% {
+        box-shadow: 0 0 8px rgba($pulse-color, 0.4);
     }
 }
 

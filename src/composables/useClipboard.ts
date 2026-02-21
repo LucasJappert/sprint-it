@@ -25,7 +25,8 @@ const stripHtmlTags = (html: string): string => {
 export const useClipboard = () => {
     const copyToClipboardAsync = async (title: string, detail: string): Promise<void> => {
         const cleanDetail = stripHtmlTags(detail);
-        const textToCopy = `Title: ${title}\n\nDescription: ${cleanDetail}`;
+        const textToCopy = `Title: ${title}${cleanDetail ? `\n\nDescription: ${cleanDetail}` : ''
+            }`;
 
         try {
             await navigator.clipboard.writeText(textToCopy);

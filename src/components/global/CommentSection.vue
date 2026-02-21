@@ -74,10 +74,16 @@ interface Props {
 
 interface Emits {
     (e: "comment-added", comment: Comment): void;
+    (e: "writing-comment", isWriting: boolean): void;
+    (e: "editing-comment", isEditing: boolean): void;
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
+const emit = defineEmits<{
+    "comment-added": [comment: Comment];
+    "writing-comment": [isWriting: boolean];
+    "editing-comment": [isEditing: boolean];
+}>();
 
 const authStore = useAuthStore();
 const loadingStore = useLoadingStore();
@@ -190,6 +196,11 @@ watch(
     { immediate: true },
 );
 
+// Watch for new comment content changes
+watch(newCommentContent, (newValue) => {
+    emit("writing-comment", newValue.trim().length > 0);
+});
+
 const addCommentAsync = async () => {
     if (newCommentContent.value.trim()) {
         loadingStore.setLoading(true);
@@ -215,6 +226,7 @@ const addCommentAsync = async () => {
             // Agregar al inicio de la lista para que aparezca primero
             await addCommentToStart(newComment);
             newCommentContent.value = "";
+            emit("writing-comment", false);
         } catch (error) {
             console.error("Error adding comment:", error);
         } finally {
@@ -227,12 +239,14 @@ const startEditComment = (comment: Comment) => {
     editingCommentId.value = comment.id;
     editCommentContent.value = comment.description;
     originalContent.value = comment.description;
+    emit("editing-comment", true);
 };
 
 const cancelCommentEdit = () => {
     editingCommentId.value = null;
     editCommentContent.value = "";
     originalContent.value = "";
+    emit("editing-comment", false);
 };
 
 const saveCommentEditAsync = async () => {
@@ -255,6 +269,7 @@ const saveCommentEditAsync = async () => {
         editingCommentId.value = null;
         editCommentContent.value = "";
         originalContent.value = "";
+        emit("editing-comment", false);
     } catch (error) {
         console.error("Error updating comment:", error);
     } finally {

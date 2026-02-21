@@ -1,5 +1,5 @@
 <template>
-    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent>
+    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent :pulse="hasPendingChanges">
         <div class="header flex-center justify-space-between">
             <div class="flex-center">
                 <h3 class="text-left flex-center justify-start">
@@ -63,7 +63,14 @@
                 </div>
 
                 <!-- Comments section -->
-                <CommentSection v-if="existingTask" ref="" :associated-id="props.existingTask?.id || ''" associated-type="task" />
+                <CommentSection
+                    v-if="existingTask"
+                    ref="commentSectionRef"
+                    :associated-id="props.existingTask?.id || ''"
+                    associated-type="task"
+                    @writing-comment="onWritingComment"
+                    @editing-comment="onEditingComment"
+                />
             </template>
 
             <template v-else-if="viewMode === 'history'">
@@ -127,8 +134,14 @@ const hasChanges = computed(() => {
     return changes;
 });
 
+const hasPendingChanges = computed(() => {
+    return hasChanges.value || isWritingComment.value || isEditingComment.value;
+});
+
 const originalAssignedUser = ref("");
 const titleInputRef = ref();
+const isWritingComment = ref(false);
+const isEditingComment = ref(false);
 
 const title = ref("");
 const detail = ref("");
@@ -194,7 +207,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === "s") {
         event.preventDefault();
         if (canSave.value) {
-            handleSave();
+            handleSave(false);
         }
     }
 };
@@ -454,7 +467,10 @@ const onStateChange = (options: any[]) => {
     }
 };
 
-const handleSave = async () => {
+const handleSave = async (shouldClose: boolean | MouseEvent = true) => {
+    // Si el parámetro es un MouseEvent, obtener el valor de debería cerrar
+    const shouldCloseDialog = typeof shouldClose === "boolean" ? shouldClose : true;
+
     if (title.value.trim()) {
         let assignedUserId = null;
 
@@ -490,18 +506,34 @@ const handleSave = async () => {
         }
 
         emit("save", task);
-        emit("close");
+        if (shouldCloseDialog) {
+            emit("close");
+        }
     }
 };
 
 const handleClose = () => {
     emit("close");
     resetForm();
+    resetPendingChanges();
     clearQueryParams();
+};
+
+const onWritingComment = (isWriting: boolean) => {
+    isWritingComment.value = isWriting;
+};
+
+const onEditingComment = (isEditing: boolean) => {
+    isEditingComment.value = isEditing;
 };
 
 const handleCopyToClipboard = () => {
     copyToClipboardAsync(title.value, detail.value);
+};
+
+const resetPendingChanges = () => {
+    isWritingComment.value = false;
+    isEditingComment.value = false;
 };
 
 watch(

@@ -14,6 +14,19 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
     - Elimina etiquetas HTML (p, u, strong, b, br) y las convierte a texto
     - Muestra notificación de éxito: "Copied to clipboard"
 
+- **Ctrl+S para guardar sin cerrar**: Atajo de teclado para guardar items/tasks sin cerrar el diálogo.
+    - Presionando Ctrl+S se guardan los cambios sin cerrar la ventana
+    - Guarda solo los campos principales (title, description, assigned person, state, effort, etc.)
+    - Ignora comentarios pendientes (ya que estos se manejan independientemente)
+
+- **Efecto Pulse en diálogos**: Indicador visual de cambios pendientes en item/task.
+    - Efecto de pulso animado en el borde del diálogo cuando hay cambios sin guardar
+    - Se activa cuando: hay cambios en el formulario, se está escribiendo un comentario, o se está editando un comentario
+
+### Cambios
+
+- **MyDialog**: Agregada prop `pulse` para mostrar indicador visual de cambios pendientes
+
 ---
 
 ## v1.1.19 - 2026-02-19
