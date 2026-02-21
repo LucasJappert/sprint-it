@@ -22,8 +22,13 @@
         <div class="body-scroll">
             <template v-if="viewMode === 'details'">
                 <!-- Título ocupando 100% del ancho -->
-                <div class="full-width">
-                    <MyInput ref="titleInputRef" v-model="title" label="Title" density="compact" @keydown.enter="handleSave" />
+                <div class="full-width title-row">
+                    <div class="title-input">
+                        <MyInput ref="titleInputRef" v-model="title" label="Title" density="compact" @keydown.enter="handleSave" />
+                    </div>
+                    <v-btn icon size="small" class="copy-btn" @click="handleCopyToClipboard" title="Copy title and description">
+                        <v-icon size="18">mdi-content-copy</v-icon>
+                    </v-btn>
                 </div>
 
                 <!-- Campos organizados en filas lógicas -->
@@ -74,6 +79,7 @@
 
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
+import { useClipboard } from "@/composables/useClipboard";
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
@@ -144,6 +150,7 @@ const assignedUserOptions = ref<{ id: string; text: string; name: string; checke
 
 const router = useRouter();
 const { clearQueryParams } = useUrlManagement(router);
+const { copyToClipboardAsync } = useClipboard();
 const viewMode = ref<"details" | "history">("details");
 const changeHistory = ref<ChangeHistory[]>([]);
 
@@ -491,6 +498,10 @@ const handleClose = () => {
     emit("close");
     resetForm();
     clearQueryParams();
+};
+
+const handleCopyToClipboard = () => {
+    copyToClipboardAsync(title.value, detail.value);
 };
 
 watch(

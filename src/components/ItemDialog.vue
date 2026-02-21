@@ -22,8 +22,13 @@
         <div class="body-scroll">
             <template v-if="viewMode === 'details'">
                 <!-- Título ocupando 100% del ancho -->
-                <div class="full-width mt-2">
-                    <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
+                <div class="full-width mt-2 title-row">
+                    <div class="title-input">
+                        <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
+                    </div>
+                    <v-btn icon size="small" class="copy-btn" @click="handleCopyToClipboard" title="Copy title and description">
+                        <v-icon size="18">mdi-content-copy</v-icon>
+                    </v-btn>
                 </div>
                 <!-- Campos organizados en filas lógicas -->
                 <div class="form-section mt-3">
@@ -73,6 +78,7 @@
 
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
+import { useClipboard } from "@/composables/useClipboard";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
@@ -107,6 +113,7 @@ const emit = defineEmits<{
 
 const loadingStore = useLoadingStore();
 const authStore = useAuthStore();
+const { copyToClipboardAsync } = useClipboard();
 
 const isEditing = computed(() => !!props.existingItem);
 
@@ -496,6 +503,10 @@ const handleSave = async () => {
 const handleClose = () => {
     emit("close");
     resetForm();
+};
+
+const handleCopyToClipboard = () => {
+    copyToClipboardAsync(newItem.value.title, newItem.value.detail);
 };
 </script>
 

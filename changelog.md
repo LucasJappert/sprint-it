@@ -4,6 +4,18 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.20 - 2026-02-21
+
+### Nuevas Funciones
+
+- **Copy to Clipboard**: Nueva funcionalidad para copiar título y descripción de items y tasks al portapapeles.
+    - Icono `mdi-content-copy` ubicado a la derecha del campo de título en ItemDialog y TaskDialog
+    - Al hacer click, copia el título y la descripción en formato texto plano
+    - Elimina etiquetas HTML (p, u, strong, b, br) y las convierte a texto
+    - Muestra notificación de éxito: "Copied to clipboard"
+
+---
+
 ## v1.1.19 - 2026-02-19
 
 ### Nuevas Funciones

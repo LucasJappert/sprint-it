@@ -141,3 +141,13 @@
         min-height: 150px !important;
     }
 }
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .title-input {
+        flex: 1;
+    }
+}
