@@ -162,6 +162,8 @@ const canSave = computed(() => {
 });
 
 const hasPendingChanges = computed(() => {
+    // Solo mostrar pulso cuando se está editando un item existente
+    if (!isEditing.value) return false;
     return hasChanges.value || isWritingComment.value || isEditingComment.value;
 });
 

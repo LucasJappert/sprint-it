@@ -135,6 +135,8 @@ const hasChanges = computed(() => {
 });
 
 const hasPendingChanges = computed(() => {
+    // Solo mostrar pulso cuando se está editando un task existente
+    if (!isEditing.value) return false;
     return hasChanges.value || isWritingComment.value || isEditingComment.value;
 });
 

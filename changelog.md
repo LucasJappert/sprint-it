@@ -8,6 +8,13 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ### Nuevas Funciones
 
+- **Agregar comentario desde Changelog**: Nueva funcionalidad para facilitar el pegado de detalles desde un changelog.
+    - Botón "From Changelog" ubicado a la izquierda del botón "Add Comment" en la sección de comentarios
+    - Abre un modal con un label predefinido: "Tarea realizada, así quedó el detalle en el changelog:"
+    - El textarea obtiene el foco automáticamente al abrir el modal
+    - Al guardar, se genera el comentario con formato: `Tarea completada, así quedó el detalle en el changelog:<br>[contenido pegado]`
+    - Disponible tanto en items como en tasks
+
 - **Copy to Clipboard**: Nueva funcionalidad para copiar título y descripción de items y tasks al portapapeles.
     - Icono `mdi-content-copy` ubicado a la derecha del campo de título en ItemDialog y TaskDialog
     - Al hacer click, copia el título y la descripción en formato texto plano

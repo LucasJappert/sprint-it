@@ -10,6 +10,10 @@
         <div class="add-comment relative">
             <MyRichText v-model="newCommentContent" placeholder="Write a comment..." density="compact" :height="'80px'" />
             <div class="add-comment-actions">
+                <MyButton @click="openChangelogDialog" class="custom-button mr-2" secondary>
+                    <v-icon size="14" class="mr-1">mdi-file-document-alert-outline</v-icon>
+                    From Changelog
+                </MyButton>
                 <MyButton @click="addCommentAsync" :disabled="!newCommentContent.trim()" class="custom-button"> Add Comment </MyButton>
             </div>
         </div>
@@ -57,6 +61,33 @@
         <!-- No comments message -->
         <div v-else class="no-comments">No comments yet.</div>
     </MyCard>
+
+    <!-- Changelog Comment Dialog -->
+    <MyDialog :visible="changelogDialogVisible" min-width="500" @close="closeChangelogDialog" persistent>
+        <div class="header flex-center justify-space-between">
+            <div class="flex-center">
+                <h3 class="text-left flex-center justify-start">
+                    <v-icon class="blue mr-1" size="30">mdi-file-document-alert-outline</v-icon>
+                    Add Comment from Changelog
+                </h3>
+            </div>
+            <v-icon class="close-btn" @click="closeChangelogDialog" :size="24">mdi-close</v-icon>
+        </div>
+        <div class="body-scroll">
+            <div class="changelog-label">Tarea realizada, así quedó el detalle en el changelog:</div>
+            <MyTextarea
+                ref="changelogTextareaRef"
+                v-model="changelogContent"
+                placeholder="Paste the changelog content here..."
+                :height="'200px'"
+                class="mt-2"
+            />
+        </div>
+        <div class="footer">
+            <MyButton btn-class="px-2" secondary @click="closeChangelogDialog">Cancel</MyButton>
+            <MyButton btn-class="px-2" @click="saveChangelogComment" :disabled="!changelogContent.trim()">Add Comment</MyButton>
+        </div>
+    </MyDialog>
 </template>
 
 <script setup lang="ts">
@@ -93,6 +124,11 @@ const comments = ref<Comment[]>([]);
 const editingCommentId = ref<string | null>(null);
 const editCommentContent = ref("");
 const originalContent = ref("");
+
+// Changelog dialog state
+const changelogDialogVisible = ref(false);
+const changelogContent = ref("");
+const changelogTextareaRef = ref();
 
 // Colores para autores: celeste claro y verde claro
 const AUTHOR_COLORS = ["#33c7ffaa", "#3a9962aa"];
@@ -232,6 +268,49 @@ const addCommentAsync = async () => {
         } finally {
             loadingStore.setLoading(false);
         }
+    }
+};
+
+// Changelog dialog functions
+const openChangelogDialog = async () => {
+    changelogDialogVisible.value = true;
+    await nextTick();
+    changelogTextareaRef.value?.focus();
+};
+
+const closeChangelogDialog = () => {
+    changelogDialogVisible.value = false;
+    changelogContent.value = "";
+};
+
+const saveChangelogComment = async () => {
+    if (!changelogContent.value.trim()) return;
+
+    loadingStore.setLoading(true);
+    try {
+        const description = `Tarea completada, así quedó el detalle en el changelog:<br>${changelogContent.value.trim()}`;
+        const now = new Date();
+        const newCommentData = {
+            associatedId: props.associatedId,
+            associatedType: props.associatedType,
+            userId: authStore.user?.id || "",
+            createdAt: now,
+            updatedAt: now,
+            description,
+        };
+
+        const commentId = await addComment(newCommentData);
+        const newComment: Comment = {
+            id: commentId,
+            ...newCommentData,
+        };
+
+        await addCommentToStart(newComment);
+        closeChangelogDialog();
+    } catch (error) {
+        console.error("Error adding changelog comment:", error);
+    } finally {
+        loadingStore.setLoading(false);
     }
 };
 
@@ -405,5 +484,12 @@ onBeforeUnmount(async () => {
     color: #ffffff88;
     font-style: italic;
     padding: 20px;
+}
+
+.changelog-label {
+    color: $text;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 4px;
 }
 </style>
