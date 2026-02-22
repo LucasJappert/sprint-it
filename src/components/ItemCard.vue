@@ -33,7 +33,7 @@
             {{ item.order }}
         </div>
         <div class="item-col cols-assigned">
-            {{ assignedUserName }}
+            {{ assignedUserName.replace("Sebastian", "Seba") }}
         </div>
         <div class="item-col cols-title text-left">
             <!-- <span v-if="taskCountDisplay" class="mr-1">{{ taskCountDisplay }}</span> -->

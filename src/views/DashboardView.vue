@@ -17,7 +17,7 @@
                     </v-btn>
                 </div>
                 <div class="item-col cols-order flex-center">#</div>
-                <div class="item-col cols-assigned">Assigned</div>
+                <div class="item-col cols-assigned"><span class="ellipsis" title="Assigned">Assigned</span></div>
                 <div class="item-col cols-title text-left">
                     Title
 

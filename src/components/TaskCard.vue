@@ -30,7 +30,7 @@
             {{ task.order }}
         </div>
         <div class="item-col cols-assigned">
-            {{ assignedUserName }}
+            {{ assignedUserName.replace("Sebastian", "Seba") }}
         </div>
         <div class="item-col cols-title text-left">
             <span class="ellipsis">{{ task.title }}</span>
@@ -89,12 +89,6 @@ const { showEditTaskDialog, editingTask, openEditTaskDialog, closeDialogs, onSav
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
     return option ? option.name : priority;
-};
-
-const getStateHtml = (state: string | undefined) => {
-    if (!state) return "To Do"; // Default fallback
-    const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
-    return option ? option.name : state;
 };
 
 const getStateColor = (state: string) => {
