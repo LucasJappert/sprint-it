@@ -42,6 +42,8 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ### Cambios
 
+- **Header**: Agregado limitador de ancho máximo (max-width: 1100px) para mantener consistencia con el dashboard en resoluciones amplias
+
 - **MyDialog**: Agregada prop `pulse` para mostrar indicador visual de cambios pendientes
 
 - **ProjectSelector**: Agregadas propiedades `density` y mejoras en la detección de cambios en tiempo real
