@@ -283,6 +283,7 @@ const onSaveEditItem = async (item: Item) => {
             estimatedEffort: item.estimatedEffort,
             actualEffort: item.actualEffort,
             assignedUser: item.assignedUser,
+            projectName: item.projectName,
         });
     }
     // No cerrar el diálogo para que persista visible después de guardar

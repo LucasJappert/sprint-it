@@ -103,12 +103,6 @@ interface Props {
     associatedType: "task" | "item";
 }
 
-interface Emits {
-    (e: "comment-added", comment: Comment): void;
-    (e: "writing-comment", isWriting: boolean): void;
-    (e: "editing-comment", isEditing: boolean): void;
-}
-
 const props = defineProps<Props>();
 const emit = defineEmits<{
     "comment-added": [comment: Comment];
@@ -147,8 +141,10 @@ const sortedComments = computed(() => {
 const hasChanges = computed(() => editCommentContent.value.trim() !== originalContent.value.trim());
 
 const processCommentHtml = (html: string): string => {
+    // Convertir saltos de línea en etiquetas <br> para que se muestren correctamente en v-html
+    let processed = html.replace(/\n/g, "<br>");
     // Reemplazar todas las etiquetas <img> con links
-    return html.replace(/<img[^>]*src="([^"]*)"[^>]*>/g, (match, src) => {
+    return processed.replace(/<img[^>]*src="([^"]*)"[^>]*>/g, (_match, src) => {
         return `<a href="${src}" target="_blank" rel="noopener noreferrer" style="color: #5aa7ff; text-decoration: underline; font-family: monospace; font-size: 0.9em;">${src}</a>`;
     });
 };
@@ -288,7 +284,7 @@ const saveChangelogComment = async () => {
 
     loadingStore.setLoading(true);
     try {
-        const description = `Tarea completada, así quedó el detalle en el changelog:<br>${changelogContent.value.trim()}`;
+        const description = `Tarea completada, así quedó el detalle en el changelog:<br>${changelogContent.value.trim().replace(/\n/g, "<br>")}`;
         const now = new Date();
         const newCommentData = {
             associatedId: props.associatedId,

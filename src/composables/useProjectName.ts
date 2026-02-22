@@ -4,11 +4,12 @@ const LAST_PROJECT_KEY = "sprint-it-last-project";
 
 // Proyectos por defecto que siempre estarán disponibles
 const DEFAULT_PROJECTS = [
-    "APIX/front",
-    "APIX/back-node",
-    "APIX/back-python",
-    "Agroideas-In/front",
-    "Agroideas-In/back",
+    "🟢 APIX/front",
+    "🔵 APIX/back-node",
+    "🟡 APIX/back-python",
+    "🟩 Agroideas-In/front",
+    "🟦 Agroideas-In/back",
+    "📋 Dashboard Sprint-It"
 ];
 
 /**

@@ -22,7 +22,7 @@
                 @keydown="handleKeydown"
             />
 
-            <v-btn v-if="hasValue && showClear" class="clear-btn" icon size="x-small" @click.stop="clearSelection">
+            <v-btn v-if="hasValue && showClear" class="clear-btn" icon size="x-small" @mousedown.prevent="clearSelection">
                 <v-icon size="14">mdi-close</v-icon>
             </v-btn>
         </div>
@@ -133,6 +133,9 @@ const handleBlur = () => {
 
     // Delay closing to allow click on options
     setTimeout(() => {
+        // No cerrar si el documento no tiene foco (ej: usuario hizo clic en dev tools)
+        if (!document.hasFocus()) return;
+
         if (!dropdownRef.value?.contains(document.activeElement)) {
             isFocused.value = false;
             isOpen.value = false;
@@ -266,6 +269,9 @@ onBeforeUnmount(() => {
 });
 
 const handleClickOutside = (event: MouseEvent) => {
+    // No cerrar si el documento no tiene foco (ej: usuario hizo clic en dev tools)
+    if (!document.hasFocus()) return;
+
     const target = event.target as Node;
     const isOutside = rootRef.value && !rootRef.value.contains(target) && dropdownRef.value && !dropdownRef.value.contains(target);
 
@@ -316,7 +322,6 @@ $gray: #666666;
     border: none;
     outline: none;
     color: #ffffffbb;
-    // font-size: 1rem;
     padding: 0;
 
     &::placeholder {
@@ -333,7 +338,6 @@ $gray: #666666;
     transition: all 0.18s ease;
     opacity: 1;
     font-weight: 300;
-    // font-size: 1rem;
     color: $text;
 
     &.is-active {
@@ -371,7 +375,8 @@ $gray: #666666;
 }
 
 .project-option {
-    padding: 10px 14px;
+    padding: 8px 8px;
+    font-size: 0.9rem;
     color: #ffffffbb;
     cursor: pointer;
     transition: background-color 0.15s ease;
