@@ -39,6 +39,9 @@
         <div class="item-col cols-priority priority-cell">
             <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
         </div>
+        <div class="item-col cols-project">
+            {{ item.projectName || "-" }}
+        </div>
     </div>
 
     <!-- Diálogo de edición de task -->

@@ -47,6 +47,9 @@
         <div class="item-col cols-priority priority-cell">
             <span class="priority-content" v-html="getPriorityHtml(item.priority)"></span>
         </div>
+        <div class="item-col cols-project">
+            {{ item.projectName || "-" }}
+        </div>
     </div>
 
     <div v-if="showTasks || props.isExpanded" class="tasks-container">
