@@ -40,7 +40,7 @@
             <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
         </div>
         <div class="item-col cols-project">
-            {{ item.projectName || "-" }}
+            {{ task.projectName || "-" }}
         </div>
     </div>
 

@@ -169,8 +169,23 @@ export const useSprintStore = defineStore("sprint", () => {
     const updateItem = async (itemId: string, updatedItem: Partial<Item>) => {
         if (currentSprint.value) {
             const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
+
             if (index !== -1 && currentSprint.value.items[index]) {
+                // Si se está actualizando el projectName, propagarlo a las tasks que no tengan projectName
+                if (updatedItem.projectName !== undefined) {
+                    const item = currentSprint.value.items[index];
+                    const newProjectName = updatedItem.projectName;
+
+                    // Actualizar solo las tasks que tienen projectName vacío
+                    item.tasks.forEach((task) => {
+                        if (!task.projectName || !task.projectName.trim()) {
+                            task.projectName = newProjectName;
+                        }
+                    });
+                }
+
                 Object.assign(currentSprint.value.items[index], updatedItem);
+
                 if (await validateSprintItemsBeforeSave(currentSprint.value)) {
                     await saveSprint(currentSprint.value);
                 }
@@ -485,7 +500,6 @@ export const useSprintStore = defineStore("sprint", () => {
             `;
             const result = await MyAlerts.confirmAsync("¿Guardar cambios?", html, "warning");
             if (!result) {
-                console.warn("🚫 Guardado cancelado por el usuario debido a posible pérdida de datos");
                 return false;
             }
         } else if (currentItemsCount > newItemsCount && (currentItemsCount - newItemsCount) >= 2) {
@@ -497,7 +511,6 @@ export const useSprintStore = defineStore("sprint", () => {
             `;
             const result = await MyAlerts.confirmAsync("¿Guardar cambios?", html, "warning");
             if (!result) {
-                console.warn(`🚫 Guardado cancelado: posible pérdida de ${lostItems} items`);
                 return false;
             }
         }
@@ -670,6 +683,109 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    /**
+     * Busca y reporta items duplicados en el sprint (mismo ID)
+     */
+    const checkForDuplicateItems = (sprint: Sprint): string[] => {
+        const idCount = new Map<string, number>();
+
+        sprint.items.forEach((item) => {
+            const count = idCount.get(item.id) || 0;
+            idCount.set(item.id, count + 1);
+        });
+
+        // Buscar IDs duplicados
+        const duplicates: string[] = [];
+        idCount.forEach((count, id) => {
+            if (count > 1) {
+                duplicates.push(id);
+            }
+        });
+
+        if (duplicates.length > 0) {
+            console.error("⚠️ ATENCIÓN: Se detectaron items con IDs duplicados:", duplicates);
+            sprint.items.forEach((item) => {
+                if (duplicates.includes(item.id)) {
+                    console.error(`  - ID: ${item.id}, Título: "${item.title}", deletedAt: ${item.deletedAt ? "SÍ" : "NO"}`);
+                }
+            });
+        }
+
+        return duplicates;
+    };
+
+    /**
+     * Elimina items duplicados, manteniendo solo el más reciente (el no borrado)
+     */
+    const removeDuplicateItems = async (sprint: Sprint) => {
+        const idCount = new Map<string, number>();
+
+        // Contar ocurrencias de cada ID
+        sprint.items.forEach((item) => {
+            const count = idCount.get(item.id) || 0;
+            idCount.set(item.id, count + 1);
+        });
+
+        // Encontrar IDs duplicados
+        const duplicates: string[] = [];
+        idCount.forEach((count, id) => {
+            if (count > 1) {
+                duplicates.push(id);
+            }
+        });
+
+        if (duplicates.length === 0) {
+            console.log("✅ No hay items duplicados para eliminar");
+            return;
+        }
+
+        console.log("🧹 Eliminando items duplicados...", duplicates);
+
+        // Para cada ID duplicado, eliminar el que está marcado como borrado
+        const itemsToRemove: string[] = [];
+
+        duplicates.forEach((dupId) => {
+            const itemsWithSameId = sprint.items.filter((item) => item.id === dupId);
+            const deletedItems = itemsWithSameId.filter((item) => item.deletedAt !== null);
+            const activeItems = itemsWithSameId.filter((item) => item.deletedAt === null);
+
+            // Si hay uno borrado y uno activo, eliminar el borrado
+            if (deletedItems.length > 0 && activeItems.length > 0) {
+                itemsToRemove.push(deletedItems[0].id);
+                console.log(`  - Eliminando duplicado borrado: "${deletedItems[0].title}" (ID: ${deletedItems[0].id})`);
+            }
+        });
+
+        if (itemsToRemove.length > 0) {
+            // Pedir confirmación antes de eliminar
+            const html = `
+                <p><strong>⚠️ Se detectaron items duplicados</strong></p>
+                <p>Se eliminarán ${itemsToRemove.length} item(s) marcado(s) como borrado(s) que tienen el mismo ID que otro item activo.</p>
+                <p>Esta acción no debería afectar ningún dato activo.</p>
+            `;
+            const result = await MyAlerts.confirmAsync("¿Eliminar duplicados?", html, "warning");
+
+            if (!result) {
+                console.log("🚫 Eliminación de duplicados cancelada por el usuario");
+                return;
+            }
+
+            // Eliminar los items duplicados
+            sprint.items = sprint.items.filter((item) => !itemsToRemove.includes(item.id));
+
+            // Reordenar
+            const activeItems = sprint.items.filter((item) => item.deletedAt === null);
+            activeItems.forEach((item, idx) => {
+                item.order = idx + 1;
+            });
+
+            console.log("✅ Duplicados eliminados, guardando...");
+            await saveSprint(sprint);
+            console.log("✅ Guardado completado");
+            notifyOk("Duplicados eliminados", "Los items duplicados marcados como borrado han sido eliminados.");
+        }
+    };
+
     const updateSprintWorkingDays = async (workingDays: boolean[]) => {
         if (currentSprint.value) {
             currentSprint.value.workingDays = [...workingDays];
@@ -717,5 +833,7 @@ export const useSprintStore = defineStore("sprint", () => {
         duplicateItem,
         duplicateTask,
         copyItemWithTaskSplit,
+        checkForDuplicateItems,
+        removeDuplicateItems,
     };
 });
