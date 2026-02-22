@@ -2,17 +2,40 @@ import { useSprintStore } from "@/stores/sprint";
 
 const LAST_PROJECT_KEY = "sprint-it-last-project";
 
-// Proyectos por defecto que siempre estarán disponibles
-const DEFAULT_PROJECTS = [
-    // "🟢 APIX/front",
-    // "🔵 APIX/back-node",
-    // "🟡 APIX/back-python",
-    // "🟩 Agroideas-In/front",
-    // "🟦 Agroideas-In/back",
-    "📋 Dashboard Sprint-It",
-    "🟢 APIX",
-    "🔵 Agroideas-In",
-];
+// Interfaz para proyectos con color
+interface ProjectConfig {
+    name: string;
+    color: string;
+}
+
+// Constante de proyectos con acceso directo: PROJECTS.APIX.color, PROJECTS.APIX.name
+const PROJECTS = {
+    DASHBOARD_SPRINT_IT: {
+        name: "📋 Dashboard Sprint-It",
+        color: "#4CAF50",
+    },
+    APIX: {
+        name: "🟢 APIX",
+        color: "#00ab22",
+    },
+    AGROIDEAS_IN: {
+        name: "🔵 Agroideas-In",
+        color: "#2196F3",
+    },
+    MEETINGS: {
+        name: "🟣 Meetings",
+        color: "#9b44f8",
+    },
+    VARIOS: {
+        name: "⚫ Varios",
+        color: "#282828",
+    }
+} as const;
+
+// Retrocompatibilidad: array de nombres default para funciones existentes
+const DEFAULT_PROJECTS = Object.values(PROJECTS).map((p) => p.name);
+
+const DEFAULT_COLOR = "#ecebeb";
 
 /**
  * Composable para gestionar la selección de proyectos en items y tasks.
@@ -82,6 +105,14 @@ export const useProjectName = () => {
     };
 
     /**
+     * Obtiene todos los proyectos por defecto con su color.
+     * Retorna objetos con { name, color } para uso cuando se necesita el color.
+     */
+    const getProjectsWithColors = (): ProjectConfig[] => {
+        return Object.values(PROJECTS);
+    };
+
+    /**
      * Guarda el último proyecto usado en localStorage.
      */
     const saveLastProject = (projectName: string): void => {
@@ -104,11 +135,37 @@ export const useProjectName = () => {
         localStorage.removeItem(LAST_PROJECT_KEY);
     };
 
+    /**
+     * Obtiene el color de un proyecto.
+     * Retorna el color definido en PROJECTS o el color gris por defecto.
+     */
+    const getProjectColor = (projectName: string): string => {
+        if (!projectName || !projectName.trim()) return DEFAULT_COLOR;
+
+        const trimmedName = projectName.trim().toLowerCase();
+
+        // Buscar en PROJECTS comparando el texto sin emoji
+        for (const project of Object.values(PROJECTS)) {
+            const projectText = project.name.replace(/[^a-zA-Z0-9\s]/g, "").trim().toLowerCase();
+            const searchText = trimmedName.replace(/[^a-zA-Z0-9\s]/g, "").trim().toLowerCase();
+
+            // Comparar si el texto del proyecto está contenido en el nombre buscado
+            if (projectText.includes(searchText) || searchText.includes(projectText)) {
+                return project.color;
+            }
+        }
+
+        return DEFAULT_COLOR;
+    };
+
     return {
         getAllProjects,
         filterProjects,
         saveLastProject,
         getLastProject,
         clearLastProject,
+        getProjectsWithColors,
+        getProjectColor,
+        PROJECTS,
     };
 };

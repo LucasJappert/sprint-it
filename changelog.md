@@ -6,6 +6,40 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ## v1.1.21 - 2026-02-22
 
+### Nuevas Funciones
+
+- **Columna de Proyecto en Dashboard**: Nueva columna Project para mostrar el nombre del proyecto en items y tasks.
+    - Columna de 160px de ancho
+    - Mostrada tanto en ItemCard como en TaskCard
+    - Ajuste de columna effort de 100px a 70px para mantener el balance del layout
+
+### Cambios
+
+- **ProjectSelector**: Mejorado el comportamiento del dropdown.
+    - Oculta el dropdown cuando el texto de búsqueda coincide exactamente con una opción
+    - Mantiene el dropdown abierto después de borrar la selección para mejor UX
+
+- **Gráfico de Effort by Project**: Nuevo gráfico de barras en el dashboard que muestra el esfuerzo real por proyecto.
+    - Ubicado debajo del gráfico "User Progress in the Sprint"
+    - Muestra solo proyectos con esfuerzo > 0
+    - No se renderiza si no hay proyectos con esfuerzos
+    - Colores obtenidos de PROJECTS en useProjectName.ts (incluye Meetings y Varios)
+    - Color gris (#ecebeb) por defecto para proyectos no reconocidos
+    - Si el item tiene tasks, usa el esfuerzo de las tasks (ignora el item padre)
+    - Si el item no tiene tasks, usa el esfuerzo del item directamente
+
+- **Actualización de PROJECTS**: Proyectos predefinidos actualizados:
+    - 📋 Dashboard Sprint-It (#4CAF50)
+    - 🟢 APIX (#00ab22)
+    - 🔵 Agroideas-In (#2196F3)
+    - 🟣 Meetings (#9b44f8)
+    - ⚫ Varios (#282828)
+
+- **Función getProjectColor()**: Nueva función en useProjectName.ts para obtener el color de un proyecto.
+    - Retorna el color de PROJECTS si existe
+    - Compara nombres removiendo emojis para mejor matching
+    - Retorna color gris por defecto si no encuentra coincidencia
+
 ### Arreglos
 
 - **Visualización de projectName en tasks**: Corregido bug visual en TaskCard donde se mostraba el `projectName` del item padre en lugar del `projectName` de cada task individual.
@@ -18,6 +52,11 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 - **Preseteo de projectName al crear tasks**: Al crear una nueva task dentro de un item, ahora se usa el `projectName` del item padre como valor por defecto.
     - Prioridad: 1) `projectName` del item, 2) último proyecto usado (localStorage)
     - Implementado en `TaskDialog.resetFormForNew()`
+
+- **Conversión de newlines a `<br>` en comentarios**: Los saltos de línea ahora se convierten correctamente a etiquetas `<br>` para una visualización adecuada en HTML.
+    - Implementado en `processCommentHtml()` y `saveChangelogComment()`
+
+- **Notificación errónea de portapapeles**: Corregido bug donde mostraba notificación de éxito incluso cuando fallaba el copiado al portapapeles.
 
 ---
 

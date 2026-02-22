@@ -28,6 +28,7 @@ declare module 'vue' {
     MySelect: typeof import('./components/global/MySelect.vue')['default']
     MySeparator: typeof import('./components/global/MySeparator.vue')['default']
     MyTextarea: typeof import('./components/global/MyTextarea.vue')['default']
+    ProjectEffortChart: typeof import('./components/ProjectEffortChart.vue')['default']
     ProjectSelector: typeof import('./components/global/ProjectSelector.vue')['default']
     PwaInstallButton: typeof import('./components/PwaInstallButton.vue')['default']
     ResizableImageView: typeof import('./components/ResizableImageView.vue')['default']

@@ -52,6 +52,9 @@
 
             <!-- Gráfico de progreso de usuarios -->
             <UserProgressChart v-if="chartReady" class="mt-1" />
+
+            <!-- Gráfico de esfuerzo por proyecto -->
+            <ProjectEffortChart v-if="chartReady" class="mt-1" />
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
@@ -83,6 +86,7 @@
 import Header from "@/components/Header.vue";
 import ItemCard from "@/components/ItemCard.vue";
 import ItemDialog from "@/components/ItemDialog.vue";
+import ProjectEffortChart from "@/components/ProjectEffortChart.vue";
 import TaskDialog from "@/components/TaskDialog.vue";
 import UserProgressChart from "@/components/UserProgressChart.vue";
 import { useTaskManagement } from "@/composables/useTaskManagement";
