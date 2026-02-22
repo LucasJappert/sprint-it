@@ -16,7 +16,7 @@
                 v-model="searchText"
                 type="text"
                 class="project-input"
-                :placeholder="isFocused ? '' : ''"
+                :placeholder="''"
                 @focus="handleFocus"
                 @blur="handleBlur"
                 @keydown="handleKeydown"

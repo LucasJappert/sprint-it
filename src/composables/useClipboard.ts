@@ -33,7 +33,6 @@ export const useClipboard = () => {
             notifyOk("Copied to clipboard", "Title and description copied successfully");
         } catch (error) {
             console.error("Failed to copy to clipboard:", error);
-            notifyOk("Copied to clipboard", "Title and description copied successfully");
         }
     };
 
