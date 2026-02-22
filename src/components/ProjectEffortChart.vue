@@ -79,6 +79,7 @@ const chartSeries = computed(() => {
             data: sorted.map((project) => ({
                 x: project,
                 y: efforts[project] || 0,
+                fillColor: getProjectColor(project),
             })),
         },
     ];
@@ -110,7 +111,7 @@ const chartOptions = computed(() => {
         legend: {
             show: false,
         },
-        colors: colors,
+        // Note: colors are set via fillColor in each data point
         dataLabels: {
             enabled: true,
             offsetX: 30,
