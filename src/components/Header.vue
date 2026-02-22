@@ -1,52 +1,54 @@
 <template>
     <v-app-bar dark height="50" :class="{ 'header-hidden': !isVisible }" class="header-transition">
-        <div class="dashboard-header">
-            <div class="sprint-container-1">
-                <div style="width: 250px">
-                    <MySelect
-                        :options="sprintOptions"
-                        @update:options="onSprintOptionsChange"
-                        @action="onSprintAction"
-                        density="compact"
-                        :show-clear-selection="false"
-                    />
+        <div class="header-content">
+            <div class="dashboard-header">
+                <div class="sprint-container-1">
+                    <div style="width: 250px">
+                        <MySelect
+                            :options="sprintOptions"
+                            @update:options="onSprintOptionsChange"
+                            @action="onSprintAction"
+                            density="compact"
+                            :show-clear-selection="false"
+                        />
+                    </div>
+                    <v-tooltip location="bottom" :text="getExportSprintTooltip">
+                        <template #activator="{ props }">
+                            <v-icon v-bind="props" class="primary" @click="exportSprintAsync" :disabled="!sprintStore.currentSprint">mdi-file-export</v-icon>
+                        </template>
+                    </v-tooltip>
                 </div>
-                <v-tooltip location="bottom" :text="getExportSprintTooltip">
-                    <template #activator="{ props }">
-                        <v-icon v-bind="props" class="primary" @click="exportSprintAsync" :disabled="!sprintStore.currentSprint">mdi-file-export</v-icon>
-                    </template>
-                </v-tooltip>
             </div>
+            <v-spacer />
+            <v-menu>
+                <template #activator="{ props }">
+                    <v-avatar v-bind="props" size="40" :class="['avatar', 'primary', { pulse: needsBackupPulse }]">
+                        <span class="avatar-text">{{ authStore.user?.name?.charAt(0).toUpperCase() }}</span>
+                    </v-avatar>
+                </template>
+                <div class="menu">
+                    <div class="menu-item">
+                        <span>Hello {{ authStore.user?.name }}!</span>
+                    </div>
+                    <div class="menu-item" @click="exportData" :title="getExportDataTitle">
+                        <v-icon>mdi-download</v-icon>
+                        <span>Export Data</span>
+                        <v-icon v-if="needsBackupPulse" size="16" class="ml-2 warning" :class="{ pulse: needsBackupPulse }">mdi-alert-circle</v-icon>
+                    </div>
+                    <div class="menu-item no-border" @click="importItems">
+                        <v-icon>mdi-upload</v-icon>
+                        <span>Import Data</span>
+                    </div>
+                    <div class="menu-item" @click="logout">
+                        <v-icon>mdi-logout</v-icon>
+                        <span>Logout</span>
+                    </div>
+                    <div class="menu-item version">
+                        <span>v{{ appVersion }}</span>
+                    </div>
+                </div>
+            </v-menu>
         </div>
-        <v-spacer />
-        <v-menu>
-            <template #activator="{ props }">
-                <v-avatar v-bind="props" size="40" :class="['avatar', 'primary', { pulse: needsBackupPulse }]">
-                    <span class="avatar-text">{{ authStore.user?.name?.charAt(0).toUpperCase() }}</span>
-                </v-avatar>
-            </template>
-            <div class="menu">
-                <div class="menu-item">
-                    <span>Hello {{ authStore.user?.name }}!</span>
-                </div>
-                <div class="menu-item" @click="exportData" :title="getExportDataTitle">
-                    <v-icon>mdi-download</v-icon>
-                    <span>Export Data</span>
-                    <v-icon v-if="needsBackupPulse" size="16" class="ml-2 warning" :class="{ pulse: needsBackupPulse }">mdi-alert-circle</v-icon>
-                </div>
-                <div class="menu-item no-border" @click="importItems">
-                    <v-icon>mdi-upload</v-icon>
-                    <span>Import Data</span>
-                </div>
-                <div class="menu-item" @click="logout">
-                    <v-icon>mdi-logout</v-icon>
-                    <span>Logout</span>
-                </div>
-                <div class="menu-item version">
-                    <span>v{{ appVersion }}</span>
-                </div>
-            </div>
-        </v-menu>
     </v-app-bar>
 </template>
 
@@ -375,6 +377,14 @@ const importItems = async () => {
 .header-transition {
     transition: transform 0.3s ease-in-out;
     background: #111 !important;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
 .dashboard-header {

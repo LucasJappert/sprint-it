@@ -1,5 +1,5 @@
 <template>
-    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent>
+    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent :pulse="hasPendingChanges">
         <div class="header flex-center justify-space-between">
             <div class="flex-center">
                 <h3 class="text-left flex-center justify-start">
@@ -22,8 +22,13 @@
         <div class="body-scroll">
             <template v-if="viewMode === 'details'">
                 <!-- Título ocupando 100% del ancho -->
-                <div class="full-width">
-                    <MyInput ref="titleInputRef" v-model="title" label="Title" density="compact" @keydown.enter="handleSave" />
+                <div class="full-width title-row">
+                    <div class="title-input">
+                        <MyInput ref="titleInputRef" v-model="title" label="Title" density="compact" @keydown.enter="handleSave" />
+                    </div>
+                    <v-btn icon size="small" class="copy-btn" @click="handleCopyToClipboard" title="Copy title and description">
+                        <v-icon size="18">mdi-content-copy</v-icon>
+                    </v-btn>
                 </div>
 
                 <!-- Campos organizados en filas lógicas -->
@@ -31,7 +36,7 @@
                     <div class="assigned-user">
                         <MySelect
                             v-model="assignedUser"
-                            label="Assigned Person"
+                            label="Assigned to"
                             :options="assignedUserOptions"
                             placeholder="Select user..."
                             density="compact"
@@ -50,6 +55,9 @@
                     <div class="priority">
                         <MySelect v-model="priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
                     </div>
+                    <div class="project">
+                        <ProjectSelector v-model="projectName" label="Project" density="compact" />
+                    </div>
                 </div>
 
                 <!-- Detalle en textarea ocupando 100% del ancho -->
@@ -58,7 +66,14 @@
                 </div>
 
                 <!-- Comments section -->
-                <CommentSection v-if="existingTask" ref="" :associated-id="props.existingTask?.id || ''" associated-type="task" />
+                <CommentSection
+                    v-if="existingTask"
+                    ref="commentSectionRef"
+                    :associated-id="props.existingTask?.id || ''"
+                    associated-type="task"
+                    @writing-comment="onWritingComment"
+                    @editing-comment="onEditingComment"
+                />
             </template>
 
             <template v-else-if="viewMode === 'history'">
@@ -74,6 +89,8 @@
 
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
+import { useClipboard } from "@/composables/useClipboard";
+import { useProjectName } from "@/composables/useProjectName";
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
@@ -116,13 +133,22 @@ const hasChanges = computed(() => {
         state.value !== originalState.value ||
         parseInt(estimatedEffort.value) !== parseInt(originalEstimatedEffort.value) ||
         parseInt(actualEffort.value) !== parseInt(originalActualEffort.value) ||
-        assignedUser.value !== originalAssignedUser.value;
+        assignedUser.value !== originalAssignedUser.value ||
+        projectName.value !== originalProjectName.value;
 
     return changes;
 });
 
+const hasPendingChanges = computed(() => {
+    // Solo mostrar pulso cuando se está editando un task existente
+    if (!isEditing.value) return false;
+    return hasChanges.value || isWritingComment.value || isEditingComment.value;
+});
+
 const originalAssignedUser = ref("");
 const titleInputRef = ref();
+const isWritingComment = ref(false);
+const isEditingComment = ref(false);
 
 const title = ref("");
 const detail = ref("");
@@ -131,6 +157,7 @@ const state = ref(STATE_VALUES.TODO);
 const estimatedEffort = ref("");
 const actualEffort = ref("");
 const assignedUser = ref("");
+const projectName = ref("");
 
 // Guardar el estado original para comparación
 const originalTitle = ref("");
@@ -139,11 +166,14 @@ const originalPriority = ref(PRIORITY_VALUES.NORMAL);
 const originalState = ref(STATE_VALUES.TODO);
 const originalEstimatedEffort = ref("");
 const originalActualEffort = ref("");
+const originalProjectName = ref("");
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
 
 const router = useRouter();
 const { clearQueryParams } = useUrlManagement(router);
+const { copyToClipboardAsync } = useClipboard();
+const { saveLastProject, getLastProject } = useProjectName();
 const viewMode = ref<"details" | "history">("details");
 const changeHistory = ref<ChangeHistory[]>([]);
 
@@ -187,7 +217,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === "s") {
         event.preventDefault();
         if (canSave.value) {
-            handleSave();
+            handleSave(false);
         }
     }
 };
@@ -219,6 +249,7 @@ const setFormValuesFromTask = (task: Task, assignedUserValue: string) => {
     estimatedEffort.value = task.estimatedEffort.toString();
     actualEffort.value = task.actualEffort.toString();
     assignedUser.value = assignedUserValue;
+    projectName.value = task.projectName || "";
 
     // Guardar valores originales para comparación
     originalTitle.value = task.title;
@@ -228,6 +259,7 @@ const setFormValuesFromTask = (task: Task, assignedUserValue: string) => {
     originalEstimatedEffort.value = task.estimatedEffort.toString();
     originalActualEffort.value = task.actualEffort.toString();
     originalAssignedUser.value = assignedUserValue;
+    originalProjectName.value = task.projectName || "";
 };
 
 const selectAssignedUserOption = (assignedUserValue: string) => {
@@ -351,6 +383,19 @@ const saveChanges = async (oldTask: Task, newTask: Task) => {
         });
     }
 
+    // Track projectName changes
+    if ((oldTask.projectName || "") !== (newTask.projectName || "")) {
+        changes.push({
+            associatedId: oldTask.id,
+            associatedType: "task",
+            field: "projectName",
+            oldValue: oldTask.projectName || "",
+            newValue: newTask.projectName || "",
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
     // Guardar todos los cambios
     for (const change of changes) {
         try {
@@ -379,6 +424,8 @@ const resetFormForEditing = async (task: Task) => {
 };
 
 const resetFormForNew = () => {
+    // Pre-llenar projectName con el último usado
+    const lastProject = getLastProject();
     title.value = "";
     detail.value = "";
     priority.value = PRIORITY_VALUES.NORMAL;
@@ -386,6 +433,7 @@ const resetFormForNew = () => {
     estimatedEffort.value = "";
     actualEffort.value = "";
     assignedUser.value = "";
+    projectName.value = lastProject;
 
     // Limpiar valores originales
     originalTitle.value = "";
@@ -395,6 +443,7 @@ const resetFormForNew = () => {
     originalEstimatedEffort.value = "";
     originalActualEffort.value = "";
     originalAssignedUser.value = "";
+    originalProjectName.value = lastProject;
 
     // Limpiar selección
     assignedUserOptions.value.forEach((option) => {
@@ -447,7 +496,10 @@ const onStateChange = (options: any[]) => {
     }
 };
 
-const handleSave = async () => {
+const handleSave = async (shouldClose: boolean | MouseEvent = true) => {
+    // Si el parámetro es un MouseEvent, obtener el valor de debería cerrar
+    const shouldCloseDialog = typeof shouldClose === "boolean" ? shouldClose : true;
+
     if (title.value.trim()) {
         let assignedUserId = null;
 
@@ -475,7 +527,13 @@ const handleSave = async () => {
             createdAt: props.existingTask?.createdAt || new Date(),
             createdBy: props.existingTask?.createdBy || useAuthStore().user?.id || "",
             deletedAt: props.existingTask?.deletedAt || null,
+            projectName: projectName.value || "",
         };
+
+        // Guardar último proyecto usado
+        if (projectName.value) {
+            saveLastProject(projectName.value);
+        }
 
         // Guardar cambios si es edición
         if (props.existingTask) {
@@ -483,14 +541,34 @@ const handleSave = async () => {
         }
 
         emit("save", task);
-        emit("close");
+        if (shouldCloseDialog) {
+            emit("close");
+        }
     }
 };
 
 const handleClose = () => {
     emit("close");
     resetForm();
+    resetPendingChanges();
     clearQueryParams();
+};
+
+const onWritingComment = (isWriting: boolean) => {
+    isWritingComment.value = isWriting;
+};
+
+const onEditingComment = (isEditing: boolean) => {
+    isEditingComment.value = isEditing;
+};
+
+const handleCopyToClipboard = () => {
+    copyToClipboardAsync(title.value, detail.value);
+};
+
+const resetPendingChanges = () => {
+    isWritingComment.value = false;
+    isEditingComment.value = false;
 };
 
 watch(

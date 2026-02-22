@@ -17,7 +17,7 @@
                     </v-btn>
                 </div>
                 <div class="item-col cols-order flex-center">#</div>
-                <div class="item-col cols-assigned">Assigned</div>
+                <div class="item-col cols-assigned"><span class="ellipsis" title="Assigned">Assigned</span></div>
                 <div class="item-col cols-title text-left">
                     Title
 
@@ -28,6 +28,7 @@
                 </div>
                 <div class="item-col cols-effort flex-center" title="Estimated/Real">Efforts</div>
                 <div class="item-col cols-priority">Priority</div>
+                <div class="item-col cols-project">Project</div>
             </div>
 
             <ItemCard
@@ -283,6 +284,7 @@ const onSaveEditItem = async (item: Item) => {
             estimatedEffort: item.estimatedEffort,
             actualEffort: item.actualEffort,
             assignedUser: item.assignedUser,
+            projectName: item.projectName,
         });
     }
     // No cerrar el diálogo para que persista visible después de guardar

@@ -1,5 +1,5 @@
 <template>
-    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent>
+    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent :pulse="hasPendingChanges">
         <div class="header flex-center justify-space-between">
             <div class="flex-center">
                 <h3 class="text-left flex-center justify-start">
@@ -22,15 +22,20 @@
         <div class="body-scroll">
             <template v-if="viewMode === 'details'">
                 <!-- Título ocupando 100% del ancho -->
-                <div class="full-width mt-2">
-                    <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
+                <div class="full-width mt-2 title-row">
+                    <div class="title-input">
+                        <MyInput ref="titleInputRef" v-model="newItem.title" label="Title" density="compact" @keydown.enter="handleSave" />
+                    </div>
+                    <v-btn icon size="small" class="copy-btn" @click="handleCopyToClipboard" title="Copy title and description">
+                        <v-icon size="18">mdi-content-copy</v-icon>
+                    </v-btn>
                 </div>
                 <!-- Campos organizados en filas lógicas -->
                 <div class="form-section mt-3">
                     <div class="assigned-user">
                         <MySelect
                             v-model="newItem.assignedUser"
-                            label="Assigned Person"
+                            label="Assigned to"
                             :options="assignedUserOptions"
                             placeholder="Select user..."
                             density="compact"
@@ -49,6 +54,9 @@
                     <div class="priority">
                         <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
                     </div>
+                    <div class="project">
+                        <ProjectSelector v-model="newItem.projectName" label="Project" density="compact" />
+                    </div>
                 </div>
 
                 <!-- Detalle en textarea ocupando 100% del ancho -->
@@ -57,7 +65,14 @@
                 </div>
 
                 <!-- Comments section -->
-                <CommentSection v-if="existingItem" :associated-id="props.existingItem?.id || ''" associated-type="item" />
+                <CommentSection
+                    v-if="existingItem"
+                    ref="commentSectionRef"
+                    :associated-id="props.existingItem?.id || ''"
+                    associated-type="item"
+                    @writing-comment="onWritingComment"
+                    @editing-comment="onEditingComment"
+                />
             </template>
 
             <template v-else-if="viewMode === 'history'">
@@ -73,6 +88,8 @@
 
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
+import { useClipboard } from "@/composables/useClipboard";
+import { useProjectName } from "@/composables/useProjectName";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
@@ -96,6 +113,7 @@ interface NewItemForm {
     estimatedEffort: string;
     actualEffort: string;
     assignedUser: string;
+    projectName?: string;
 }
 
 const props = defineProps<Props>();
@@ -107,11 +125,15 @@ const emit = defineEmits<{
 
 const loadingStore = useLoadingStore();
 const authStore = useAuthStore();
+const { copyToClipboardAsync } = useClipboard();
+const { saveLastProject, getLastProject } = useProjectName();
 
 const isEditing = computed(() => !!props.existingItem);
 
 const originalAssignedUser = ref("");
 const titleInputRef = ref();
+const isWritingComment = ref(false);
+const isEditingComment = ref(false);
 
 // Guardar el estado original para comparación
 const originalTitle = ref("");
@@ -120,6 +142,7 @@ const originalPriority = ref(PRIORITY_VALUES.NORMAL as PriorityValue);
 const originalState = ref(STATE_VALUES.TODO as StateValue);
 const originalEstimatedEffort = ref("");
 const originalActualEffort = ref("");
+const originalProjectName = ref("");
 
 const hasChanges = computed(() => {
     if (!props.existingItem) return newItem.value.title.trim() !== ""; // Para nuevos items, habilitar si hay título
@@ -131,7 +154,8 @@ const hasChanges = computed(() => {
         newItem.value.state !== originalState.value ||
         parseInt(newItem.value.estimatedEffort) !== parseInt(originalEstimatedEffort.value) ||
         parseInt(newItem.value.actualEffort) !== parseInt(originalActualEffort.value) ||
-        newItem.value.assignedUser !== originalAssignedUser.value;
+        newItem.value.assignedUser !== originalAssignedUser.value ||
+        newItem.value.projectName !== originalProjectName.value;
 
     return changes;
 });
@@ -143,6 +167,12 @@ const canSave = computed(() => {
     }
     // Para editar: habilitar si hay cambios Y hay título
     return hasChanges.value && newItem.value.title.trim() !== "";
+});
+
+const hasPendingChanges = computed(() => {
+    // Solo mostrar pulso cuando se está editando un item existente
+    if (!isEditing.value) return false;
+    return hasChanges.value || isWritingComment.value || isEditingComment.value;
 });
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
@@ -187,7 +217,7 @@ onMounted(() => {
 const handleKeyDown = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === "s") {
         event.preventDefault();
-        if (canSave.value) return handleSave();
+        if (canSave.value) return handleSave(false);
     }
 };
 
@@ -209,6 +239,7 @@ const newItem = ref<NewItemForm>({
     estimatedEffort: "",
     actualEffort: "",
     assignedUser: "",
+    projectName: "",
 });
 
 const resetForm = async () => {
@@ -236,6 +267,7 @@ const resetForm = async () => {
                 estimatedEffort: props.existingItem.estimatedEffort.toString(),
                 actualEffort: props.existingItem.actualEffort.toString(),
                 assignedUser: assignedUserValue,
+                projectName: props.existingItem.projectName || "",
             };
 
             // Guardar valores originales para comparación
@@ -246,6 +278,7 @@ const resetForm = async () => {
             originalEstimatedEffort.value = props.existingItem.estimatedEffort.toString();
             originalActualEffort.value = props.existingItem.actualEffort.toString();
             originalAssignedUser.value = assignedUserValue;
+            originalProjectName.value = props.existingItem.projectName || "";
 
             // Esperar a que las opciones estén cargadas si no lo están
             if (assignedUserOptions.value.length === 0) {
@@ -272,6 +305,8 @@ const resetForm = async () => {
             // Cargar historial de cambios
             await loadChangeHistory(props.existingItem.id);
         } else {
+            // Pre-llenar projectName con el último usado
+            const lastProject = getLastProject();
             newItem.value = {
                 title: "",
                 detail: "",
@@ -280,6 +315,7 @@ const resetForm = async () => {
                 estimatedEffort: "",
                 actualEffort: "",
                 assignedUser: "",
+                projectName: lastProject,
             };
 
             // Limpiar valores originales
@@ -290,6 +326,7 @@ const resetForm = async () => {
             originalEstimatedEffort.value = "";
             originalActualEffort.value = "";
             originalAssignedUser.value = "";
+            originalProjectName.value = lastProject;
 
             // Limpiar selección
             assignedUserOptions.value.forEach((option) => {
@@ -443,6 +480,19 @@ const saveChanges = async (oldItem: Item, newItem: Item) => {
         });
     }
 
+    // Track projectName changes
+    if ((oldItem.projectName || "") !== (newItem.projectName || "")) {
+        changes.push({
+            associatedId: oldItem.id,
+            associatedType: "item",
+            field: "projectName",
+            oldValue: oldItem.projectName || "",
+            newValue: newItem.projectName || "",
+            userId,
+            createdAt: new Date(),
+        });
+    }
+
     // Guardar todos los cambios
     for (const change of changes) {
         try {
@@ -453,7 +503,10 @@ const saveChanges = async (oldItem: Item, newItem: Item) => {
     }
 };
 
-const handleSave = async () => {
+const handleSave = async (shouldClose: boolean | MouseEvent = true) => {
+    // Si el parámetro es un MouseEvent, obtener el valor de debería cerrar
+    const shouldCloseDialog = typeof shouldClose === "boolean" ? shouldClose : true;
+
     if (newItem.value.title.trim()) {
         let assignedUserId = null;
 
@@ -482,7 +535,13 @@ const handleSave = async () => {
             createdAt: props.existingItem?.createdAt || new Date(),
             createdBy: props.existingItem?.createdBy || authStore.user?.id || "",
             deletedAt: props.existingItem?.deletedAt || null,
+            projectName: newItem.value.projectName || "",
         };
+
+        // Guardar último proyecto usado
+        if (newItem.value.projectName) {
+            saveLastProject(newItem.value.projectName);
+        }
 
         // Guardar cambios si es edición
         if (props.existingItem) {
@@ -490,12 +549,32 @@ const handleSave = async () => {
         }
 
         emit("save", item);
-        emit("close");
+        if (shouldCloseDialog) {
+            emit("close");
+        }
     }
 };
 const handleClose = () => {
     emit("close");
     resetForm();
+    resetPendingChanges();
+};
+
+const onWritingComment = (isWriting: boolean) => {
+    isWritingComment.value = isWriting;
+};
+
+const onEditingComment = (isEditing: boolean) => {
+    isEditingComment.value = isEditing;
+};
+
+const resetPendingChanges = () => {
+    isWritingComment.value = false;
+    isEditingComment.value = false;
+};
+
+const handleCopyToClipboard = () => {
+    copyToClipboardAsync(newItem.value.title, newItem.value.detail);
 };
 </script>
 

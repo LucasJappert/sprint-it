@@ -4,6 +4,52 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.20 - 2026-02-21
+
+### Nuevas Funciones
+
+- **Agregar comentario desde Changelog**: Nueva funcionalidad para facilitar el pegado de detalles desde un changelog.
+    - Botón "From Changelog" ubicado a la izquierda del botón "Add Comment" en la sección de comentarios
+    - Abre un modal con un label predefinido: "Tarea realizada, así quedó el detalle en el changelog:"
+    - El textarea obtiene el foco automáticamente al abrir el modal
+    - Al guardar, se genera el comentario con formato: `Tarea completada, así quedó el detalle en el changelog:<br>[contenido pegado]`
+    - Disponible tanto en items como en tasks
+
+- **Copy to Clipboard**: Nueva funcionalidad para copiar título y descripción de items y tasks al portapapeles.
+    - Icono `mdi-content-copy` ubicado a la derecha del campo de título en ItemDialog y TaskDialog
+    - Al hacer click, copia el título y la descripción en formato texto plano
+    - Elimina etiquetas HTML (p, u, strong, b, br) y las convierte a texto
+    - Muestra notificación de éxito: "Copied to clipboard"
+
+- **Ctrl+S para guardar sin cerrar**: Atajo de teclado para guardar items/tasks sin cerrar el diálogo.
+    - Presionando Ctrl+S se guardan los cambios sin cerrar la ventana
+    - Guarda solo los campos principales (title, description, assigned person, state, effort, etc.)
+    - Ignora comentarios pendientes (ya que estos se manejan independientemente)
+
+- **Efecto Pulse en diálogos**: Indicador visual de cambios pendientes en item/task.
+    - Efecto de pulso animado en el borde del diálogo cuando hay cambios sin guardar
+    - Se activa cuando: hay cambios en el formulario, se está escribiendo un comentario, o se está editando un comentario
+
+- **Clasificación de items/tasks por proyectos**: Nueva funcionalidad para clasificar items y tasks por proyecto.
+    - Nuevo componente `ProjectSelector.vue` con input editable y autocompletado
+    - Las opciones se cargan desde los proyectos usados en los últimos 10 sprints
+    - Proyectos por defecto siempre disponibles: APIX/front, APIX/back-node, APIX/back-python, Agroideas-In/front, Agroideas-In/back
+    - Permite crear nuevos proyectos escribiéndolos directamente
+    - Selector ubicado a la derecha del select Priority en ItemDialog y TaskDialog
+    - Se guarda el último proyecto usado en localStorage para pre-llenar en nuevos items/tasks
+    - Campo `projectName` incluido en el historial de cambios
+    - Compatible con Export Data e Import Data
+
+### Cambios
+
+- **Header**: Agregado limitador de ancho máximo (max-width: 1100px) para mantener consistencia con el dashboard en resoluciones amplias
+
+- **MyDialog**: Agregada prop `pulse` para mostrar indicador visual de cambios pendientes
+
+- **ProjectSelector**: Agregadas propiedades `density` y mejoras en la detección de cambios en tiempo real
+
+---
+
 ## v1.1.19 - 2026-02-19
 
 ### Nuevas Funciones

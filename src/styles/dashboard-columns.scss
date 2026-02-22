@@ -49,7 +49,7 @@
     }
 }
 
-$col-assigned-width: 90px;
+$col-assigned-width: 50px;
 .cols-assigned {
     flex: 0 0 $col-assigned-width;
     max-width: $col-assigned-width;
@@ -64,13 +64,19 @@ $col-state-width: 120px;
 }
 
 .cols-effort {
-    flex: 0 0 100px;
-    max-width: 100px;
+    flex: 0 0 70px;
+    max-width: 70px;
 }
 
 .cols-priority {
     flex: 0 0 80px;
     max-width: 80px;
+    text-align: center;
+}
+
+.cols-project {
+    flex: 0 0 160px;
+    max-width: 160px;
     text-align: center;
 }
 .state-circle {

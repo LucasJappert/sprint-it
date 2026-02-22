@@ -33,7 +33,7 @@
             {{ item.order }}
         </div>
         <div class="item-col cols-assigned">
-            {{ assignedUserName }}
+            {{ assignedUserName.replace("Sebastian", "Seba") }}
         </div>
         <div class="item-col cols-title text-left">
             <!-- <span v-if="taskCountDisplay" class="mr-1">{{ taskCountDisplay }}</span> -->
@@ -46,6 +46,9 @@
         <div class="item-col cols-effort">{{ calculatedEstimatedEffort }} - {{ calculatedActualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
             <span class="priority-content" v-html="getPriorityHtml(item.priority)"></span>
+        </div>
+        <div class="item-col cols-project">
+            {{ item.projectName || "-" }}
         </div>
     </div>
 
@@ -233,6 +236,7 @@ const onSaveEditItem = async (item: Item) => {
         estimatedEffort: item.estimatedEffort,
         actualEffort: item.actualEffort,
         assignedUser: item.assignedUser,
+        projectName: item.projectName,
     });
     // No cerrar el diálogo para que persista visible después de guardar
 };
@@ -489,7 +493,9 @@ const onDrop = (e: DragEvent) => {
     box-shadow: 0 0 10px rgba($primary, 0.5) !important;
     border: 2px dashed rgba($primary, 0.5) !important;
     background: rgba($primary, 0.2) !important;
-    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+    transition:
+        transform 0.1s ease-out,
+        box-shadow 0.1s ease-out;
     backdrop-filter: blur(2px) !important;
     font-weight: bold !important;
     position: fixed !important;

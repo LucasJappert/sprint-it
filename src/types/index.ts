@@ -35,6 +35,7 @@ export interface Task {
     createdAt: Date;
     createdBy: string; // user id who created this task
     deletedAt: Date | null; // soft delete timestamp (nullable)
+    projectName?: string; // project/category classification (e.g., APIX/Front, APIX/back-node)
 }
 
 export interface Item {
@@ -51,6 +52,7 @@ export interface Item {
     createdAt: Date;
     createdBy: string; // user id who created this item
     deletedAt: Date | null; // soft delete timestamp (nullable)
+    projectName?: string; // project/category classification (e.g., APIX/Front, APIX/back-node)
 }
 
 export interface Sprint {

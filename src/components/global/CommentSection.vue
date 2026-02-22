@@ -10,6 +10,10 @@
         <div class="add-comment relative">
             <MyRichText v-model="newCommentContent" placeholder="Write a comment..." density="compact" :height="'80px'" />
             <div class="add-comment-actions">
+                <MyButton @click="openChangelogDialog" class="custom-button mr-2" secondary>
+                    <v-icon size="14" class="mr-1">mdi-file-document-alert-outline</v-icon>
+                    From Changelog
+                </MyButton>
                 <MyButton @click="addCommentAsync" :disabled="!newCommentContent.trim()" class="custom-button"> Add Comment </MyButton>
             </div>
         </div>
@@ -57,6 +61,33 @@
         <!-- No comments message -->
         <div v-else class="no-comments">No comments yet.</div>
     </MyCard>
+
+    <!-- Changelog Comment Dialog -->
+    <MyDialog :visible="changelogDialogVisible" min-width="500" @close="closeChangelogDialog" persistent>
+        <div class="header flex-center justify-space-between">
+            <div class="flex-center">
+                <h3 class="text-left flex-center justify-start">
+                    <v-icon class="blue mr-1" size="30">mdi-file-document-alert-outline</v-icon>
+                    Add Comment from Changelog
+                </h3>
+            </div>
+            <v-icon class="close-btn" @click="closeChangelogDialog" :size="24">mdi-close</v-icon>
+        </div>
+        <div class="body-scroll">
+            <div class="changelog-label">Tarea realizada, así quedó el detalle en el changelog:</div>
+            <MyTextarea
+                ref="changelogTextareaRef"
+                v-model="changelogContent"
+                placeholder="Paste the changelog content here..."
+                :height="'200px'"
+                class="mt-2"
+            />
+        </div>
+        <div class="footer">
+            <MyButton btn-class="px-2" secondary @click="closeChangelogDialog">Cancel</MyButton>
+            <MyButton btn-class="px-2" @click="saveChangelogComment" :disabled="!changelogContent.trim()">Add Comment</MyButton>
+        </div>
+    </MyDialog>
 </template>
 
 <script setup lang="ts">
@@ -72,12 +103,12 @@ interface Props {
     associatedType: "task" | "item";
 }
 
-interface Emits {
-    (e: "comment-added", comment: Comment): void;
-}
-
 const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
+const emit = defineEmits<{
+    "comment-added": [comment: Comment];
+    "writing-comment": [isWriting: boolean];
+    "editing-comment": [isEditing: boolean];
+}>();
 
 const authStore = useAuthStore();
 const loadingStore = useLoadingStore();
@@ -87,6 +118,11 @@ const comments = ref<Comment[]>([]);
 const editingCommentId = ref<string | null>(null);
 const editCommentContent = ref("");
 const originalContent = ref("");
+
+// Changelog dialog state
+const changelogDialogVisible = ref(false);
+const changelogContent = ref("");
+const changelogTextareaRef = ref();
 
 // Colores para autores: celeste claro y verde claro
 const AUTHOR_COLORS = ["#33c7ffaa", "#3a9962aa"];
@@ -105,8 +141,10 @@ const sortedComments = computed(() => {
 const hasChanges = computed(() => editCommentContent.value.trim() !== originalContent.value.trim());
 
 const processCommentHtml = (html: string): string => {
+    // Convertir saltos de línea en etiquetas <br> para que se muestren correctamente en v-html
+    let processed = html.replace(/\n/g, "<br>");
     // Reemplazar todas las etiquetas <img> con links
-    return html.replace(/<img[^>]*src="([^"]*)"[^>]*>/g, (match, src) => {
+    return processed.replace(/<img[^>]*src="([^"]*)"[^>]*>/g, (_match, src) => {
         return `<a href="${src}" target="_blank" rel="noopener noreferrer" style="color: #5aa7ff; text-decoration: underline; font-family: monospace; font-size: 0.9em;">${src}</a>`;
     });
 };
@@ -190,6 +228,11 @@ watch(
     { immediate: true },
 );
 
+// Watch for new comment content changes
+watch(newCommentContent, (newValue) => {
+    emit("writing-comment", newValue.trim().length > 0);
+});
+
 const addCommentAsync = async () => {
     if (newCommentContent.value.trim()) {
         loadingStore.setLoading(true);
@@ -215,6 +258,7 @@ const addCommentAsync = async () => {
             // Agregar al inicio de la lista para que aparezca primero
             await addCommentToStart(newComment);
             newCommentContent.value = "";
+            emit("writing-comment", false);
         } catch (error) {
             console.error("Error adding comment:", error);
         } finally {
@@ -223,16 +267,61 @@ const addCommentAsync = async () => {
     }
 };
 
+// Changelog dialog functions
+const openChangelogDialog = async () => {
+    changelogDialogVisible.value = true;
+    await nextTick();
+    changelogTextareaRef.value?.focus();
+};
+
+const closeChangelogDialog = () => {
+    changelogDialogVisible.value = false;
+    changelogContent.value = "";
+};
+
+const saveChangelogComment = async () => {
+    if (!changelogContent.value.trim()) return;
+
+    loadingStore.setLoading(true);
+    try {
+        const description = `Tarea completada, así quedó el detalle en el changelog:<br>${changelogContent.value.trim().replace(/\n/g, "<br>")}`;
+        const now = new Date();
+        const newCommentData = {
+            associatedId: props.associatedId,
+            associatedType: props.associatedType,
+            userId: authStore.user?.id || "",
+            createdAt: now,
+            updatedAt: now,
+            description,
+        };
+
+        const commentId = await addComment(newCommentData);
+        const newComment: Comment = {
+            id: commentId,
+            ...newCommentData,
+        };
+
+        await addCommentToStart(newComment);
+        closeChangelogDialog();
+    } catch (error) {
+        console.error("Error adding changelog comment:", error);
+    } finally {
+        loadingStore.setLoading(false);
+    }
+};
+
 const startEditComment = (comment: Comment) => {
     editingCommentId.value = comment.id;
     editCommentContent.value = comment.description;
     originalContent.value = comment.description;
+    emit("editing-comment", true);
 };
 
 const cancelCommentEdit = () => {
     editingCommentId.value = null;
     editCommentContent.value = "";
     originalContent.value = "";
+    emit("editing-comment", false);
 };
 
 const saveCommentEditAsync = async () => {
@@ -255,6 +344,7 @@ const saveCommentEditAsync = async () => {
         editingCommentId.value = null;
         editCommentContent.value = "";
         originalContent.value = "";
+        emit("editing-comment", false);
     } catch (error) {
         console.error("Error updating comment:", error);
     } finally {
@@ -390,5 +480,12 @@ onBeforeUnmount(async () => {
     color: #ffffff88;
     font-style: italic;
     padding: 20px;
+}
+
+.changelog-label {
+    color: $text;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 4px;
 }
 </style>

@@ -30,7 +30,7 @@
             {{ task.order }}
         </div>
         <div class="item-col cols-assigned">
-            {{ assignedUserName }}
+            {{ assignedUserName.replace("Sebastian", "Seba") }}
         </div>
         <div class="item-col cols-title text-left">
             <span class="ellipsis">{{ task.title }}</span>
@@ -38,6 +38,9 @@
         <div class="item-col cols-effort">{{ task.estimatedEffort }} - {{ task.actualEffort }}</div>
         <div class="item-col cols-priority priority-cell">
             <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
+        </div>
+        <div class="item-col cols-project">
+            {{ item.projectName || "-" }}
         </div>
     </div>
 
@@ -89,12 +92,6 @@ const { showEditTaskDialog, editingTask, openEditTaskDialog, closeDialogs, onSav
 const getPriorityHtml = (priority: string) => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
     return option ? option.name : priority;
-};
-
-const getStateHtml = (state: string | undefined) => {
-    if (!state) return "To Do"; // Default fallback
-    const option = STATE_OPTIONS.find((opt) => opt.value.toLowerCase() === state.toLowerCase());
-    return option ? option.name : state;
 };
 
 const getStateColor = (state: string) => {
