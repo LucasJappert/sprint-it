@@ -58,22 +58,27 @@ const projectEfforts = computed(() => {
     return filteredEfforts;
 });
 
-// Prepare chart series data
-const chartSeries = computed(() => {
+// Sorted projects by effort (descending) - DRY: extracted for reuse in series and xaxis
+const sortedProjects = computed(() => {
     const efforts = projectEfforts.value;
-    const sortedProjects = Object.keys(efforts).sort((a, b) => {
+    return Object.keys(efforts).sort((a, b) => {
         const effortA = efforts[a] || 0;
         const effortB = efforts[b] || 0;
-        return effortB - effortA; // Sort descending by effort
+        return effortB - effortA;
     });
+});
+
+// Prepare chart series data
+const chartSeries = computed(() => {
+    const sorted = sortedProjects.value;
+    const efforts = projectEfforts.value;
 
     return [
         {
             name: "Actual Effort (hours)",
-            data: sortedProjects.map((project) => ({
+            data: sorted.map((project) => ({
                 x: project,
                 y: efforts[project] || 0,
-                fillColor: getProjectColor(project),
             })),
         },
     ];
@@ -118,11 +123,7 @@ const chartOptions = computed(() => {
             },
         },
         xaxis: {
-            categories: Object.keys(projectEfforts.value).sort((a, b) => {
-                const effortA = projectEfforts.value[a] || 0;
-                const effortB = projectEfforts.value[b] || 0;
-                return effortB - effortA;
-            }),
+            categories: sortedProjects.value,
             labels: {
                 style: {
                     colors: "#9ca3af",
