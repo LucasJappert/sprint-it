@@ -178,6 +178,14 @@ onMounted(async () => {
             await sprintStore.generateSprints();
         }
 
+        // Verificar y eliminar items duplicados automáticamente
+        if (sprintStore.currentSprint) {
+            const duplicates = sprintStore.checkForDuplicateItems(sprintStore.currentSprint);
+            if (duplicates.length > 0) {
+                await sprintStore.removeDuplicateItems(sprintStore.currentSprint);
+            }
+        }
+
         // Check if sprintId exists in URL, otherwise use date-based selection
         const urlSprintId = getSprintIdFromUrl();
 

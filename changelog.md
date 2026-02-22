@@ -4,6 +4,23 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.21 - 2026-02-22
+
+### Arreglos
+
+- **Visualización de projectName en tasks**: Corregido bug visual en TaskCard donde se mostraba el `projectName` del item padre en lugar del `projectName` de cada task individual.
+    - Ahora cada task muestra su propio `projectName` en la columna de proyecto
+
+- **Propagación de projectName a tasks**: Al editar el `projectName` de un item, ahora se aplica automáticamente a las tasks contenidas que no tengan `projectName` seteado.
+    - Las tasks que ya tienen un `projectName` configurado NO se modifican
+    - Implementado en `sprintStore.updateItem()`
+
+- **Preseteo de projectName al crear tasks**: Al crear una nueva task dentro de un item, ahora se usa el `projectName` del item padre como valor por defecto.
+    - Prioridad: 1) `projectName` del item, 2) último proyecto usado (localStorage)
+    - Implementado en `TaskDialog.resetFormForNew()`
+
+---
+
 ## v1.1.20 - 2026-02-21
 
 ### Nuevas Funciones

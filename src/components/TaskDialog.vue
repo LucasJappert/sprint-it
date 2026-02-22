@@ -424,8 +424,11 @@ const resetFormForEditing = async (task: Task) => {
 };
 
 const resetFormForNew = () => {
-    // Pre-llenar projectName con el último usado
+    // Pre-llenar projectName: primero con el proyecto del item, luego con el último usado
+    const itemProjectName = props.item?.projectName || "";
     const lastProject = getLastProject();
+    const defaultProjectName = itemProjectName || lastProject;
+
     title.value = "";
     detail.value = "";
     priority.value = PRIORITY_VALUES.NORMAL;
@@ -433,7 +436,7 @@ const resetFormForNew = () => {
     estimatedEffort.value = "";
     actualEffort.value = "";
     assignedUser.value = "";
-    projectName.value = lastProject;
+    projectName.value = defaultProjectName;
 
     // Limpiar valores originales
     originalTitle.value = "";
@@ -443,7 +446,7 @@ const resetFormForNew = () => {
     originalEstimatedEffort.value = "";
     originalActualEffort.value = "";
     originalAssignedUser.value = "";
-    originalProjectName.value = lastProject;
+    originalProjectName.value = defaultProjectName;
 
     // Limpiar selección
     assignedUserOptions.value.forEach((option) => {
