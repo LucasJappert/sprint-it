@@ -85,7 +85,15 @@ const selectedIndex = ref(-1);
 
 const hasValue = computed(() => !!searchText.value.trim());
 
-const hasOptions = computed(() => filteredProjects.value.length > 0);
+const hasOptions = computed(() => {
+    const options = filteredProjects.value;
+    if (options.length === 0) return false;
+    // If there's only one option and it matches exactly with search text, don't show dropdown
+    if (options.length === 1 && options[0].toLowerCase() === searchText.value.trim().toLowerCase()) {
+        return false;
+    }
+    return true;
+});
 
 const filteredProjects = computed(() => filterProjects(searchText.value));
 
@@ -214,7 +222,13 @@ const clearSelection = () => {
     searchText.value = "";
     emit("update:modelValue", "");
     highlightedIndex.value = -1;
-    inputRef.value?.focus();
+    // Keep focus and dropdown open after clearing
+    isOpen.value = true;
+    isFocused.value = true;
+    nextTick(() => {
+        inputRef.value?.focus();
+        updateDropdownPosition();
+    });
 };
 
 watch(
