@@ -2,7 +2,25 @@
     <div v-if="hasEffortData" class="project-effort-chart">
         <h3 class="chart-title">Effort by Project</h3>
 
-        <apexchart type="bar" height="300" :options="chartOptions" :series="chartSeries" />
+        <!-- Barra de porcentajes horizontal -->
+        <div class="percentage-bar-container mt-1">
+            <div class="percentage-bar">
+                <template v-for="project in projectPercentages" :key="project.name">
+                    <div
+                        class="percentage-segment"
+                        :style="{
+                            width: project.percentage + '%',
+                            backgroundColor: project.color,
+                        }"
+                        :title="`${project.name}: ${project.percentage.toFixed(1)}% (${project.effort}h)`"
+                    >
+                        <span class="percentage-tooltip"> {{ project.name }}: {{ project.percentage.toFixed(1) }}% ({{ project.effort }}h) </span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <apexchart type="bar" height="200" :options="chartOptions" :series="chartSeries" />
     </div>
 </template>
 
@@ -66,6 +84,25 @@ const sortedProjects = computed(() => {
         const effortB = efforts[b] || 0;
         return effortB - effortA;
     });
+});
+
+// Calculate total effort and percentages for each project
+const projectPercentages = computed(() => {
+    const efforts = projectEfforts.value;
+    const projects = sortedProjects.value;
+
+    if (projects.length === 0) return [];
+
+    const total = Object.values(efforts).reduce((sum, effort) => sum + effort, 0);
+
+    if (total === 0) return [];
+
+    return projects.map((project) => ({
+        name: project,
+        effort: efforts[project] || 0,
+        percentage: ((efforts[project] || 0) / total) * 100,
+        color: getProjectColor(project),
+    }));
 });
 
 // Prepare chart series data
@@ -174,15 +211,73 @@ const chartOptions = computed(() => {
     background: #1e1e1e;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    margin-top: 16px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
 .chart-title {
-    margin-bottom: 16px;
     color: #ffffff;
     font-size: 1.2em;
     font-weight: bold;
+}
+.percentage-bar {
+    display: flex;
+    width: 100%;
+    height: 14px;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+}
+
+.percentage-segment {
+    position: relative;
+    height: 100%;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
+
+    &:not(:last-child) {
+        border-right: 2px solid #000;
+    }
+
+    &:hover {
+        opacity: 0.85;
+
+        .percentage-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    }
+}
+
+.percentage-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
+    z-index: 10;
+    pointer-events: none;
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.9);
+    }
 }
 </style>

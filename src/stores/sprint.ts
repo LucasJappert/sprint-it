@@ -1,9 +1,10 @@
+import { STATE_VALUES } from "@/constants/states";
 import MyAlerts from "@/plugins/my-alerts";
 import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
 import { convertFirestoreTimestamp, getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
-import type { Item, Sprint } from "@/types";
+import type { Item, Sprint, Task } from "@/types";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
@@ -15,6 +16,82 @@ export const useSprintStore = defineStore("sprint", () => {
 
     // Backup para prevenir pérdida de datos
     const sprintItemsBackup = ref<Item[]>([]);
+
+    // ============================================
+    // Funciones de cálculo automático de campos
+    // ============================================
+
+    // Calcular estado del item basado en sus tasks
+    const calculateItemState = (tasks: Task[]): string => {
+        const activeTasks = tasks.filter((t) => t.deletedAt === null);
+        if (activeTasks.length === 0) return STATE_VALUES.TODO;
+
+        // Prioridad: InProgress > Ready For Test > Done > Waiting > To Do
+        if (activeTasks.some((t) => t.state === STATE_VALUES.IN_PROGRESS)) {
+            return STATE_VALUES.IN_PROGRESS;
+        }
+        if (activeTasks.some((t) => t.state === STATE_VALUES.READY_FOR_TEST)) {
+            return STATE_VALUES.READY_FOR_TEST;
+        }
+        if (activeTasks.every((t) => t.state === STATE_VALUES.DONE)) {
+            return STATE_VALUES.DONE;
+        }
+        if (activeTasks.some((t) => t.state === STATE_VALUES.WAITING)) {
+            return STATE_VALUES.WAITING;
+        }
+        return STATE_VALUES.TODO;
+    };
+
+    // Calcular assigned user del item
+    const calculateItemAssignedUser = (tasks: Task[], currentAssignedUser: string | null): string | null => {
+        const activeTasks = tasks.filter((t) => t.deletedAt === null);
+        if (activeTasks.length === 0) return currentAssignedUser;
+
+        // Prioridad 1: Task en estado In Progress
+        const inProgressTask = activeTasks.find((t) => t.state === STATE_VALUES.IN_PROGRESS);
+        if (inProgressTask?.assignedUser) {
+            return inProgressTask.assignedUser;
+        }
+
+        // Prioridad 2: Usuario con más tasks asignadas
+        const userTaskCount = new Map<string, number>();
+        activeTasks.forEach((task) => {
+            if (task.assignedUser) {
+                userTaskCount.set(task.assignedUser, (userTaskCount.get(task.assignedUser) || 0) + 1);
+            }
+        });
+
+        if (userTaskCount.size > 0) {
+            const maxUser = [...userTaskCount.entries()].reduce((a, b) => (b[1] > a[1] ? b : a));
+            return maxUser[0];
+        }
+
+        return currentAssignedUser;
+    };
+
+    // Calcular esfuerzos del item
+    const calculateItemEfforts = (tasks: Task[]) => {
+        const activeTasks = tasks.filter((t) => t.deletedAt === null);
+        return {
+            estimatedEffort: activeTasks.reduce((sum, t) => sum + t.estimatedEffort, 0),
+            actualEffort: activeTasks.reduce((sum, t) => sum + t.actualEffort, 0),
+        };
+    };
+
+    // Actualizar automáticamente los campos del item padre based on tasks
+    const autoUpdateParentItem = (item: Item) => {
+        const activeTasks = item.tasks.filter((t) => t.deletedAt === null);
+        if (activeTasks.length === 0) return;
+
+        const newState = calculateItemState(item.tasks);
+        const newAssignedUser = calculateItemAssignedUser(item.tasks, item.assignedUser);
+        const { estimatedEffort, actualEffort } = calculateItemEfforts(item.tasks);
+
+        item.state = newState as Item["state"];
+        item.assignedUser = newAssignedUser;
+        item.estimatedEffort = estimatedEffort;
+        item.actualEffort = actualEffort;
+    };
 
     const currentSprint = computed(() =>
         sprints.value.find((s) => s.id === currentSprintId.value)
@@ -193,7 +270,7 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
-    const updateTask = async (taskId: string, itemId: string, updatedTask: Partial<Item['tasks'][0]>) => {
+    const updateTask = async (taskId: string, itemId: string, updatedTask: Partial<Item["tasks"][0]>) => {
         if (currentSprint.value) {
             const itemIndex = currentSprint.value.items.findIndex((i) => i.id === itemId);
             if (itemIndex !== -1) {
@@ -205,23 +282,8 @@ export const useSprintStore = defineStore("sprint", () => {
                         if (task) {
                             Object.assign(task, updatedTask);
 
-                            // Recalcular esfuerzos del item padre si tiene tasks
-                            if (item.tasks.length > 0) {
-                                item.estimatedEffort = item.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
-                                item.actualEffort = item.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
-                            }
-
-                            // Verificar si todas las tasks activas están en "Done"
-                            const activeTasks = item.tasks.filter(t => t.deletedAt === null);
-                            const allTasksDone = activeTasks.length > 0 && activeTasks.every(t => t.state === "Done");
-                            if (allTasksDone) {
-                                item.state = "Done";
-                            }
-
-                            // Si la task cambió a "In Progress" y el item está en "To Do" o "Done", marcar item como "In Progress"
-                            if (updatedTask.state === "In Progress" && (item.state === "To Do" || item.state === "Done")) {
-                                item.state = "In Progress";
-                            }
+                            // Actualizar automáticamente los campos del item padre
+                            autoUpdateParentItem(item);
 
                             if (await validateSprintItemsBeforeSave(currentSprint.value)) {
                                 await saveSprint(currentSprint.value);
@@ -233,7 +295,7 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
-    const moveTask = (fromItemId: string, toItemId: string, taskId: string, newIndex: number) => {
+    const moveTask = async (fromItemId: string, toItemId: string, taskId: string, newIndex: number) => {
         const fromItem = currentSprint.value?.items.find((i) => i.id === fromItemId);
         const toItem = currentSprint.value?.items.find((i) => i.id === toItemId);
         if (fromItem && toItem) {
@@ -243,18 +305,32 @@ export const useSprintStore = defineStore("sprint", () => {
                 if (task) {
                     fromItem.tasks.splice(taskIndex, 1);
                     toItem.tasks.splice(newIndex, 0, task);
+
+                    // Actualizar automáticamente los campos de ambos items
+                    autoUpdateParentItem(fromItem);
+                    autoUpdateParentItem(toItem);
+
+                    // Guardar los cambios
+                    if (currentSprint.value && await validateSprintItemsBeforeSave(currentSprint.value)) {
+                        await saveSprint(currentSprint.value);
+                    }
                 }
             }
         }
     };
 
-    const reorderTasks = (itemId: string, oldIndex: number, newIndex: number) => {
+    const reorderTasks = async (itemId: string, oldIndex: number, newIndex: number) => {
         const item = currentSprint.value?.items.find((i) => i.id === itemId);
         if (item && oldIndex >= 0 && oldIndex < item.tasks.length) {
             const task = item.tasks[oldIndex];
             if (task) {
                 item.tasks.splice(oldIndex, 1);
                 item.tasks.splice(newIndex, 0, task);
+
+                // Guardar los cambios
+                if (currentSprint.value && await validateSprintItemsBeforeSave(currentSprint.value)) {
+                    await saveSprint(currentSprint.value);
+                }
             }
         }
     };
@@ -568,6 +644,9 @@ export const useSprintStore = defineStore("sprint", () => {
             task.order = idx + 1;
         });
 
+        // Actualizar automáticamente los campos del item padre
+        autoUpdateParentItem(item);
+
         await updateItem(item.id, { tasks: item.tasks });
     };
 
@@ -597,6 +676,10 @@ export const useSprintStore = defineStore("sprint", () => {
         };
 
         item.tasks.push(duplicatedTask);
+
+        // Actualizar automáticamente los campos del item padre
+        autoUpdateParentItem(item);
+
         await updateItem(itemId, { tasks: item.tasks });
     };
 

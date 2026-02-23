@@ -4,6 +4,46 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.22 - 2026-02-23
+
+### Nuevas Funciones
+
+- **Aviso antes de cerrar con cambios pendientes**: Al intentar cerrar un Item o Task existente que tiene cambios sin guardar, ahora se muestra un diálogo de confirmación.
+    - Opciones: "Guardar y cerrar" (guarda cambios y cierra), "Descartar cambios" (cierra sin guardar), "Cancelar" (vuelve al diálogo)
+    - Funciona al hacer click en botón X, botón Cancel, o presionar Escape
+    - Cuando el diálogo de confirmación está activo, presionar Escape no cierra el diálogo principal (permite择"Cancelar" para volver)
+    - Solo se activa para Items/Tasks existentes con cambios pendientes
+
+- **Campos calculados automáticamente para items con tasks**: Cuando un item tiene tasks, los campos Estado, Assigned User y Esfuerzos ahora se calculan automáticamente y no son editables manualmente.
+    - Estado: InProgress > Ready for Test > Done > Waiting > To Do (prioridad de mayor a menor)
+    - Assigned User: Prioridad a task en estado In Progress, o el usuario con más tasks asignadas
+    - Esfuerzos: Suma automática de los esfuerzos de todas las tasks
+    - Los campos se actualizan automáticamente al crear, editar, mover o eliminar tasks
+    - En ItemDialog se muestra un mensaje informativo indicando que estos campos se calculan automáticamente
+
+- **Barra de porcentajes de esfuerzo por proyecto**: Nueva barra horizontal ubicada debajo del gráfico de esfuerzos que muestra visualmente el porcentaje de esfuerzo de cada proyecto.
+    - Barra del 100% de ancho dividida en secciones proporcionales al porcentaje de horas de cada proyecto
+    - Cada sección pintada con el color correspondiente del proyecto
+    - Líneas divisorias negras (2px) entre cada sección
+    - Estilo con box-shadow inset para efecto de profundidad
+    - Tooltip al hacer hover mostrando: nombre del proyecto, porcentaje y horas de esfuerzo
+    - Ejemplo: "📋 Dashboard Sprint-It: 45.2% (24h)"
+
+### Cambios
+
+- **MySelect**: Agregada propiedad `disabled` para deshabilitar interactuación con el select.
+    - Agregado estilo visual de opacidad reducida y cursor no permitido cuando está deshabilitado
+
+- **MyDialog**: Agregada propiedad `closeOnEscape` para controlar el comportamiento de la tecla Escape.
+    - Por defecto es `true` (comportamiento anterior)
+    - Se establece en `false` cuando el diálogo de confirmación de cierre está activo
+
+- **ItemDialog y TaskDialog**: Integración del aviso antes de cerrar con cambios pendientes.
+    - Diálogo de confirmación aparece al intentar cerrar con cambios pendientes
+    - Prop `closeOnEscape` configurada dinámicamente según el estado del diálogo de confirmación
+
+---
+
 ## v1.1.21 - 2026-02-22
 
 ### Nuevas Funciones

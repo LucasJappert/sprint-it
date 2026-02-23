@@ -1,13 +1,15 @@
 ﻿<template>
-    <div class="my-select-wrapper no-select" :class="accentClass">
+    <div class="my-select-wrapper no-select" :class="[accentClass, { disabled: props.disabled }]">
         <div
             ref="rootRef"
             class="my-select-field text-left"
-            :class="{ expanded, 'has-value': hasValue }"
+            :class="{ expanded, 'has-value': hasValue, 'is-disabled': props.disabled }"
             :style="fieldInlineStyle"
+            :tabindex="props.disabled ? -1 : 0"
             @click="toggle"
             role="combobox"
             :aria-expanded="expanded"
+            :aria-disabled="props.disabled"
         >
             <span class="floating-label" :class="{ 'is-active': expanded || hasValue }">
                 {{ labelText }}
@@ -102,6 +104,7 @@ const props = withDefaults(
         minSelected?: number; // nuevo: mínimo seleccionado requerido (para multiselect)
         density?: "default" | "compact";
         accent?: AccentColor;
+        disabled?: boolean;
     }>(),
     {
         multiselect: false,
@@ -113,6 +116,7 @@ const props = withDefaults(
         minSelected: 0,
         density: "default",
         accent: "gray",
+        disabled: false,
     },
 );
 
@@ -210,6 +214,7 @@ const handleClickOutside = (event: MouseEvent) => {
 };
 
 const toggle = () => {
+    if (props.disabled) return;
     expanded.value = !expanded.value;
 };
 
@@ -307,6 +312,12 @@ $radius: 18px;
 
     &.expanded {
         box-shadow: 0 0 0 1px var(--sel-035) inset;
+    }
+
+    &.is-disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        background-color: rgba(0, 0, 0, 0.05);
     }
 
     .content {
