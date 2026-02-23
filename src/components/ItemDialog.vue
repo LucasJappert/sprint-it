@@ -1,5 +1,5 @@
 <template>
-    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent :pulse="hasPendingChanges">
+    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent :pulse="hasPendingChanges" :close-on-escape="!showCloseConfirmation">
         <div class="header flex-center justify-space-between">
             <div class="flex-center">
                 <h3 class="text-left flex-center justify-start">
@@ -17,7 +17,7 @@
                     </v-btn>
                 </v-btn-toggle>
             </div>
-            <v-icon class="close-btn" @click="$emit('close')" :size="24">mdi-close</v-icon>
+            <v-icon class="close-btn" @click="handleClose" :size="24">mdi-close</v-icon>
         </div>
         <div class="body-scroll">
             <template v-if="viewMode === 'details'">
@@ -39,17 +39,25 @@
                             :options="assignedUserOptions"
                             placeholder="Select user..."
                             density="compact"
+                            :disabled="itemHasTasks"
                             @update:options="onAssignedUserChange"
                         />
                     </div>
                     <div class="state">
-                        <MySelect v-model="newItem.state" label="State" :options="stateOptions" density="compact" @update:options="onStateChange" />
+                        <MySelect
+                            v-model="newItem.state"
+                            label="State"
+                            :options="stateOptions"
+                            density="compact"
+                            :disabled="itemHasTasks"
+                            @update:options="onStateChange"
+                        />
                     </div>
                     <div class="estimated-effort">
-                        <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" />
+                        <MyInput v-model="newItem.estimatedEffort" label="Effort" type="number" density="compact" :disabled="itemHasTasks" />
                     </div>
                     <div class="actual-effort">
-                        <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" />
+                        <MyInput v-model="newItem.actualEffort" label="Real Effort" type="number" density="compact" :disabled="itemHasTasks" />
                     </div>
                     <div class="priority">
                         <MySelect v-model="newItem.priority" label="Priority" :options="priorityOptions" density="compact" @update:options="onPriorityChange" />
@@ -59,8 +67,13 @@
                     </div>
                 </div>
 
+                <div v-if="itemHasTasks" class="auto-calculated-notice mt-1">
+                    <v-icon size="14" class="mr-1">mdi-information-outline</v-icon>
+                    State, Assigned User, and Efforts are calculated automatically from tasks
+                </div>
+
                 <!-- Detalle en textarea ocupando 100% del ancho -->
-                <div class="full-width mt-3">
+                <div class="full-width">
                     <MyRichText v-model="newItem.detail" placeholder="Description" density="compact" class="detail-textarea" />
                 </div>
 
@@ -80,14 +93,31 @@
             </template>
         </div>
         <div class="footer">
-            <MyButton btn-class="px-2" secondary @click="$emit('close')">Cancel</MyButton>
+            <MyButton btn-class="px-2" secondary @click="handleClose">Cancel</MyButton>
             <MyButton btn-class="px-2" @click="handleSave" :disabled="!canSave">{{ isEditing ? "Save Changes" : "Create Item" }}</MyButton>
         </div>
     </MyDialog>
+
+    <MyAlertDialog
+        v-model="showCloseConfirmation"
+        title="Cambios pendientes"
+        text="¿Qué deseas hacer con los cambios realizados?"
+        icon="warning"
+        :show-cancel="true"
+        cancel-text="Cancelar"
+        :confirm-buttons="[
+            { text: 'Descartar cambios', value: 'discard' },
+            { text: 'Guardar y cerrar', value: 'save' },
+        ]"
+        :confirm-btn-props="{ color: 'my-blue-button', colorClass: 'my-blue-button' }"
+        @confirm="handleConfirmClose"
+        @cancel="handleCancelClose"
+    />
 </template>
 
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
+import MyAlertDialog from "@/components/my-elements/MyAlertDialog.vue";
 import { useClipboard } from "@/composables/useClipboard";
 import { useProjectName } from "@/composables/useProjectName";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
@@ -128,7 +158,14 @@ const authStore = useAuthStore();
 const { copyToClipboardAsync } = useClipboard();
 const { saveLastProject, getLastProject } = useProjectName();
 
+const showCloseConfirmation = ref(false);
+
 const isEditing = computed(() => !!props.existingItem);
+
+// Computed para determinar si el item tiene tasks
+const itemHasTasks = computed(() => {
+    return props.existingItem?.tasks && props.existingItem.tasks.filter((t: any) => t.deletedAt === null).length > 0;
+});
 
 const originalAssignedUser = ref("");
 const titleInputRef = ref();
@@ -173,6 +210,11 @@ const hasPendingChanges = computed(() => {
     // Solo mostrar pulso cuando se está editando un item existente
     if (!isEditing.value) return false;
     return hasChanges.value || isWritingComment.value || isEditingComment.value;
+});
+
+const shouldShowCloseConfirmation = computed(() => {
+    if (!isEditing.value) return false;
+    return hasPendingChanges.value;
 });
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
@@ -555,9 +597,27 @@ const handleSave = async (shouldClose: boolean | MouseEvent = true) => {
     }
 };
 const handleClose = () => {
+    if (shouldShowCloseConfirmation.value) {
+        showCloseConfirmation.value = true;
+        return;
+    }
     emit("close");
     resetForm();
     resetPendingChanges();
+};
+
+const handleConfirmClose = (action: "save" | "discard") => {
+    showCloseConfirmation.value = false;
+    if (action === "save") {
+        handleSave(false);
+    }
+    emit("close");
+    resetForm();
+    resetPendingChanges();
+};
+
+const handleCancelClose = () => {
+    showCloseConfirmation.value = false;
 };
 
 const onWritingComment = (isWriting: boolean) => {
@@ -580,4 +640,16 @@ const handleCopyToClipboard = () => {
 
 <style scoped lang="scss">
 @use "@/styles/dialog-form.scss";
+
+.auto-calculated-notice {
+    color: #ffa72688;
+    font-size: 0.7rem;
+    text-align: left;
+    width: fit-content;
+    display: block;
+    background: rgba(255, 167, 38, 0.1);
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 167, 38, 0.3);
+}
 </style>

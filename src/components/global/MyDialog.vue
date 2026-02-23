@@ -24,6 +24,7 @@ const props = withDefaults(
         bgTransparent?: boolean;
         persistent?: boolean;
         pulse?: boolean;
+        closeOnEscape?: boolean;
     }>(),
     {
         myDialogStyles: "",
@@ -32,6 +33,7 @@ const props = withDefaults(
         bgTransparent: false,
         persistent: false,
         pulse: false,
+        closeOnEscape: true,
     },
 );
 
@@ -50,6 +52,7 @@ const closeDialog = () => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
+    if (!props.closeOnEscape) return;
     if (event.key == "Escape" || event.key == "Esc") return emit("close");
     const stack = (window as any).myDialogStack || [];
     if (stack[stack.length - 1] !== dialogInstance) return;

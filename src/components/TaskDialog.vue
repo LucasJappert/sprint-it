@@ -1,5 +1,5 @@
 <template>
-    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent :pulse="hasPendingChanges">
+    <MyDialog :visible="visible" :min-width="0" @close="handleClose" persistent :pulse="hasPendingChanges" :close-on-escape="!showCloseConfirmation">
         <div class="header flex-center justify-space-between">
             <div class="flex-center">
                 <h3 class="text-left flex-center justify-start">
@@ -17,7 +17,7 @@
                     </v-btn>
                 </v-btn-toggle>
             </div>
-            <v-icon class="close-btn" @click="$emit('close')" :size="24">mdi-close</v-icon>
+            <v-icon class="close-btn" @click="handleClose" :size="24">mdi-close</v-icon>
         </div>
         <div class="body-scroll">
             <template v-if="viewMode === 'details'">
@@ -85,10 +85,27 @@
             <MyButton btn-class="px-2" @click="handleSave" :disabled="!canSave">{{ isEditing ? "Save Changes" : "Add Task" }}</MyButton>
         </div>
     </MyDialog>
+
+    <MyAlertDialog
+        v-model="showCloseConfirmation"
+        title="Cambios pendientes"
+        text="¿Qué deseas hacer con los cambios realizados?"
+        icon="warning"
+        :show-cancel="true"
+        cancel-text="Cancelar"
+        :confirm-buttons="[
+            { text: 'Descartar cambios', value: 'discard' },
+            { text: 'Guardar y cerrar', value: 'save' },
+        ]"
+        :confirm-btn-props="{ color: 'my-blue-button', colorClass: 'my-blue-button' }"
+        @confirm="handleConfirmClose"
+        @cancel="handleCancelClose"
+    />
 </template>
 
 <script setup lang="ts">
 import HistoryView from "@/components/HistoryView.vue";
+import MyAlertDialog from "@/components/my-elements/MyAlertDialog.vue";
 import { useClipboard } from "@/composables/useClipboard";
 import { useProjectName } from "@/composables/useProjectName";
 import { useUrlManagement } from "@/composables/useUrlManagement";
@@ -113,6 +130,8 @@ const emit = defineEmits<{
 }>();
 
 const isEditing = computed(() => !!props.existingTask);
+
+const showCloseConfirmation = ref(false);
 
 const canSave = computed(() => {
     if (!isEditing.value) {
@@ -143,6 +162,11 @@ const hasPendingChanges = computed(() => {
     // Solo mostrar pulso cuando se está editando un task existente
     if (!isEditing.value) return false;
     return hasChanges.value || isWritingComment.value || isEditingComment.value;
+});
+
+const shouldShowCloseConfirmation = computed(() => {
+    if (!isEditing.value) return false;
+    return hasPendingChanges.value;
 });
 
 const originalAssignedUser = ref("");
@@ -551,10 +575,29 @@ const handleSave = async (shouldClose: boolean | MouseEvent = true) => {
 };
 
 const handleClose = () => {
+    if (shouldShowCloseConfirmation.value) {
+        showCloseConfirmation.value = true;
+        return;
+    }
     emit("close");
     resetForm();
     resetPendingChanges();
     clearQueryParams();
+};
+
+const handleConfirmClose = (action: "save" | "discard") => {
+    showCloseConfirmation.value = false;
+    if (action === "save") {
+        handleSave(false);
+    }
+    emit("close");
+    resetForm();
+    resetPendingChanges();
+    clearQueryParams();
+};
+
+const handleCancelClose = () => {
+    showCloseConfirmation.value = false;
 };
 
 const onWritingComment = (isWriting: boolean) => {

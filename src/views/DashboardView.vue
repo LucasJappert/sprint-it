@@ -51,10 +51,10 @@
             </div>
 
             <!-- Gráfico de progreso de usuarios -->
-            <UserProgressChart v-if="chartReady" class="mt-1" />
+            <UserProgressChart v-if="chartReady" />
 
             <!-- Gráfico de esfuerzo por proyecto -->
-            <ProjectEffortChart v-if="chartReady" class="mt-1" />
+            <ProjectEffortChart v-if="chartReady" />
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
