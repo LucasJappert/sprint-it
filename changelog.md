@@ -4,6 +4,14 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.23 - 2026-02-25
+
+### Nuevas Funciones
+
+- **Prefijo de proyecto en títulos del dashboard**: Ahora se muestra el ícono del nombre del proyecto como prefijo en los títulos de items y tasks en el dashboard. Permite identificar rápidamente el proyecto al que pertenece cada item/task
+
+---
+
 ## v1.1.22 - 2026-02-23
 
 ### Nuevas Funciones

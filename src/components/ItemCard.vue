@@ -38,6 +38,7 @@
         <div class="item-col cols-title text-left">
             <!-- <span v-if="taskCountDisplay" class="mr-1">{{ taskCountDisplay }}</span> -->
             <!-- <v-icon class="mr-1 text" size="16">mdi-clipboard-text</v-icon> -->
+            <span v-if="item.projectName" class="project-prefix">{{ item.projectName }}</span>
             {{ item.title }}
             <div class="task-indicators" v-if="activeTasks.length > 0">
                 <div v-for="task in activeTasks" :key="task.id" class="task-indicator" :style="{ backgroundColor: getStateColor(task.state) }"></div>
@@ -433,8 +434,8 @@ const onDrop = (e: DragEvent) => {
 
 <style scoped lang="scss">
 @use "@/styles/dashboard-columns.scss" as *;
+
 .item-card {
-    color: $text;
     display: flex;
     align-items: center;
     padding: 0 8px;
