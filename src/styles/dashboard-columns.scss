@@ -86,3 +86,11 @@ $col-state-width: 120px;
     flex-shrink: 0;
     margin-right: 6px;
 }
+.project-prefix {
+    display: block;
+    width: 10px;
+    font-weight: bold;
+    font-size: 0.5rem;
+    margin-right: 2px;
+    overflow: hidden;
+}

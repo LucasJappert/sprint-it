@@ -33,6 +33,7 @@
             {{ assignedUserName.replace("Sebastian", "Seba") }}
         </div>
         <div class="item-col cols-title text-left">
+            <span v-if="task.projectName || item.projectName" class="project-prefix">{{ task.projectName || item.projectName || "" }}</span>
             <span class="ellipsis">{{ task.title }}</span>
         </div>
         <div class="item-col cols-effort">{{ task.estimatedEffort }} - {{ task.actualEffort }}</div>

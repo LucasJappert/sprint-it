@@ -412,7 +412,7 @@ export const exportSprintData = async (sprintId: string) => {
     }
 
     // Prompt para ChatGPT
-    const prompt = "Generame un resumen del sprint MUY breve (maximo 10-12 lineas), en formato ideal para WhatsApp. Debe ser facil de entender para colegas que no son del area de sistemas, con bullets cortos, claro y directo. Usar pocos emoticones solo para ayudar a la lectura (sin abusar).";
+    const prompt = "Generame un resumen del sprint MUY breve (maximo 10-12 lineas), en formato ideal para WhatsApp. Debe ser facil de entender para colegas que no son del area de sistemas, con bullets cortos, claro y directo. Usar pocos emoticones solo para ayudar a la lectura (sin abusar). Puede que existan items/tasks en estado Done que no tienen esfuerzos, las cuales las deberiamos considerar como proyectos que trabajamos fuera del horario de la empresa, pero que suman valor a la misma, asi que podemos agregar algun comentario para estos casos tambien.";
 
     // Construir el objeto de exportación
     const exportData = {
