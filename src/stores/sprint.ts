@@ -730,6 +730,38 @@ export const useSprintStore = defineStore("sprint", () => {
         await updateItem(item.id, { tasks: item.tasks });
     };
 
+    /**
+     * Elimina permanentemente una tarea del item
+     */
+    const deleteTask = async (taskId: string, itemId: string) => {
+        if (currentSprint.value) {
+            const itemIndex = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (itemIndex !== -1) {
+                const item = currentSprint.value.items[itemIndex];
+                if (!item) return;
+
+                const taskIndex = item.tasks.findIndex((t) => t.id === taskId);
+                if (taskIndex !== -1) {
+                    // Eliminar físicamente la tarea
+                    item.tasks.splice(taskIndex, 1);
+
+                    // Reordenar las tareas activas
+                    const activeTasks = item.tasks.filter((task) => task.deletedAt === null);
+                    activeTasks.forEach((task, idx) => {
+                        task.order = idx + 1;
+                    });
+
+                    // Actualizar automáticamente los campos del item padre
+                    autoUpdateParentItem(item);
+
+                    if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                        await saveSprint(currentSprint.value);
+                    }
+                }
+            }
+        }
+    };
+
     const duplicateTask = async (taskId: string, itemId: string) => {
         if (!currentSprint.value) return;
 
@@ -991,6 +1023,7 @@ export const useSprintStore = defineStore("sprint", () => {
         softDeleteItem,
         restoreTask,
         softDeleteTask,
+        deleteTask,
         moveTask,
         reorderTasks,
         sortTasksByState,

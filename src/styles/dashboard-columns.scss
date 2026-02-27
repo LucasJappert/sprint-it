@@ -89,3 +89,15 @@ $col-state-width: 120px;
     margin-right: 2px;
     overflow: hidden;
 }
+
+.drag-handle {
+    cursor: grab !important;
+    margin-right: 4px;
+
+    * {
+        pointer-events: none;
+    }
+}
+.drag-handle:active {
+    cursor: grabbing !important;
+}

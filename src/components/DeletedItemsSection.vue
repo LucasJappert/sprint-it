@@ -66,7 +66,17 @@
                         <div class="task-info" v-for="task in itemWithDeleted.deletedTasks" :key="task.id">
                             <v-icon size="14" class="mr-1">mdi-checkbox-blank-outline</v-icon>
                             <span class="task-title">{{ task.title }}</span>
-                            <v-chip size="x-small" color="error" variant="tonal" class="ml-2">deleted</v-chip>
+                            <v-btn
+                                size="x-small"
+                                icon
+                                variant="text"
+                                color="error"
+                                @click="onPermanentDeleteTask(task, itemWithDeleted.item)"
+                                title="Permanently delete task"
+                                class="ml-2"
+                            >
+                                <v-icon size="14">mdi-delete-forever</v-icon>
+                            </v-btn>
                             <v-btn size="x-small" icon variant="text" color="success" @click="onRestoreTask(task, itemWithDeleted.item)" title="Restore task">
                                 <v-icon size="14">mdi-restore</v-icon>
                             </v-btn>
@@ -187,6 +197,20 @@ const onRestoreTask = async (task: Task, item: Item) => {
     if (confirmed) {
         await sprintStore.restoreTask(task.id, item.id);
         notifyOk("Task restored", `The task "${task.title}" has been restored.`);
+    }
+};
+
+// Eliminar permanentemente una tarea
+const onPermanentDeleteTask = async (task: Task, item: Item) => {
+    const confirmed = await MyAlerts.confirmAsync(
+        "Permanently Delete Task",
+        `Are you sure you want to permanently delete the task "<strong>${task.title}</strong>"?<br><br><strong>This action cannot be undone.</strong>`,
+        "error",
+    );
+
+    if (confirmed) {
+        await sprintStore.deleteTask(task.id, item.id);
+        notifyOk("Task deleted", `The task "${task.title}" has been permanently deleted.`);
     }
 };
 </script>
