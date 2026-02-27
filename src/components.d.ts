@@ -11,6 +11,7 @@ declare module 'vue' {
     CommentSection: typeof import('./components/global/CommentSection.vue')['default']
     ContextMenu: typeof import('./components/ContextMenu.vue')['default']
     ContextSubmenu: typeof import('./components/ContextSubmenu.vue')['default']
+    DeletedItemsSection: typeof import('./components/DeletedItemsSection.vue')['default']
     Header: typeof import('./components/Header.vue')['default']
     HistoryView: typeof import('./components/HistoryView.vue')['default']
     ImageLinkView: typeof import('./components/ImageLinkView.vue')['default']

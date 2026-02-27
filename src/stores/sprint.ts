@@ -511,6 +511,73 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    /**
+     * Restaura un item eliminado (soft-delete) estableciendo deletedAt a null
+     */
+    const restoreItem = async (itemId: string) => {
+        if (currentSprint.value) {
+            const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (index !== -1 && currentSprint.value.items[index]) {
+                // Verificar que el item esté marcado como eliminado
+                if (currentSprint.value.items[index].deletedAt === null) {
+                    console.warn("El item no está eliminado:", itemId);
+                    return;
+                }
+                // Restaurar el item estableciendo deletedAt a null
+                currentSprint.value.items[index].deletedAt = null;
+                // Reordenar los ítems activos
+                const activeItems = currentSprint.value.items.filter((item) => item.deletedAt === null);
+                activeItems.forEach((item, idx) => {
+                    item.order = idx + 1;
+                });
+                if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                    await saveSprint(currentSprint.value);
+                }
+            }
+        }
+    };
+
+    /**
+     * Restaura una tarea eliminada (soft-delete) estableciendo deletedAt a null
+     */
+    const restoreTask = async (taskId: string, itemId: string) => {
+        if (currentSprint.value) {
+            const itemIndex = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (itemIndex !== -1) {
+                const item = currentSprint.value.items[itemIndex];
+                if (!item) return;
+
+                const taskIndex = item.tasks.findIndex((t) => t.id === taskId);
+                if (taskIndex !== -1) {
+                    const task = item.tasks[taskIndex];
+                    if (!task) return;
+
+                    // Verificar que la tarea esté marcada como eliminada
+                    if (task.deletedAt === null) {
+                        console.warn("La tarea no está eliminada:", taskId);
+                        return;
+                    }
+
+                    // Restaurar la tarea estableciendo deletedAt a null
+                    item.tasks[taskIndex].deletedAt = null;
+
+                    // Reordenar las tareas activas
+                    const activeTasks = item.tasks.filter((task) => task.deletedAt === null);
+                    activeTasks.forEach((task, idx) => {
+                        task.order = idx + 1;
+                    });
+
+                    // Actualizar automáticamente los campos del item padre
+                    autoUpdateParentItem(item);
+
+                    if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                        await saveSprint(currentSprint.value);
+                    }
+                }
+            }
+        }
+    };
+
     const moveItemToSprint = async (itemId: string, targetSprintId: string) => {
         loadingStore.setLoading(true);
         try {
@@ -920,7 +987,9 @@ export const useSprintStore = defineStore("sprint", () => {
         addItem,
         updateItem,
         deleteItem,
+        restoreItem,
         softDeleteItem,
+        restoreTask,
         softDeleteTask,
         moveTask,
         reorderTasks,

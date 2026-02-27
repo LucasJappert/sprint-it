@@ -57,6 +57,9 @@
 
             <!-- Gráfico de esfuerzo por proyecto -->
             <ProjectEffortChart v-if="chartReady" />
+
+            <!-- Sección de items eliminados -->
+            <DeletedItemsSection />
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
