@@ -19,6 +19,7 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 - **Actualización automática del item padre al cambiar estado de task**: Corregido bug donde el item padre no se actualizaba automáticamente al cambiar el estado de una task a "Done" (sí funcionaba con "In Progress").
     - El problema era que existían dos métodos para guardar tasks: `sprintStore.updateTask()` (sí actualizaba padre) y `useTaskManagement.saveTask()` (no actualizaba padre)
     - Ahora `saveTask` delega en `sprintStore.updateTask()`, eliminando duplicación y garantizando consistencia
+- **Ajustar ancho del dashboard para mobile**
 
 ---
 
