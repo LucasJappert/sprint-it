@@ -26,7 +26,7 @@ export const useSprintStore = defineStore("sprint", () => {
         const activeTasks = tasks.filter((t) => t.deletedAt === null);
         if (activeTasks.length === 0) return STATE_VALUES.TODO;
 
-        // Prioridad: InProgress > Ready For Test > Done > Waiting > To Do
+        // Prioridad: InProgress > Ready For Test > Done > To Do > Waiting
         if (activeTasks.some((t) => t.state === STATE_VALUES.IN_PROGRESS)) {
             return STATE_VALUES.IN_PROGRESS;
         }
@@ -36,10 +36,10 @@ export const useSprintStore = defineStore("sprint", () => {
         if (activeTasks.every((t) => t.state === STATE_VALUES.DONE)) {
             return STATE_VALUES.DONE;
         }
-        if (activeTasks.some((t) => t.state === STATE_VALUES.WAITING)) {
-            return STATE_VALUES.WAITING;
+        if (activeTasks.some((t) => t.state === STATE_VALUES.TODO)) {
+            return STATE_VALUES.TODO;
         }
-        return STATE_VALUES.TODO;
+        return STATE_VALUES.WAITING;
     };
 
     // Calcular assigned user del item

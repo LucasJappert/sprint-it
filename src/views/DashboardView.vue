@@ -28,7 +28,7 @@
                         </MyButton>
                     </div>
                     <div class="item-col cols-effort flex-center" title="Estimated/Real">Efforts</div>
-                    <div class="item-col cols-priority">Priority</div>
+                    <!-- <div class="item-col cols-priority">Priority</div> -->
                     <div class="item-col cols-project">Project</div>
                 </div>
 

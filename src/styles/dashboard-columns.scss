@@ -43,6 +43,7 @@
     min-width: 600px;
     max-width: 600px;
     text-align: left;
+    padding-right: 20px;
     @media (max-width: $mobile-resolution) {
         flex: 0 0 300px;
         max-width: 300px;
@@ -100,4 +101,12 @@ $col-state-width: 120px;
 }
 .drag-handle:active {
     cursor: grabbing !important;
+}
+
+.priority-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: absolute;
+    right: 0;
 }

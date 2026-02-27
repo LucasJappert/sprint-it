@@ -19,11 +19,29 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ### Cambios
 
+- **Eliminación de columna de prioridad en dashboard**: Se eliminó la columna de prioridad del dashboard.
+    - Ahora las banderitas de prioridad (🔴 alta, 🟡 media, 🟢 baja) se muestran al final del título de cada item/task
+    - Las banderitas solo se visualizan cuando la prioridad es diferente de "Normal"
+    - El diseño es más limpio y reduce el espacio horizontal necesario
+
+- **Lógica de actualización de estado de item padre**: Ajustada la lógica para determinar el estado de un item cuando sus tasks cambian.
+    - Anterior: InProgress > Ready for Test > Done > Waiting > To Do
+    - Nuevo: InProgress > Ready for Test > **To Do** > Done > Waiting
+    - El estado "To Do" ahora tiene mayor prioridad que "Done" y "Waiting"
+    - Esto refleja mejor el flujo de trabajo donde un item con al menos una tarea pendiente debe mostrarse como pendiente
+
 - **Duplicar item/task**: Al duplicar un item o tarea, ahora solo se copia el título (y otros campos relevantes como detail, priority, projectName). Ya no se copia la persona asignada ni los esfuerzos.
     - Persona asignada (`assignedUser`) se establece a `null`
     - Esfuerzos (`estimatedEffort`, `actualEffort`) se establecen a `0`
     - Estado (`state`) se resetea a "To Do"
     - Aplica tanto para duplicar item completo como item sin tasks, y para duplicar tareas individuales
+
+- **Export Sprint optimizado para IA**: Mejorado el JSON exportado para facilitar el cálculo de horas por proyecto.
+    - Agregado objeto `projectEffortSummary` pre-calculado con: `projectName`, `totalHours`, `percentage` (suma 100%), `itemCount`, `taskCount`
+    - Agregado campo `totalSprintHours` con el total de horas del sprint
+    - Eliminado `estimatedEffort` del export (solo se incluye `actualEffort`)
+    - El cálculo usa la misma lógica que el gráfico "Effort by Project": si el item tiene tasks, usa el esfuerzo de las tasks; si no tiene tasks, usa el esfuerzo del item
+    - Prompt actualizado para que la IA use directamente `projectEffortSummary` sin necesidad de calcular
 
 ### Arreglos
 
