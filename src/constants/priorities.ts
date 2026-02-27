@@ -21,19 +21,24 @@ export interface PriorityOption {
     color: string;
 }
 
+export const PRIORITY_ICONS: Record<PriorityValue, string> = {
+    [NORMAL_NAME]: `<i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${LOW_COLOR};"></i>`,
+    [MEDIUM_NAME]: `<i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${MEDIUM_COLOR};"></i>`,
+    [HIGH_NAME]: `<i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${HIGH_COLOR};"></i>`,
+};
 export const PRIORITY_OPTIONS: PriorityOption[] = [
     {
-        name: `<span style="display: flex; align-items: center; gap: 6px;"><i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${LOW_COLOR};"></i>${NORMAL_NAME}</span>`,
+        name: `<span style="display: flex; align-items: center; gap: 6px;">${PRIORITY_ICONS[NORMAL_NAME]}${NORMAL_NAME}</span>`,
         value: NORMAL_NAME,
         color: LOW_COLOR,
     },
     {
-        name: `<span style="display: flex; align-items: center; gap: 6px;"><i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${MEDIUM_COLOR};"></i>${MEDIUM_NAME}</span>`,
+        name: `<span style="display: flex; align-items: center; gap: 6px;">${PRIORITY_ICONS[MEDIUM_NAME]}${MEDIUM_NAME}</span>`,
         value: MEDIUM_NAME,
         color: MEDIUM_COLOR,
     },
     {
-        name: `<span style="display: flex; align-items: center; gap: 6px;"><i class="v-icon notranslate mdi mdi-flag" style="font-size: 16px; color: ${HIGH_COLOR};"></i>${HIGH_NAME}</span>`,
+        name: `<span style="display: flex; align-items: center; gap: 6px;">${PRIORITY_ICONS[HIGH_NAME]}${HIGH_NAME}</span>`,
         value: HIGH_NAME,
         color: HIGH_COLOR,
     },

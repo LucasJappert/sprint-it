@@ -32,14 +32,17 @@
         <div class="item-col cols-assigned">
             {{ assignedUserName.replace("Sebastian", "Seba") }}
         </div>
-        <div class="item-col cols-title text-left">
+        <div class="item-col cols-title text-left relative">
             <span v-if="task.projectName || item.projectName" class="project-prefix">{{ task.projectName || item.projectName || "" }}</span>
-            <span class="ellipsis">{{ task.title }}</span>
+            <span class="ellipsis">
+                {{ task.title }}
+            </span>
+            <span class="priority-content" v-html="PRIORITY_ICONS[task.priority]"></span>
         </div>
         <div class="item-col cols-effort">{{ task.estimatedEffort }} - {{ task.actualEffort }}</div>
-        <div class="item-col cols-priority priority-cell">
-            <span class="priority-content" v-html="getPriorityHtml(task.priority)"></span>
-        </div>
+        <!-- <div class="item-col cols-priority priority-cell">
+            <span class="priority-content" v-html="PRIORITY_ICONS[task.priority]"></span>
+        </div> -->
         <div class="item-col cols-project">
             {{ task.projectName || "-" }}
         </div>
@@ -62,7 +65,7 @@
 <script setup lang="ts">
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
-import { PRIORITY_OPTIONS } from "@/constants/priorities";
+import { PRIORITY_ICONS, PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
@@ -344,12 +347,6 @@ const onDragEnd = () => {
 .priority-cell {
     display: flex;
     align-items: center;
-}
-
-.priority-content {
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
 .priority-dot {

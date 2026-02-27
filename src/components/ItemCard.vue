@@ -43,11 +43,13 @@
             <div class="task-indicators" v-if="activeTasks.length > 0">
                 <div v-for="task in activeTasks" :key="task.id" class="task-indicator" :style="{ backgroundColor: getStateColor(task.state) }"></div>
             </div>
+
+            <span class="priority-content" v-html="PRIORITY_ICONS[item.priority]"></span>
         </div>
         <div class="item-col cols-effort">{{ calculatedEstimatedEffort }} - {{ calculatedActualEffort }}</div>
-        <div class="item-col cols-priority priority-cell">
-            <span class="priority-content" v-html="getPriorityHtml(item.priority)"></span>
-        </div>
+        <!-- <div class="item-col cols-priority priority-cell">
+            <span class="priority-content" v-html="PRIORITY_ICONS[item.priority]"></span>
+        </div> -->
         <div class="item-col cols-project">
             {{ item.projectName || "-" }}
         </div>
@@ -74,7 +76,7 @@
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { useUrlManagement } from "@/composables/useUrlManagement";
-import { PRIORITY_OPTIONS } from "@/constants/priorities";
+import { PRIORITY_ICONS, PRIORITY_OPTIONS } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
@@ -577,12 +579,6 @@ const onDrop = (e: DragEvent) => {
 .priority-cell {
     display: flex;
     align-items: center;
-}
-
-.priority-content {
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
 .priority-dot {
