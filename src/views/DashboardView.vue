@@ -7,43 +7,45 @@
 
         <!-- Lista de items -->
         <div class="board" @dragover="onItemDragOver" @drop="onBoardDrop">
-            <!-- Cabecera de columnas -->
-            <div class="header-row">
-                <div class="item-col cols-actions text-left">
-                    <v-btn v-if="items.some((item) => item.tasks.length > 0)" icon size="x-small" @click="toggleAllTasks" @mousedown.stop>
-                        <v-icon size="16" :class="{ yellow: allTasksExpanded, text: !allTasksExpanded }">{{
-                            allTasksExpanded ? "mdi-collapse-all" : "mdi-expand-all"
-                        }}</v-icon>
-                    </v-btn>
-                </div>
-                <div class="item-col cols-order flex-center">#</div>
-                <div class="item-col cols-assigned"><span class="ellipsis" title="Assigned">Assigned</span></div>
-                <div class="item-col cols-title text-left">
-                    Title
+            <div class="dashboard-container">
+                <!-- Cabecera de columnas -->
+                <div class="header-row">
+                    <div class="item-col cols-actions text-left">
+                        <v-btn v-if="items.some((item) => item.tasks.length > 0)" icon size="x-small" @click="toggleAllTasks" @mousedown.stop>
+                            <v-icon size="16" :class="{ yellow: allTasksExpanded, text: !allTasksExpanded }">{{
+                                allTasksExpanded ? "mdi-collapse-all" : "mdi-expand-all"
+                            }}</v-icon>
+                        </v-btn>
+                    </div>
+                    <div class="item-col cols-order flex-center">#</div>
+                    <div class="item-col cols-assigned"><span class="ellipsis" title="Assigned">Assigned</span></div>
+                    <div class="item-col cols-title text-left">
+                        Title
 
-                    <MyButton class="ml-4" @click="showAddItemDialog = true" btn-class="px-2" accent="blue" density="comfortable" :opacity="0.8">
-                        <v-icon left class="mr-2 blue">mdi-clipboard-text</v-icon>
-                        New Item
-                    </MyButton>
+                        <MyButton class="ml-4" @click="showAddItemDialog = true" btn-class="px-2" accent="blue" density="comfortable" :opacity="0.8">
+                            <v-icon left class="mr-2 blue">mdi-clipboard-text</v-icon>
+                            New Item
+                        </MyButton>
+                    </div>
+                    <div class="item-col cols-effort flex-center" title="Estimated/Real">Efforts</div>
+                    <div class="item-col cols-priority">Priority</div>
+                    <div class="item-col cols-project">Project</div>
                 </div>
-                <div class="item-col cols-effort flex-center" title="Estimated/Real">Efforts</div>
-                <div class="item-col cols-priority">Priority</div>
-                <div class="item-col cols-project">Project</div>
+
+                <ItemCard
+                    v-for="it in items"
+                    :key="it.id"
+                    :item="it"
+                    :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
+                    :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
+                    :isContextMenuOpen="contextMenuItemId === it.id"
+                    :isExpanded="expandedItems.has(it.id)"
+                    @contextMenuOpened="onContextMenuOpened"
+                    @contextMenuClosed="onContextMenuClosed"
+                    @taskReceived="onTaskReceived"
+                    @toggleExpanded="onToggleExpanded"
+                />
             </div>
-
-            <ItemCard
-                v-for="it in items"
-                :key="it.id"
-                :item="it"
-                :showBorder="dragDropStore.highlightedItems.some((h) => h.itemId === it.id)"
-                :borderPosition="dragDropStore.highlightedItems.find((h) => h.itemId === it.id)?.position || null"
-                :isContextMenuOpen="contextMenuItemId === it.id"
-                :isExpanded="expandedItems.has(it.id)"
-                @contextMenuOpened="onContextMenuOpened"
-                @contextMenuClosed="onContextMenuClosed"
-                @taskReceived="onTaskReceived"
-                @toggleExpanded="onToggleExpanded"
-            />
 
             <!-- Working Days Toggles -->
             <div class="working-days-section mt-4" v-if="sprintStore.currentSprint">
@@ -55,6 +57,9 @@
 
             <!-- Gráfico de esfuerzo por proyecto -->
             <ProjectEffortChart v-if="chartReady" />
+
+            <!-- Sección de items eliminados -->
+            <DeletedItemsSection />
         </div>
 
         <!-- Diálogo para agregar nuevo item -->
@@ -513,6 +518,10 @@ const toggleAllTasks = () => {
         overflow-x: auto; /* Enable horizontal scrolling on mobile */
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         padding: 4px;
+    }
+    .dashboard-container {
+        width: 100%;
+        overflow-x: auto; /* Enable horizontal scrolling on mobile */
     }
 }
 </style>

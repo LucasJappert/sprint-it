@@ -4,6 +4,36 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.24 - 2026-02-27
+
+### Nuevas Funciones
+
+- **Sección de Items/Tareas Eliminadas**: Nueva sección al final del dashboard que muestra los items y tareas eliminadas del sprint actual.
+    - Se puede expandir/colapsar haciendo click en el encabezado
+    - Muestra un contador de elementos eliminados
+    - **Items eliminados**: Lista de items con `deletedAt !== null`, incluyendo sus tareas eliminadas
+    - **Tareas eliminadas de items activos**: Items con `deletedAt === null` pero que tienen tareas con `deletedAt !== null`
+    - **Restaurar**: Botón para restaurar un item o tarea eliminada, estableciendo `deletedAt` a `null`
+    - **Eliminar permanentemente**: Botón para eliminar un item de forma definitiva (sin posibilidad de recuperación)
+    - Ambas acciones muestran confirmación usando el módulo `MyAlerts`
+
+### Cambios
+
+- **Duplicar item/task**: Al duplicar un item o tarea, ahora solo se copia el título (y otros campos relevantes como detail, priority, projectName). Ya no se copia la persona asignada ni los esfuerzos.
+    - Persona asignada (`assignedUser`) se establece a `null`
+    - Esfuerzos (`estimatedEffort`, `actualEffort`) se establecen a `0`
+    - Estado (`state`) se resetea a "To Do"
+    - Aplica tanto para duplicar item completo como item sin tasks, y para duplicar tareas individuales
+
+### Arreglos
+
+- **Actualización automática del item padre al cambiar estado de task**: Corregido bug donde el item padre no se actualizaba automáticamente al cambiar el estado de una task a "Done" (sí funcionaba con "In Progress").
+    - El problema era que existían dos métodos para guardar tasks: `sprintStore.updateTask()` (sí actualizaba padre) y `useTaskManagement.saveTask()` (no actualizaba padre)
+    - Ahora `saveTask` delega en `sprintStore.updateTask()`, eliminando duplicación y garantizando consistencia
+- **Ajustar ancho del dashboard para mobile**
+
+---
+
 ## v1.1.23 - 2026-02-25
 
 ### Nuevas Funciones

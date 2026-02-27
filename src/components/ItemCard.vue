@@ -475,18 +475,6 @@ const onDrop = (e: DragEvent) => {
     box-shadow: inset 0 -3px 0 0 lightblue;
 }
 
-.drag-handle {
-    cursor: grab;
-    margin-right: 4px;
-
-    * {
-        pointer-events: none;
-    }
-}
-.drag-handle:active {
-    cursor: grabbing;
-}
-
 /* Estilos para el ghost arrastrable */
 .draggable-ghost {
     transform: rotate(-2deg) !important;

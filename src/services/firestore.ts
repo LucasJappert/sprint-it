@@ -412,7 +412,17 @@ export const exportSprintData = async (sprintId: string) => {
     }
 
     // Prompt para ChatGPT
-    const prompt = "Generame un resumen del sprint MUY breve (maximo 10-12 lineas), en formato ideal para WhatsApp. Debe ser facil de entender para colegas que no son del area de sistemas, con bullets cortos, claro y directo. Usar pocos emoticones solo para ayudar a la lectura (sin abusar). Puede que existan items/tasks en estado Done que no tienen esfuerzos, las cuales las deberiamos considerar como proyectos que trabajamos fuera del horario de la empresa, pero que suman valor a la misma, asi que podemos agregar algun comentario para estos casos tambien.";
+    const prompt = `Generame un resumen del sprint MUY breve (maximo 10-12 lineas por seccion), en formato ideal para WhatsApp. 
+
+Formato requerido:
+- Organizar por secciones segun el projectName (ej: 🟢 APIX, 🔵 Agroideas-In, 🟠 Tracker, 📋 Dashboard, 🟣 Meetings).
+- Cada seccion debe tener bullets cortos con las acciones mas importantes. Entre parentesis, al principio y para cada proyecto, indicar el porcentaje de esfuerzo y horas, por ej: "📋 Dashboard Sprint-It: 45.2% (24h)"
+- Priorizar impacto funcional y de negocio por sobre detalles tecnicos.
+- Redactar para colegas que no son del area de sistemas (claro, directo y simple).
+- Usar pocos emoticones solo para ayudar a la lectura (sin abusar).
+- Si hay tareas en estado Done con esfuerzo 0, considerarlas como mejoras realizadas fuera de horario y mencionarlas como aportes de valor cuando corresponda.
+- Agrupar y sintetizar tareas similares en un mismo bullet para evitar exceso de detalle.
+- Evitar lenguaje tecnico innecesario.`;
 
     // Construir el objeto de exportación
     const exportData = {

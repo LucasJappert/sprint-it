@@ -511,6 +511,73 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    /**
+     * Restaura un item eliminado (soft-delete) estableciendo deletedAt a null
+     */
+    const restoreItem = async (itemId: string) => {
+        if (currentSprint.value) {
+            const index = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (index !== -1 && currentSprint.value.items[index]) {
+                // Verificar que el item esté marcado como eliminado
+                if (currentSprint.value.items[index].deletedAt === null) {
+                    console.warn("El item no está eliminado:", itemId);
+                    return;
+                }
+                // Restaurar el item estableciendo deletedAt a null
+                currentSprint.value.items[index].deletedAt = null;
+                // Reordenar los ítems activos
+                const activeItems = currentSprint.value.items.filter((item) => item.deletedAt === null);
+                activeItems.forEach((item, idx) => {
+                    item.order = idx + 1;
+                });
+                if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                    await saveSprint(currentSprint.value);
+                }
+            }
+        }
+    };
+
+    /**
+     * Restaura una tarea eliminada (soft-delete) estableciendo deletedAt a null
+     */
+    const restoreTask = async (taskId: string, itemId: string) => {
+        if (currentSprint.value) {
+            const itemIndex = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (itemIndex !== -1) {
+                const item = currentSprint.value.items[itemIndex];
+                if (!item) return;
+
+                const taskIndex = item.tasks.findIndex((t) => t.id === taskId);
+                if (taskIndex !== -1) {
+                    const task = item.tasks[taskIndex];
+                    if (!task) return;
+
+                    // Verificar que la tarea esté marcada como eliminada
+                    if (task.deletedAt === null) {
+                        console.warn("La tarea no está eliminada:", taskId);
+                        return;
+                    }
+
+                    // Restaurar la tarea estableciendo deletedAt a null
+                    item.tasks[taskIndex].deletedAt = null;
+
+                    // Reordenar las tareas activas
+                    const activeTasks = item.tasks.filter((task) => task.deletedAt === null);
+                    activeTasks.forEach((task, idx) => {
+                        task.order = idx + 1;
+                    });
+
+                    // Actualizar automáticamente los campos del item padre
+                    autoUpdateParentItem(item);
+
+                    if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                        await saveSprint(currentSprint.value);
+                    }
+                }
+            }
+        }
+    };
+
     const moveItemToSprint = async (itemId: string, targetSprintId: string) => {
         loadingStore.setLoading(true);
         try {
@@ -609,20 +676,33 @@ export const useSprintStore = defineStore("sprint", () => {
             : 0;
 
         const duplicatedItem: Item = {
-            ...originalItem,
             id: `item-copy-${Date.now()}`,
             title: `${originalItem.title}`,
+            detail: originalItem.detail,
+            priority: originalItem.priority,
+            state: STATE_VALUES.TODO, // Resetear estado a To Do
+            estimatedEffort: 0, // No copiar esfuerzo estimado
+            actualEffort: 0,
+            assignedUser: null, // No copiar persona asignada
             order: maxOrder + 1,
             createdAt: new Date(),
             createdBy: authStore.user?.id || "",
-            actualEffort: 0,
+            deletedAt: null,
+            projectName: originalItem.projectName,
             tasks: includeTasks ? originalItem.tasks.map((task) => ({
-                ...task,
                 id: `task-copy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                title: task.title,
+                detail: task.detail,
+                priority: task.priority,
+                state: STATE_VALUES.TODO, // Resetear estado a To Do
+                estimatedEffort: 0, // No copiar esfuerzo estimado
+                actualEffort: 0,
+                assignedUser: null, // No copiar persona asignada
                 order: task.order,
                 createdAt: new Date(),
                 createdBy: authStore.user?.id || "",
-                actualEffort: 0
+                deletedAt: null,
+                projectName: task.projectName
             })) : []
         };
 
@@ -650,6 +730,38 @@ export const useSprintStore = defineStore("sprint", () => {
         await updateItem(item.id, { tasks: item.tasks });
     };
 
+    /**
+     * Elimina permanentemente una tarea del item
+     */
+    const deleteTask = async (taskId: string, itemId: string) => {
+        if (currentSprint.value) {
+            const itemIndex = currentSprint.value.items.findIndex((i) => i.id === itemId);
+            if (itemIndex !== -1) {
+                const item = currentSprint.value.items[itemIndex];
+                if (!item) return;
+
+                const taskIndex = item.tasks.findIndex((t) => t.id === taskId);
+                if (taskIndex !== -1) {
+                    // Eliminar físicamente la tarea
+                    item.tasks.splice(taskIndex, 1);
+
+                    // Reordenar las tareas activas
+                    const activeTasks = item.tasks.filter((task) => task.deletedAt === null);
+                    activeTasks.forEach((task, idx) => {
+                        task.order = idx + 1;
+                    });
+
+                    // Actualizar automáticamente los campos del item padre
+                    autoUpdateParentItem(item);
+
+                    if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+                        await saveSprint(currentSprint.value);
+                    }
+                }
+            }
+        }
+    };
+
     const duplicateTask = async (taskId: string, itemId: string) => {
         if (!currentSprint.value) return;
 
@@ -666,13 +778,19 @@ export const useSprintStore = defineStore("sprint", () => {
             : 0;
 
         const duplicatedTask = {
-            ...originalTask,
             id: `task-copy-${Date.now()}`,
             title: `${originalTask.title}`,
+            detail: originalTask.detail,
+            priority: originalTask.priority,
+            state: STATE_VALUES.TODO, // Resetear estado a To Do
+            estimatedEffort: 0, // No copiar esfuerzo estimado
+            actualEffort: 0,
+            assignedUser: null, // No copiar persona asignada
             order: maxOrder + 1,
             createdAt: new Date(),
             createdBy: authStore.user?.id || "",
-            deletedAt: null
+            deletedAt: null,
+            projectName: originalTask.projectName
         };
 
         item.tasks.push(duplicatedTask);
@@ -901,8 +1019,11 @@ export const useSprintStore = defineStore("sprint", () => {
         addItem,
         updateItem,
         deleteItem,
+        restoreItem,
         softDeleteItem,
+        restoreTask,
         softDeleteTask,
+        deleteTask,
         moveTask,
         reorderTasks,
         sortTasksByState,
