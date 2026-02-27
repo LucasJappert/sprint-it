@@ -4,6 +4,16 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.24 - 2026-02-27
+
+### Arreglos
+
+- **Actualización automática del item padre al cambiar estado de task**: Corregido bug donde el item padre no se actualizaba automáticamente al cambiar el estado de una task a "Done" (sí funcionaba con "In Progress").
+    - El problema era que existían dos métodos para guardar tasks: `sprintStore.updateTask()` (sí actualizaba padre) y `useTaskManagement.saveTask()` (no actualizaba padre)
+    - Ahora `saveTask` delega en `sprintStore.updateTask()`, eliminando duplicación y garantizando consistencia
+
+---
+
 ## v1.1.23 - 2026-02-25
 
 ### Nuevas Funciones

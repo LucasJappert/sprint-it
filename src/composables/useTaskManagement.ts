@@ -41,27 +41,12 @@ export const useTaskManagement = () => {
         clearQueryParams();
     };
 
-    const saveTask = (task: Task) => {
+    const saveTask = async (task: Task) => {
         if (!currentItem.value) return;
 
         if (editingTask.value) {
-            // Editar task existente
-            const taskIndex = currentItem.value.tasks.findIndex((t) => t.id === editingTask.value!.id);
-            if (taskIndex !== -1) {
-                currentItem.value.tasks[taskIndex] = task;
-                // Actualizar editingTask para refrescar el diálogo
-                editingTask.value = task;
-
-                // Recalcular esfuerzos del item padre si tiene tasks
-                if (currentItem.value.tasks.length > 0) {
-                    currentItem.value.estimatedEffort = currentItem.value.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
-                    currentItem.value.actualEffort = currentItem.value.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
-                }
-
-                if (sprintStore.currentSprint) {
-                    saveSprint(sprintStore.currentSprint);
-                }
-            }
+            // Editar task existente - usar updateTask del store para mantener consistencia
+            await sprintStore.updateTask(editingTask.value.id, currentItem.value.id, task);
         } else {
             // Agregar nueva task
             // Calcular el orden solo para tasks activas (no eliminadas)
@@ -70,21 +55,15 @@ export const useTaskManagement = () => {
             task.createdBy = authStore.user?.id || "";
             currentItem.value.tasks.push(task);
 
-            // Recalcular esfuerzos del item padre si tiene tasks
-            if (currentItem.value.tasks.length > 0) {
-                currentItem.value.estimatedEffort = currentItem.value.tasks.reduce((sum, t) => sum + t.estimatedEffort, 0);
-                currentItem.value.actualEffort = currentItem.value.tasks.reduce((sum, t) => sum + t.actualEffort, 0);
-            }
-
-            if (sprintStore.currentSprint) {
-                saveSprint(sprintStore.currentSprint);
-            }
+            // Usar updateTask para guardar y actualizar el item padre
+            await sprintStore.updateTask(task.id, currentItem.value.id, task);
 
             // Emitir evento para expandir el item
             eventBus.newTaskCreated(currentItem.value);
         }
 
-        // No cerrar diálogos para que persistan visibles después de guardar
+        // Actualizar editingTask para refrescar el diálogo
+        editingTask.value = task;
     };
 
     const onSaveEditTask = (task: Task) => {

@@ -79,16 +79,11 @@ $col-state-width: 120px;
     max-width: 160px;
     text-align: center;
 }
-.state-circle {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    margin-right: 6px;
-}
 .project-prefix {
     display: block;
     width: 10px;
+    min-width: 10px;
+    max-width: 10px;
     font-weight: bold;
     font-size: 0.5rem;
     margin-right: 2px;
