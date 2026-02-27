@@ -36,6 +36,13 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
     - Estado (`state`) se resetea a "To Do"
     - Aplica tanto para duplicar item completo como item sin tasks, y para duplicar tareas individuales
 
+- **Export Sprint optimizado para IA**: Mejorado el JSON exportado para facilitar el cálculo de horas por proyecto.
+    - Agregado objeto `projectEffortSummary` pre-calculado con: `projectName`, `totalHours`, `percentage` (suma 100%), `itemCount`, `taskCount`
+    - Agregado campo `totalSprintHours` con el total de horas del sprint
+    - Eliminado `estimatedEffort` del export (solo se incluye `actualEffort`)
+    - El cálculo usa la misma lógica que el gráfico "Effort by Project": si el item tiene tasks, usa el esfuerzo de las tasks; si no tiene tasks, usa el esfuerzo del item
+    - Prompt actualizado para que la IA use directamente `projectEffortSummary` sin necesidad de calcular
+
 ### Arreglos
 
 - **Actualización automática del item padre al cambiar estado de task**: Corregido bug donde el item padre no se actualizaba automáticamente al cambiar el estado de una task a "Done" (sí funcionaba con "In Progress").

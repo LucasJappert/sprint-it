@@ -361,6 +361,102 @@ export const getFilteredSprintData = async (sprintId: string) => {
 };
 
 /**
+ * Calculate effort summary by project using the same logic as ProjectEffortChart
+ * - If item has tasks: use task.actualEffort (not item's)
+ * - projectName: use task.projectName if exists, otherwise item.projectName
+ * - Filter out projects with 0 effort
+ * - Calculate percentages to sum to 100%
+ */
+const calculateProjectEffortSummary = (itemsWithDoneTasksOnly: any[]) => {
+    const efforts: Record<string, number> = {};
+    const itemCounts: Record<string, number> = {};
+    const taskCounts: Record<string, number> = {};
+
+    itemsWithDoneTasksOnly.forEach((item) => {
+        const projectName = item.projectName || "Unassigned";
+
+        // If item has tasks, use only tasks' effort
+        if (item.tasks && item.tasks.length > 0) {
+            item.tasks.forEach((task: any) => {
+                if (task.deletedAt !== null) return;
+                const taskProjectName = task.projectName || projectName;
+                if (!efforts[taskProjectName]) {
+                    efforts[taskProjectName] = 0;
+                    itemCounts[taskProjectName] = 0;
+                    taskCounts[taskProjectName] = 0;
+                }
+                efforts[taskProjectName]! += task.actualEffort || 0;
+                taskCounts[taskProjectName]! += 1;
+            });
+            // Count item once for the project (item with tasks)
+            if (!itemCounts[projectName]) {
+                itemCounts[projectName] = 0;
+            }
+            itemCounts[projectName] += 1;
+            return;
+        }
+
+        // If item has no tasks, use item's effort directly
+        if (!efforts[projectName]) {
+            efforts[projectName] = 0;
+            itemCounts[projectName] = 0;
+            taskCounts[projectName] = 0;
+        }
+        efforts[projectName]! += item.actualEffort || 0;
+        itemCounts[projectName] += 1;
+    });
+
+    // Filter out projects with 0 effort and calculate total
+    const filteredEfforts: Record<string, number> = {};
+    Object.entries(efforts).forEach(([project, effort]) => {
+        if (effort > 0) {
+            filteredEfforts[project] = effort;
+        }
+    });
+
+    const total = Object.values(filteredEfforts).reduce((sum, effort) => sum + effort, 0);
+
+    // Build summary with percentages that sum to 100%
+    const summary = Object.entries(filteredEfforts)
+        .map(([projectName, totalHours]) => ({
+            projectName,
+            totalHours: Math.round(totalHours * 10) / 10, // Round to 1 decimal
+            percentage: total > 0 ? Math.round((totalHours / total) * 1000) / 10 : 0, // Round to 1 decimal
+            itemCount: itemCounts[projectName] || 0,
+            taskCount: taskCounts[projectName] || 0,
+        }))
+        .sort((a, b) => b.totalHours - a.totalHours); // Sort by hours descending
+
+    // Adjust percentages to ensure they sum exactly to 100%
+    const percentageSum = summary.reduce((sum, p) => sum + p.percentage, 0);
+    if (summary.length > 0 && Math.abs(percentageSum - 100) > 0.1) {
+        // Adjust the largest percentage to make it sum to 100
+        summary[0].percentage = Math.round((summary[0].percentage + (100 - percentageSum)) * 10) / 10;
+    }
+
+    return {
+        projects: summary,
+        totalSprintHours: Math.round(total * 10) / 10,
+    };
+};
+
+/**
+ * Remove estimatedEffort from items and tasks (keep only actualEffort)
+ */
+const removeEstimatedEffort = (itemsWithDoneTasksOnly: any[]) => {
+    return itemsWithDoneTasksOnly.map((item) => {
+        const { estimatedEffort, ...itemWithoutEstimated } = item;
+        return {
+            ...itemWithoutEstimated,
+            tasks: itemWithoutEstimated.tasks.map((task: any) => {
+                const { estimatedEffort: _estimated, ...taskWithoutEstimated } = task;
+                return taskWithoutEstimated;
+            }),
+        };
+    });
+};
+
+/**
  * Exporta los datos del sprint actual sin items ni tareas eliminadas
  * Solo exporta items que tienen al menos una task completa (Done)
  * Las tasks exportadas serán solo las completas (Done)
@@ -376,11 +472,17 @@ export const exportSprintData = async (sprintId: string) => {
     // Obtener datos filtrados
     const { itemsWithDoneTasksOnly } = await getFilteredSprintData(sprintId);
 
+    // Calcular effort summary by project (same logic as ProjectEffortChart)
+    const projectEffortSummary = calculateProjectEffortSummary(itemsWithDoneTasksOnly);
+
+    // Remove estimatedEffort from items and tasks
+    const itemsWithoutEstimatedEffort = removeEstimatedEffort(itemsWithDoneTasksOnly);
+
     // Obtener todos los IDs de items y tasks para buscar comentarios
-    const itemIds = itemsWithDoneTasksOnly.map((item) => item.id);
+    const itemIds = itemsWithoutEstimatedEffort.map((item) => item.id);
     const taskIds: string[] = [];
-    itemsWithDoneTasksOnly.forEach((item) => {
-        item.tasks.forEach((task) => taskIds.push(task.id));
+    itemsWithoutEstimatedEffort.forEach((item) => {
+        item.tasks.forEach((task: any) => taskIds.push(task.id));
     });
 
     // Obtener comentarios para los items y tasks
@@ -411,25 +513,28 @@ export const exportSprintData = async (sprintId: string) => {
             });
     }
 
-    // Prompt para ChatGPT
-    const prompt = `Generame un resumen del sprint MUY breve (maximo 10-12 lineas por seccion), en formato ideal para WhatsApp. 
+    // Prompt para ChatGPT - mejorado para usar projectEffortSummary
+    const prompt = `Generame un resumen del sprint MUY breve (maximo 10-12 lineas por seccion), en formato ideal para WhatsApp, listo para copiar y pegar, asi que no hagas preguntas finales ni saludos o introducciones de ninguna manera. 
 
 Formato requerido:
-- Organizar por secciones segun el projectName (ej: 🟢 APIX, 🔵 Agroideas-In, 🟠 Tracker, 📋 Dashboard, 🟣 Meetings).
-- Cada seccion debe tener bullets cortos con las acciones mas importantes. Entre parentesis, al principio y para cada proyecto, indicar el porcentaje de esfuerzo y horas, por ej: "📋 Dashboard Sprint-It: 45.2% (24h)"
-- Priorizar impacto funcional y de negocio por sobre detalles tecnicos.
-- Redactar para colegas que no son del area de sistemas (claro, directo y simple).
-- Usar pocos emoticones solo para ayudar a la lectura (sin abusar).
-- Si hay tareas en estado Done con esfuerzo 0, considerarlas como mejoras realizadas fuera de horario y mencionarlas como aportes de valor cuando corresponda.
-- Agrupar y sintetizar tareas similares en un mismo bullet para evitar exceso de detalle.
-- Evitar lenguaje tecnico innecesario.`;
+- Usa el objeto projectEffortSummary para obtener las horas y porcentajes por proyecto (ya están calculados)
+- Organizar por secciones segun el projectName (ej: 🟢 APIX, 🔵 Agroideas-In, 🟠 Tracker, 📋 Dashboard, 🟣 Meetings)
+- Cada seccion debe mostrar: "[emoji] [projectName]: [porcentaje]% ([horas]h) - [items] items, [tasks] tasks"
+- Priorizar impacto funcional y de negocio por sobre detalles tecnicos
+- Redactar para colegas que no son del area de sistemas (claro, directo y simple)
+- Usar pocos emoticones solo para ayudar a la lectura (sin abusar)
+- Las tareas con esfuerzo 0 considerarlas como mejoras realizadas fuera de horario y mencionarlas como aportes de valor cuando corresponda
+- Agrupar y sintetizar tareas similares en un mismo bullet para evitar exceso de detalle
+- Evitar lenguaje tecnico innecesario`;
 
     // Construir el objeto de exportación
     const exportData = {
         prompt,
+        projectEffortSummary: projectEffortSummary.projects,
+        totalSprintHours: projectEffortSummary.totalSprintHours,
         sprint: {
             ...sprint,
-            items: itemsWithDoneTasksOnly,
+            items: itemsWithoutEstimatedEffort,
         },
         comments,
         exportedAt: new Date().toISOString(),
