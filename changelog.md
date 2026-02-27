@@ -19,6 +19,17 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ### Cambios
 
+- **Eliminación de columna de prioridad en dashboard**: Se eliminó la columna de prioridad del dashboard.
+    - Ahora las banderitas de prioridad (🔴 alta, 🟡 media, 🟢 baja) se muestran al final del título de cada item/task
+    - Las banderitas solo se visualizan cuando la prioridad es diferente de "Normal"
+    - El diseño es más limpio y reduce el espacio horizontal necesario
+
+- **Lógica de actualización de estado de item padre**: Ajustada la lógica para determinar el estado de un item cuando sus tasks cambian.
+    - Anterior: InProgress > Ready for Test > Done > Waiting > To Do
+    - Nuevo: InProgress > Ready for Test > **To Do** > Done > Waiting
+    - El estado "To Do" ahora tiene mayor prioridad que "Done" y "Waiting"
+    - Esto refleja mejor el flujo de trabajo donde un item con al menos una tarea pendiente debe mostrarse como pendiente
+
 - **Duplicar item/task**: Al duplicar un item o tarea, ahora solo se copia el título (y otros campos relevantes como detail, priority, projectName). Ya no se copia la persona asignada ni los esfuerzos.
     - Persona asignada (`assignedUser`) se establece a `null`
     - Esfuerzos (`estimatedEffort`, `actualEffort`) se establecen a `0`

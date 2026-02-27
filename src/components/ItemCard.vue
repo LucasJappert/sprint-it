@@ -44,7 +44,7 @@
                 <div v-for="task in activeTasks" :key="task.id" class="task-indicator" :style="{ backgroundColor: getStateColor(task.state) }"></div>
             </div>
 
-            <span class="priority-content" v-html="PRIORITY_ICONS[item.priority]"></span>
+            <span v-if="item.priority != PRIORITY_VALUES.NORMAL" class="priority-content" v-html="PRIORITY_ICONS[item.priority]"></span>
         </div>
         <div class="item-col cols-effort">{{ calculatedEstimatedEffort }} - {{ calculatedActualEffort }}</div>
         <!-- <div class="item-col cols-priority priority-cell">
@@ -76,7 +76,7 @@
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { useUrlManagement } from "@/composables/useUrlManagement";
-import { PRIORITY_ICONS, PRIORITY_OPTIONS } from "@/constants/priorities";
+import { PRIORITY_ICONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
@@ -217,11 +217,6 @@ watch(
         loadContextMenuOptions();
     },
 );
-
-const getPriorityHtml = (priority: string) => {
-    const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
-    return option ? option.name : priority;
-};
 
 const getStateColor = (state: string) => {
     const option = STATE_OPTIONS.find((opt) => opt.value === state);

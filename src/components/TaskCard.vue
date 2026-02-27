@@ -37,7 +37,7 @@
             <span class="ellipsis">
                 {{ task.title }}
             </span>
-            <span class="priority-content" v-html="PRIORITY_ICONS[task.priority]"></span>
+            <span v-if="task.priority != PRIORITY_VALUES.NORMAL" class="priority-content" v-html="PRIORITY_ICONS[task.priority]"></span>
         </div>
         <div class="item-col cols-effort">{{ task.estimatedEffort }} - {{ task.actualEffort }}</div>
         <!-- <div class="item-col cols-priority priority-cell">
@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
 import { useTaskManagement } from "@/composables/useTaskManagement";
-import { PRIORITY_ICONS, PRIORITY_OPTIONS } from "@/constants/priorities";
+import { PRIORITY_ICONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
@@ -92,11 +92,6 @@ const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
 
 const { showEditTaskDialog, editingTask, openEditTaskDialog, closeDialogs, onSaveEditTask } = useTaskManagement();
-
-const getPriorityHtml = (priority: string) => {
-    const option = PRIORITY_OPTIONS.find((opt) => opt.value.toLowerCase() === priority.toLowerCase());
-    return option ? option.name : priority;
-};
 
 const getStateColor = (state: string) => {
     const option = STATE_OPTIONS.find((opt) => opt.value === state);
