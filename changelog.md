@@ -6,6 +6,14 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ## v1.1.24 - 2026-02-27
 
+### Cambios
+
+- **Duplicar item/task**: Al duplicar un item o tarea, ahora solo se copia el título (y otros campos relevantes como detail, priority, projectName). Ya no se copia la persona asignada ni los esfuerzos.
+    - Persona asignada (`assignedUser`) se establece a `null`
+    - Esfuerzos (`estimatedEffort`, `actualEffort`) se establecen a `0`
+    - Estado (`state`) se resetea a "To Do"
+    - Aplica tanto para duplicar item completo como item sin tasks, y para duplicar tareas individuales
+
 ### Arreglos
 
 - **Actualización automática del item padre al cambiar estado de task**: Corregido bug donde el item padre no se actualizaba automáticamente al cambiar el estado de una task a "Done" (sí funcionaba con "In Progress").

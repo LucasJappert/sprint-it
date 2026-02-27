@@ -609,20 +609,33 @@ export const useSprintStore = defineStore("sprint", () => {
             : 0;
 
         const duplicatedItem: Item = {
-            ...originalItem,
             id: `item-copy-${Date.now()}`,
             title: `${originalItem.title}`,
+            detail: originalItem.detail,
+            priority: originalItem.priority,
+            state: STATE_VALUES.TODO, // Resetear estado a To Do
+            estimatedEffort: 0, // No copiar esfuerzo estimado
+            actualEffort: 0,
+            assignedUser: null, // No copiar persona asignada
             order: maxOrder + 1,
             createdAt: new Date(),
             createdBy: authStore.user?.id || "",
-            actualEffort: 0,
+            deletedAt: null,
+            projectName: originalItem.projectName,
             tasks: includeTasks ? originalItem.tasks.map((task) => ({
-                ...task,
                 id: `task-copy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                title: task.title,
+                detail: task.detail,
+                priority: task.priority,
+                state: STATE_VALUES.TODO, // Resetear estado a To Do
+                estimatedEffort: 0, // No copiar esfuerzo estimado
+                actualEffort: 0,
+                assignedUser: null, // No copiar persona asignada
                 order: task.order,
                 createdAt: new Date(),
                 createdBy: authStore.user?.id || "",
-                actualEffort: 0
+                deletedAt: null,
+                projectName: task.projectName
             })) : []
         };
 
@@ -666,13 +679,19 @@ export const useSprintStore = defineStore("sprint", () => {
             : 0;
 
         const duplicatedTask = {
-            ...originalTask,
             id: `task-copy-${Date.now()}`,
             title: `${originalTask.title}`,
+            detail: originalTask.detail,
+            priority: originalTask.priority,
+            state: STATE_VALUES.TODO, // Resetear estado a To Do
+            estimatedEffort: 0, // No copiar esfuerzo estimado
+            actualEffort: 0,
+            assignedUser: null, // No copiar persona asignada
             order: maxOrder + 1,
             createdAt: new Date(),
             createdBy: authStore.user?.id || "",
-            deletedAt: null
+            deletedAt: null,
+            projectName: originalTask.projectName
         };
 
         item.tasks.push(duplicatedTask);
