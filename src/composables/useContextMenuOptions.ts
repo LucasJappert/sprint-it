@@ -207,17 +207,37 @@ export const useContextMenuOptions = () => {
         };
 
         const createSprintOptions = () => {
-            return sprintStore.sprints
+            // Obtener lista completa de sprints ordenada por fecha (igual que en el menú del header)
+            const allSprints = [...sprintStore.sprints]
                 .filter(sprint => sprint.id !== sprintStore.currentSprintId)
-                .sort((a, b) => new Date(b.fechaDesde).getTime() - new Date(a.fechaDesde).getTime())
-                .map(sprint => ({
+                .sort((a, b) => new Date(b.fechaDesde).getTime() - new Date(a.fechaDesde).getTime());
+
+            // Encontrar el índice del sprint actual en la lista completa de sprints
+            const currentSprintIndex = sprintStore.sprints.findIndex(s => s.id === sprintStore.currentSprintId);
+
+            return allSprints.map(sprint => {
+                // Encontrar el índice de este sprint en la lista completa
+                const sprintIndex = sprintStore.sprints.findIndex(s => s.id === sprint.id);
+                let label = sprint.titulo;
+
+                // Agregar (Prev) si es el sprint inmediatamente anterior al actual
+                if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex - 1) {
+                    label = `${sprint.titulo} (Prev)`;
+                }
+                // Agregar (Next) si es el sprint inmediatamente siguiente al actual
+                else if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex + 1) {
+                    label = `${sprint.titulo} (Next)`;
+                }
+
+                return {
                     key: `move-to-${sprint.id}`,
-                    label: sprint.titulo,
+                    label,
                     icon: "mdi-swap-horizontal",
                     action: async () => {
                         await moveItemToSprint(sprint.id);
                     },
-                }));
+                };
+            });
         };
 
         // Verificar condición: al menos 1 task Done y al menos 1 task en otro estado, y al menos 2 tasks totales

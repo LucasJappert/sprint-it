@@ -33,9 +33,10 @@
                     <!-- Actual total hours -->
                     <div
                         class="progress-actual"
-                        :style="{ width: totalProgress.actualPercentage + '%' }"
+                        :style="{ width: Math.min(totalProgress.actualPercentage, 100) + '%' }"
                         :class="{
                             'over-target': totalProgress.actual >= totalProgress.expected,
+                            'exceed-total': totalProgress.actualPercentage > 100,
                             'on-target': totalProgress.actual < totalProgress.expected,
                         }"
                     ></div>
@@ -63,9 +64,10 @@
                     <!-- Actual user hours (blue) -->
                     <div
                         class="progress-actual"
-                        :style="{ width: progress.actualPercentage + '%' }"
+                        :style="{ width: Math.min(progress.actualPercentage, 100) + '%' }"
                         :class="{
                             'over-target': progress.actual >= progress.expected,
+                            'exceed-total': progress.actualPercentage > 100,
                             'on-target': progress.actual < progress.expected,
                         }"
                     ></div>
@@ -405,6 +407,10 @@ watch(
 
     &.over-target {
         background: linear-gradient(90deg, #4caf50 0%, #45a049 100%); /* Green for over target */
+    }
+
+    &.exceed-total {
+        background: linear-gradient(90deg, #4caf50 80%, #1aff00 100%); /* Cyan/light green for exceed 100% */
     }
 
     &.on-target {
