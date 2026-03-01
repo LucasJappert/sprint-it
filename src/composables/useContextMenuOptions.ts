@@ -222,11 +222,11 @@ export const useContextMenuOptions = () => {
 
                 // Agregar (Prev) si es el sprint inmediatamente anterior al actual
                 if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex - 1) {
-                    label = `${sprint.titulo} (Prev)`;
+                    label = `${sprint.titulo} (⬅️ Prev)`;
                 }
                 // Agregar (Next) si es el sprint inmediatamente siguiente al actual
                 else if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex + 1) {
-                    label = `${sprint.titulo} (Next)`;
+                    label = `${sprint.titulo} (Next ➡️)`;
                 }
 
                 return {

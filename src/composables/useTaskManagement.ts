@@ -58,8 +58,10 @@ export const useTaskManagement = () => {
             // Usar updateTask para guardar y actualizar el item padre
             await sprintStore.updateTask(task.id, currentItem.value.id, task);
 
-            // Emitir evento para expandir el item
-            eventBus.newTaskCreated(currentItem.value);
+            // Emitir evento para expandir el item solo si currentItem aún tiene valor
+            if (currentItem.value) {
+                eventBus.newTaskCreated(currentItem.value);
+            }
         }
 
         // Actualizar editingTask para refrescar el diálogo

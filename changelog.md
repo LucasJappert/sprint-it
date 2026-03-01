@@ -13,6 +13,11 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
     - (Next): Sprint inmediatamente siguiente al actual
     - Los demás sprints no muestran indicador
 
+- **Error al crear task**: Corregido error de consola "TypeError: Cannot read properties of null (reading 'id')" que ocurría al crear una nueva task.
+    - El problema era que el eventBus emitía el evento con valor null
+    - Agregada verificación defensiva en `useTaskManagement.ts` antes de emitir el evento
+    - Actualizado handler en `DashboardView.vue` para aceptar y manejar valores nulos
+
 ---
 
 ## v1.1.24 - 2026-02-27
