@@ -415,8 +415,10 @@ const onTaskReceived = (itemId: string) => {
 };
 
 // Manejar cuando se crea una nueva task en un item
-const onTaskCreated = (item: Item) => {
-    expandedItems.value.add(item.id);
+const onTaskCreated = (item: Item | null) => {
+    if (item && item.id) {
+        expandedItems.value.add(item.id);
+    }
 };
 
 // Manejar la expansión/colapso manual de items
