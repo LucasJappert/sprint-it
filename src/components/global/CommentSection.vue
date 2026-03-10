@@ -54,7 +54,9 @@
                     </div>
                 </div>
                 <!-- Display mode -->
-                <div v-else class="comment-content" v-html="processCommentHtml(comment.description)"></div>
+                <div v-else class="comment-content-wrapper">
+                    <CommentContent :html="comment.description" />
+                </div>
             </div>
         </div>
 
@@ -91,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+import CommentContent from "@/components/CommentContent.vue";
 import MyAlerts from "@/plugins/my-alerts";
 import { addComment, deleteComment, getCommentsByAssociatedId, getUser, updateComment } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
@@ -139,15 +142,6 @@ const sortedComments = computed(() => {
 });
 
 const hasChanges = computed(() => editCommentContent.value.trim() !== originalContent.value.trim());
-
-const processCommentHtml = (html: string): string => {
-    // Convertir saltos de línea en etiquetas <br> para que se muestren correctamente en v-html
-    let processed = html.replace(/\n/g, "<br>");
-    // Reemplazar todas las etiquetas <img> con links
-    return processed.replace(/<img[^>]*src="([^"]*)"[^>]*>/g, (_match, src) => {
-        return `<a href="${src}" target="_blank" rel="noopener noreferrer" style="color: #5aa7ff; text-decoration: underline; font-family: monospace; font-size: 0.9em;">${src}</a>`;
-    });
-};
 
 // Función para agregar comentario al inicio de la lista
 const addCommentToStart = async (comment: Comment) => {
@@ -460,6 +454,11 @@ onBeforeUnmount(async () => {
 .comment-date {
     color: #ffffff88;
     font-size: 0.8rem;
+}
+
+.comment-content-wrapper {
+    color: #ffffffcc;
+    line-height: 1.5;
 }
 
 .comment-content {

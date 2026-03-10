@@ -4,6 +4,14 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.28 - 2026-03-10
+
+### Nuevas Funciones
+
+- **Vista previa de imágenes**: Imágenes en descripciones y comentarios ahora se muestran como miniaturas (200-800px). Click central abre en nueva pestaña. Botón verde para pantalla completa, rojo para eliminar (solo en descripciones).
+
+---
+
 ## v1.1.27 - 2026-03-10
 
 ### Nuevas Funciones
