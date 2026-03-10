@@ -43,8 +43,8 @@
                         <v-icon>mdi-logout</v-icon>
                         <span>Logout</span>
                     </div>
-                    <div class="menu-item version">
-                        <span>v{{ appVersion }}</span>
+                    <div class="menu-item version" @click="goToChangelog">
+                        <span>v{{ appVersion }} - <span class="changelog-link">See changelog</span></span>
                     </div>
                 </div>
             </v-menu>
@@ -234,6 +234,10 @@ const checkBackupStatus = async () => {
 const logout = async () => {
     await authStore.logout();
     router.push("/");
+};
+
+const goToChangelog = () => {
+    router.push("/changelog");
 };
 
 const exportData = async () => {
@@ -488,8 +492,21 @@ const importItems = async () => {
     font-size: 0.7rem;
     opacity: 0.6;
     text-align: center;
-    cursor: default;
+    cursor: pointer;
     padding: 4px 16px;
+
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.04);
+
+        .changelog-link {
+            color: $primary;
+            text-decoration: underline;
+        }
+    }
+
+    .changelog-link {
+        transition: color 0.2s;
+    }
 }
 
 .avatar {

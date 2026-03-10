@@ -16,7 +16,7 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ### Nuevas Funciones
 
-- **Timer de tiempo en estado InProgress**: Para tasks y items que están en estado "InProgress", ahora se muestra un relojito que indica el tiempo transcurrido desde que entró en ese estado.
+- **Timer de tiempo en estado InProgress**: Para tasks e items que están en estado "InProgress", ahora se muestra un relojito que indica el tiempo transcurrido desde que entró en ese estado.
     - Se muestra en formato dinámico: `hh:mm:ss` (horas), `mm:ss` (minutos), o `00:ss` (segundos)
     - Se actualiza en tiempo real cada segundo
     - Aparece flotando a la derecha del card (centrado verticalmente)

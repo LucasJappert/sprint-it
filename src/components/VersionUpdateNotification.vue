@@ -1,15 +1,18 @@
 <template>
     <teleport to="body">
         <div v-if="visible" class="version-update-notification" role="alert" aria-live="polite">
-            <div class="notification-content">
+            <div class="notification-content" :class="{ clickable: isAuthenticated }" @click="goToChangelog">
                 <div class="icon">
                     <v-icon size="24" color="primary">mdi-update</v-icon>
                 </div>
                 <div class="text-content">
                     <div class="title">Aplicación actualizada ✨</div>
-                    <div class="message">Estás usando la versión {{ version }}</div>
+                    <div class="message">
+                        v{{ version }}
+                        <span v-if="isAuthenticated"> - See changelog</span>
+                    </div>
                 </div>
-                <button class="close-btn" @click="dismiss" aria-label="Cerrar notificación">
+                <button class="close-btn" @click.stop="dismiss" aria-label="Cerrar notificación">
                     <v-icon size="20" color="primary">mdi-close</v-icon>
                 </button>
             </div>
@@ -19,12 +22,27 @@
 
 <script setup lang="ts">
 import { dismissVersionUpdateNotification, versionUpdateState } from "@/plugins/pwa-updater";
+import { useAuthStore } from "@/stores/auth";
 import { computed } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const authStore = useAuthStore();
 
 const visible = computed(() => versionUpdateState.visible);
 const version = computed(() => versionUpdateState.version);
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+
 const dismiss = () => {
     dismissVersionUpdateNotification();
+};
+
+const goToChangelog = () => {
+    dismiss();
+    if (!isAuthenticated.value) return;
+
+    console.log("goToChangelog called");
+    router.push("/changelog");
 };
 </script>
 
@@ -49,6 +67,14 @@ const dismiss = () => {
     padding: 12px 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(8px);
+
+    &.clickable {
+        cursor: pointer;
+
+        &:hover {
+            background: rgba(30, 32, 35, 0.98);
+        }
+    }
 }
 
 .icon {
@@ -80,6 +106,10 @@ const dismiss = () => {
     line-height: 1.3;
     color: rgba($primary, 0.8);
     word-break: break-word;
+
+    &.clickable {
+        cursor: pointer;
+    }
 }
 
 .close-btn {
