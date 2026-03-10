@@ -1,7 +1,7 @@
 import { STATE_VALUES } from "@/constants/states";
 import MyAlerts from "@/plugins/my-alerts";
 import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
-import { convertFirestoreTimestamp, getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
+import { addChange, convertFirestoreTimestamp, getAllSprints, saveSprint, subscribeToSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { Item, Sprint, Task } from "@/types";
@@ -79,18 +79,23 @@ export const useSprintStore = defineStore("sprint", () => {
     };
 
     // Actualizar automáticamente los campos del item padre based on tasks
-    const autoUpdateParentItem = (item: Item) => {
+    const autoUpdateParentItem = async (item: Item) => {
         const activeTasks = item.tasks.filter((t) => t.deletedAt === null);
         if (activeTasks.length === 0) return;
 
-        const newState = calculateItemState(item.tasks);
+        const oldState = item.state;
+        const newState = calculateItemState(item.tasks) as Item["state"];
         const newAssignedUser = calculateItemAssignedUser(item.tasks, item.assignedUser);
         const { estimatedEffort, actualEffort } = calculateItemEfforts(item.tasks);
 
-        item.state = newState as Item["state"];
+        console.log(`[autoUpdateParentItem] Item: ${item.id}, oldState: ${oldState}, newState: ${newState}, activeTasks: ${activeTasks.length}`);
+
+        // Actualizar los campos del item
+        item.state = newState;
         item.assignedUser = newAssignedUser;
         item.estimatedEffort = estimatedEffort;
         item.actualEffort = actualEffort;
+        console.log(`[autoUpdateParentItem] Item actualizado, nuevo estado: ${item.state}`);
     };
 
     const currentSprint = computed(() =>
@@ -280,10 +285,46 @@ export const useSprintStore = defineStore("sprint", () => {
                     if (taskIndex !== -1) {
                         const task = item.tasks[taskIndex];
                         if (task) {
+                            // Guardar el estado anterior del item y de la task para el historial
+                            const oldItemState = item.state;
+                            const oldTaskState = task.state;
+
                             Object.assign(task, updatedTask);
 
+                            // Guardar historial del cambio de estado de la task
+                            if (updatedTask.state !== undefined && task.state !== oldTaskState) {
+                                const userId = authStore.user?.id;
+                                if (userId) {
+                                    await addChange({
+                                        associatedId: task.id,
+                                        associatedType: "task",
+                                        field: "state",
+                                        oldValue: oldTaskState,
+                                        newValue: task.state,
+                                        userId,
+                                        createdAt: new Date(),
+                                    });
+                                }
+                            }
+
                             // Actualizar automáticamente los campos del item padre
-                            autoUpdateParentItem(item);
+                            await autoUpdateParentItem(item);
+
+                            // Si el estado del item cambió, guardar en historial
+                            if (item.state !== oldItemState) {
+                                const userId = authStore.user?.id;
+                                if (userId) {
+                                    await addChange({
+                                        associatedId: item.id,
+                                        associatedType: "item",
+                                        field: "state",
+                                        oldValue: oldItemState,
+                                        newValue: item.state,
+                                        userId,
+                                        createdAt: new Date(),
+                                    });
+                                }
+                            }
 
                             if (await validateSprintItemsBeforeSave(currentSprint.value)) {
                                 await saveSprint(currentSprint.value);
