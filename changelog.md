@@ -4,11 +4,21 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.28 - 2026-03-10
+
+### Nuevas Funciones
+
+- **Sección Changelog**: Nueva página /changelog accesible desde el menú del avatar y la notificación de actualización. Muestra el historial de versiones con categorías (Nuevas Funciones, Cambios, Arreglos). Incluye botón para volver al dashboard.
+
+- **Vista previa de imágenes**: Imágenes en descripciones y comentarios ahora se muestran como miniaturas (200-800px). Click central abre en nueva pestaña. Botón verde para pantalla completa, rojo para eliminar (solo en descripciones).
+
+---
+
 ## v1.1.27 - 2026-03-10
 
 ### Nuevas Funciones
 
-- **Timer de tiempo en estado InProgress**: Para tasks y items que están en estado "InProgress", ahora se muestra un relojito que indica el tiempo transcurrido desde que entró en ese estado.
+- **Timer de tiempo en estado InProgress**: Para tasks e items que están en estado "InProgress", ahora se muestra un relojito que indica el tiempo transcurrido desde que entró en ese estado.
     - Se muestra en formato dinámico: `hh:mm:ss` (horas), `mm:ss` (minutos), o `00:ss` (segundos)
     - Se actualiza en tiempo real cada segundo
     - Aparece flotando a la derecha del card (centrado verticalmente)
