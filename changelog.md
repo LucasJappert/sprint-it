@@ -8,6 +8,8 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ### Nuevas Funciones
 
+- **Sección Changelog**: Nueva página /changelog accesible desde el menú del avatar y la notificación de actualización. Muestra el historial de versiones con categorías (Nuevas Funciones, Cambios, Arreglos). Incluye botón para volver al dashboard.
+
 - **Vista previa de imágenes**: Imágenes en descripciones y comentarios ahora se muestran como miniaturas (200-800px). Click central abre en nueva pestaña. Botón verde para pantalla completa, rojo para eliminar (solo en descripciones).
 
 ---

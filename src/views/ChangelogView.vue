@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
+import { useRouter } from "vue-router";
 import changelogContent from "../../changelog.md?raw";
 import packageJson from "../../package.json";
+
+const router = useRouter();
 
 const APP_VERSION = packageJson.version as string;
 
@@ -137,6 +140,10 @@ const getCategoryColor = (category: string): string => {
 onMounted(() => {
     document.title = "Changelog - Sprint It";
 });
+
+const goToDashboard = () => {
+    router.push("/dashboard");
+};
 </script>
 
 <template>
@@ -144,7 +151,12 @@ onMounted(() => {
         <VRow>
             <VCol cols="12">
                 <div class="d-flex align-center justify-space-between mb-6">
-                    <h1 class="text-h4 font-weight-bold">Changelog</h1>
+                    <div class="d-flex align-center">
+                        <v-btn icon variant="text" color="primary" class="mr-2" @click="goToDashboard" title="Volver al Dashboard">
+                            <v-icon>mdi-arrow-left</v-icon>
+                        </v-btn>
+                        <h1 class="text-h4 font-weight-bold">Changelog</h1>
+                    </div>
                     <VChip color="primary" variant="flat" size="large" class="version-chip">
                         <v-icon start icon="mdi-tag-outline" class="version-icon" />
                         Versión {{ APP_VERSION }}
