@@ -4,6 +4,20 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.27 - 2026-03-10
+
+### Nuevas Funciones
+
+- **Timer de tiempo en estado InProgress**: Para tasks y items que están en estado "InProgress", ahora se muestra un relojito que indica el tiempo transcurrido desde que entró en ese estado.
+    - Se muestra en formato dinámico: `hh:mm:ss` (horas), `mm:ss` (minutos), o `00:ss` (segundos)
+    - Se actualiza en tiempo real cada segundo
+    - Aparece flotando a la derecha del card (centrado verticalmente)
+    - Icono de reloj (`mdi-clock-outline`) seguido del tiempo transcurrido
+    - Solo se muestra cuando el estado es "InProgress"
+    - Utiliza el historial de cambios para calcular el tiempo exacto
+
+---
+
 ## v1.1.26 - 2026-03-01
 
 ### Cambios

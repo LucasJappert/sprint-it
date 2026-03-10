@@ -53,6 +53,11 @@
         <div class="item-col cols-project">
             {{ item.projectName || "-" }}
         </div>
+        <!-- Relojito de tiempo en InProgress -->
+        <div v-if="isInProgress && !isLoading" class="in-progress-timer">
+            <v-icon size="14" class="mr-1">mdi-clock-outline</v-icon>
+            <span class="timer-text">{{ elapsedTime }}</span>
+        </div>
     </div>
 
     <div v-if="showTasks || props.isExpanded" class="tasks-container">
@@ -74,6 +79,7 @@
 
 <script setup lang="ts">
 import { useContextMenuOptions, type ContextMenuOption } from "@/composables/useContextMenuOptions";
+import { useInProgressTime } from "@/composables/useInProgressTime";
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_ICONS, PRIORITY_VALUES } from "@/constants/priorities";
@@ -96,6 +102,9 @@ const props = defineProps<{
     isContextMenuOpen?: boolean;
     isExpanded?: boolean;
 }>();
+
+// Composable para tiempo en InProgress
+const { elapsedTime, isInProgress, isLoading } = useInProgressTime(props.item.id, "item", () => props.item.state);
 
 const emit = defineEmits<{
     contextMenuOpened: [itemId: string];
@@ -616,5 +625,23 @@ const onDrop = (e: DragEvent) => {
     width: 16px;
     height: 3px;
     border: 1px solid black;
+}
+
+.in-progress-timer {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 8px;
+    background: rgba($primary, 0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: $primary;
+    white-space: nowrap;
+}
+
+.timer-text {
+    font-family: monospace;
 }
 </style>
