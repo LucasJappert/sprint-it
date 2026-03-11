@@ -8,6 +8,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AttachmentList: typeof import('./components/AttachmentList.vue')['default']
+    AttachmentUploader: typeof import('./components/AttachmentUploader.vue')['default']
     CommentContent: typeof import('./components/CommentContent.vue')['default']
     CommentSection: typeof import('./components/global/CommentSection.vue')['default']
     ContextMenu: typeof import('./components/ContextMenu.vue')['default']

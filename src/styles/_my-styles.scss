@@ -405,3 +405,7 @@ a {
     color: rgba($primary, 0.5) !important;
     text-decoration: underline !important;
 }
+
+.v-tab.v-tab.v-btn {
+    min-width: auto !important;
+}

@@ -6,20 +6,24 @@
                     <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
                     {{ isEditing ? "Edit Item" : "New Item" }}
                 </h3>
-                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4 view-mode-toggle">
-                    <v-btn value="details" size="small">
+                <v-tabs v-if="isEditing" v-model="viewMode" class="ml-4 view-mode-tabs" density="compact">
+                    <v-tab value="details">
                         <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
                         <span class="btn-text">Details</span>
-                    </v-btn>
-                    <v-btn value="history" size="small">
+                    </v-tab>
+                    <v-tab value="attachments">
+                        <v-icon size="16" class="mr-1">mdi-paperclip</v-icon>
+                        <span class="btn-text">Attachments</span>
+                    </v-tab>
+                    <v-tab value="history">
                         <v-icon size="16" class="mr-1">mdi-history</v-icon>
                         <span class="btn-text">History</span>
-                    </v-btn>
-                </v-btn-toggle>
+                    </v-tab>
+                </v-tabs>
             </div>
             <v-icon class="close-btn" @click="handleClose" :size="24">mdi-close</v-icon>
         </div>
-        <div class="body-scroll">
+        <div class="body-scroll" @paste="onPaste">
             <template v-if="viewMode === 'details'">
                 <!-- Título ocupando 100% del ancho -->
                 <div class="full-width mt-2 title-row">
@@ -88,6 +92,18 @@
                 />
             </template>
 
+            <template v-else-if="viewMode === 'attachments'">
+                <div class="attachments-section mt-2">
+                    <AttachmentUploader
+                        :is-uploading="attachmentsStore.isUploading.value"
+                        :disabled="!canAddMore"
+                        @file-select="onFileSelect"
+                        @drag-drop="onDragDrop"
+                    />
+                    <AttachmentList :attachments="attachmentsStore.attachments.value" @remove="onRemoveAttachment" class="mt-3" />
+                </div>
+            </template>
+
             <template v-else-if="viewMode === 'history'">
                 <HistoryView :change-history="changeHistory" :createdAt="existingItem?.createdAt" :createdBy="existingItem?.createdBy" />
             </template>
@@ -116,18 +132,22 @@
 </template>
 
 <script setup lang="ts">
+import AttachmentList from "@/components/AttachmentList.vue";
+import AttachmentUploader from "@/components/AttachmentUploader.vue";
 import HistoryView from "@/components/HistoryView.vue";
 import MyAlertDialog from "@/components/my-elements/MyAlertDialog.vue";
+import { useAttachments } from "@/composables/useAttachments";
 import { useClipboard } from "@/composables/useClipboard";
 import { useProjectName } from "@/composables/useProjectName";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
+import { notifyError } from "@/plugins/my-notification-helper/my-notification-helper";
 import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { ChangeHistory, Item } from "@/types";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 interface Props {
     visible: boolean;
@@ -219,8 +239,54 @@ const shouldShowCloseConfirmation = computed(() => {
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
 
-const viewMode = ref<"details" | "history">("details");
+const viewMode = ref<"details" | "attachments" | "history">("details");
 const changeHistory = ref<ChangeHistory[]>([]);
+
+// Attachments
+const attachmentsStore = useAttachments();
+const canAddMore = computed(() => attachmentsStore.canAddMore());
+
+const loadAttachmentsForItem = async (itemId: string): Promise<void> => {
+    await attachmentsStore.loadAttachments(itemId);
+};
+
+const onPaste = async (event: ClipboardEvent): Promise<void> => {
+    if (!props.existingItem?.id) {
+        notifyError("Guarda el item primero para adjuntar archivos");
+        return;
+    }
+    await attachmentsStore.handlePaste(event, props.existingItem.id, "item");
+};
+
+const onFileSelect = async (files: FileList): Promise<void> => {
+    if (!props.existingItem?.id) return;
+    for (const file of Array.from(files)) {
+        await attachmentsStore.confirmAndUpload(file, props.existingItem.id, "item");
+    }
+};
+
+const onDragDrop = async (files: FileList): Promise<void> => {
+    if (!props.existingItem?.id) return;
+    for (const file of Array.from(files)) {
+        await attachmentsStore.confirmAndUpload(file, props.existingItem.id, "item");
+    }
+};
+
+const onRemoveAttachment = async (attachmentId: string, attachmentName?: string): Promise<void> => {
+    await attachmentsStore.removeAttachment(attachmentId, attachmentName);
+};
+
+// Cargar adjuntos cuando cambia el existingItem o cuando se abre el dialog
+watch(
+    () => props.existingItem?.id,
+    async (newId) => {
+        if (newId && props.visible) {
+            console.log("Watch triggered for item ID:", newId);
+            await loadAttachmentsForItem(newId);
+        }
+    },
+    { immediate: true },
+);
 
 const priorityOptions = ref(
     PRIORITY_OPTIONS.map((option: any) => ({
