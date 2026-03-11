@@ -6,20 +6,11 @@
                     <v-icon class="yellow mr-1" size="30">mdi-clipboard-check-outline</v-icon>
                     {{ isEditing ? "Edit Task" : "New Task" }}
                 </h3>
-                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4 view-mode-toggle">
-                    <v-btn value="details" size="small">
-                        <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
-                        <span class="btn-text">Details</span>
-                    </v-btn>
-                    <v-btn value="history" size="small">
-                        <v-icon size="16" class="mr-1">mdi-history</v-icon>
-                        <span class="btn-text">History</span>
-                    </v-btn>
-                </v-btn-toggle>
+                <DialogTabs v-if="isEditing" v-model="viewMode" :show-tabs="isEditing" />
             </div>
             <v-icon class="close-btn" @click="handleClose" :size="24">mdi-close</v-icon>
         </div>
-        <div class="body-scroll">
+        <div class="body-scroll" @paste="onPaste">
             <template v-if="viewMode === 'details'">
                 <!-- Título ocupando 100% del ancho -->
                 <div class="full-width title-row">
@@ -76,8 +67,19 @@
                 />
             </template>
 
+            <template v-else-if="viewMode === 'attachments'">
+                <AttachmentsSection
+                    :is-uploading="attachmentsStore.isUploading.value"
+                    :disabled="!canAddMore"
+                    :attachments="attachmentsStore.attachments.value"
+                    @file-select="onFileSelect"
+                    @drag-drop="onDragDrop"
+                    @remove="onRemoveAttachment"
+                />
+            </template>
+
             <template v-else-if="viewMode === 'history'">
-                <HistoryView :change-history="changeHistory" :createdAt="existingTask?.createdAt" :createdBy="existingTask?.createdBy" />
+                <HistorySection :change-history="changeHistory" :created-at="existingTask?.createdAt" :created-by="existingTask?.createdBy" />
             </template>
         </div>
         <div class="footer">
@@ -104,14 +106,18 @@
 </template>
 
 <script setup lang="ts">
-import HistoryView from "@/components/HistoryView.vue";
+import AttachmentsSection from "@/components/dialogs/AttachmentsSection.vue";
+import DialogTabs from "@/components/dialogs/DialogTabs.vue";
+import HistorySection from "@/components/dialogs/HistorySection.vue";
 import MyAlertDialog from "@/components/my-elements/MyAlertDialog.vue";
+import { useAttachments } from "@/composables/useAttachments";
 import { useClipboard } from "@/composables/useClipboard";
 import { useProjectName } from "@/composables/useProjectName";
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
+import { notifyError } from "@/plugins/my-notification-helper/my-notification-helper";
 import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import type { ChangeHistory, Item, Task } from "@/types";
@@ -161,7 +167,7 @@ const hasChanges = computed(() => {
 const hasPendingChanges = computed(() => {
     // Solo mostrar pulso cuando se está editando un task existente
     if (!isEditing.value) return false;
-    return hasChanges.value || isWritingComment.value || isEditingComment.value;
+    return hasChanges.value || hasPendingComment.value;
 });
 
 const shouldShowCloseConfirmation = computed(() => {
@@ -173,6 +179,11 @@ const originalAssignedUser = ref("");
 const titleInputRef = ref();
 const isWritingComment = ref(false);
 const isEditingComment = ref(false);
+
+// Computed para verificar si hay comentarios pendientes con contenido real
+const hasPendingComment = computed(() => {
+    return isWritingComment.value || isEditingComment.value;
+});
 
 const title = ref("");
 const detail = ref("");
@@ -198,8 +209,66 @@ const router = useRouter();
 const { clearQueryParams } = useUrlManagement(router);
 const { copyToClipboardAsync } = useClipboard();
 const { saveLastProject, getLastProject } = useProjectName();
-const viewMode = ref<"details" | "history">("details");
+const viewMode = ref<"details" | "attachments" | "history">("details");
 const changeHistory = ref<ChangeHistory[]>([]);
+
+// Attachments
+const attachmentsStore = useAttachments();
+const canAddMore = computed(() => attachmentsStore.canAddMore());
+
+const loadAttachmentsForTask = async (taskId: string): Promise<void> => {
+    await attachmentsStore.loadAttachments(taskId);
+};
+
+const onPaste = async (event: ClipboardEvent): Promise<void> => {
+    // Ignorar si el usuario está escribiendo en un campo de texto (descripción o comentarios)
+    const target = event.target as HTMLElement;
+    const isInTextField =
+        target.closest(".ProseMirror") || // MyRichText editor
+        target.closest("[contenteditable=true]") ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA";
+
+    if (isInTextField || isWritingComment.value || isEditingComment.value) {
+        return; // El usuario está escribiendo, dejar que el campo maneje el paste
+    }
+
+    if (!props.existingTask?.id) {
+        notifyError("Guarda la task primero para adjuntar archivos");
+        return;
+    }
+    await attachmentsStore.handlePaste(event, props.existingTask.id, "task");
+};
+
+const onFileSelect = async (files: FileList): Promise<void> => {
+    if (!props.existingTask?.id) return;
+    for (const file of Array.from(files)) {
+        await attachmentsStore.confirmAndUpload(file, props.existingTask.id, "task");
+    }
+};
+
+const onDragDrop = async (files: FileList): Promise<void> => {
+    if (!props.existingTask?.id) return;
+    for (const file of Array.from(files)) {
+        await attachmentsStore.confirmAndUpload(file, props.existingTask.id, "task");
+    }
+};
+
+const onRemoveAttachment = async (attachmentId: string, attachmentName?: string): Promise<void> => {
+    await attachmentsStore.removeAttachment(attachmentId, attachmentName);
+};
+
+// Cargar adjuntos cuando cambia el existingTask o cuando se abre el dialog
+watch(
+    () => props.existingTask?.id,
+    async (newId) => {
+        if (newId && props.visible) {
+            console.log("Watch triggered for task ID:", newId);
+            await loadAttachmentsForTask(newId);
+        }
+    },
+    { immediate: true },
+);
 
 const priorityOptions = ref(
     PRIORITY_OPTIONS.map((option: any) => ({

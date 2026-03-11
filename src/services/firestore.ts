@@ -1,5 +1,5 @@
 import { STATE_VALUES } from "@/constants/states";
-import type { ChangeHistory, Comment, Sprint, User } from "@/types";
+import type { Attachment, ChangeHistory, Comment, Sprint, User } from "@/types";
 import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -11,6 +11,7 @@ const usersCollection = collection(db, "users");
 const commentsCollection = collection(db, "comments");
 const changesCollection = collection(db, "changes");
 const backupsCollection = collection(db, "backups");
+const attachmentsCollection = collection(db, "attachments");
 
 /**
  * Get user display name from cache or Firestore (async, private)
@@ -541,4 +542,32 @@ Formato requerido:
     };
 
     return exportData;
+};
+
+// ============ ATTACHMENTS CRUD ============
+
+export const addAttachment = async (attachment: Omit<Attachment, "id">): Promise<string> => {
+    const attachmentData = {
+        ...attachment,
+        uploadedAt: attachment.uploadedAt,
+    };
+    const docRef = await addDoc(attachmentsCollection, attachmentData);
+    return docRef.id;
+};
+
+export const getAttachmentsByAssociatedId = async (associatedId: string): Promise<Attachment[]> => {
+    const q = query(attachmentsCollection, where("associatedId", "==", associatedId));
+    const querySnapshot = await getDocs(q);
+    const attachments = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        uploadedAt: doc.data().uploadedAt?.toDate() || new Date(),
+    })) as Attachment[];
+
+    return attachments.sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime());
+};
+
+export const deleteAttachment = async (attachmentId: string): Promise<void> => {
+    const docRef = doc(attachmentsCollection, attachmentId);
+    await deleteDoc(docRef);
 };;

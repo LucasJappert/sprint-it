@@ -6,20 +6,11 @@
                     <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
                     {{ isEditing ? "Edit Item" : "New Item" }}
                 </h3>
-                <v-btn-toggle v-if="isEditing" v-model="viewMode" mandatory class="ml-4 view-mode-toggle">
-                    <v-btn value="details" size="small">
-                        <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
-                        <span class="btn-text">Details</span>
-                    </v-btn>
-                    <v-btn value="history" size="small">
-                        <v-icon size="16" class="mr-1">mdi-history</v-icon>
-                        <span class="btn-text">History</span>
-                    </v-btn>
-                </v-btn-toggle>
+                <DialogTabs v-if="isEditing" v-model="viewMode" :show-tabs="isEditing" />
             </div>
             <v-icon class="close-btn" @click="handleClose" :size="24">mdi-close</v-icon>
         </div>
-        <div class="body-scroll">
+        <div class="body-scroll" @paste="onPaste">
             <template v-if="viewMode === 'details'">
                 <!-- Título ocupando 100% del ancho -->
                 <div class="full-width mt-2 title-row">
@@ -88,8 +79,19 @@
                 />
             </template>
 
+            <template v-else-if="viewMode === 'attachments'">
+                <AttachmentsSection
+                    :is-uploading="attachmentsStore.isUploading.value"
+                    :disabled="!canAddMore"
+                    :attachments="attachmentsStore.attachments.value"
+                    @file-select="onFileSelect"
+                    @drag-drop="onDragDrop"
+                    @remove="onRemoveAttachment"
+                />
+            </template>
+
             <template v-else-if="viewMode === 'history'">
-                <HistoryView :change-history="changeHistory" :createdAt="existingItem?.createdAt" :createdBy="existingItem?.createdBy" />
+                <HistorySection :change-history="changeHistory" :created-at="existingItem?.createdAt" :created-by="existingItem?.createdBy" />
             </template>
         </div>
         <div class="footer">
@@ -116,18 +118,22 @@
 </template>
 
 <script setup lang="ts">
-import HistoryView from "@/components/HistoryView.vue";
+import AttachmentsSection from "@/components/dialogs/AttachmentsSection.vue";
+import DialogTabs from "@/components/dialogs/DialogTabs.vue";
+import HistorySection from "@/components/dialogs/HistorySection.vue";
 import MyAlertDialog from "@/components/my-elements/MyAlertDialog.vue";
+import { useAttachments } from "@/composables/useAttachments";
 import { useClipboard } from "@/composables/useClipboard";
 import { useProjectName } from "@/composables/useProjectName";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES, type PriorityValue } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES, type StateValue } from "@/constants/states";
 import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
+import { notifyError } from "@/plugins/my-notification-helper/my-notification-helper";
 import { addChange, getChangesByAssociatedId, getUserByUsername, getUsernameById } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useLoadingStore } from "@/stores/loading";
 import type { ChangeHistory, Item } from "@/types";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 interface Props {
     visible: boolean;
@@ -172,6 +178,11 @@ const titleInputRef = ref();
 const isWritingComment = ref(false);
 const isEditingComment = ref(false);
 
+// Computed para verificar si hay comentarios pendientes con contenido real
+const hasPendingComment = computed(() => {
+    return isWritingComment.value || isEditingComment.value;
+});
+
 // Guardar el estado original para comparación
 const originalTitle = ref("");
 const originalDetail = ref("");
@@ -209,7 +220,7 @@ const canSave = computed(() => {
 const hasPendingChanges = computed(() => {
     // Solo mostrar pulso cuando se está editando un item existente
     if (!isEditing.value) return false;
-    return hasChanges.value || isWritingComment.value || isEditingComment.value;
+    return hasChanges.value || hasPendingComment.value;
 });
 
 const shouldShowCloseConfirmation = computed(() => {
@@ -219,8 +230,66 @@ const shouldShowCloseConfirmation = computed(() => {
 
 const assignedUserOptions = ref<{ id: string; text: string; name: string; checked: boolean }[]>([]);
 
-const viewMode = ref<"details" | "history">("details");
+const viewMode = ref<"details" | "attachments" | "history">("details");
 const changeHistory = ref<ChangeHistory[]>([]);
+
+// Attachments
+const attachmentsStore = useAttachments();
+const canAddMore = computed(() => attachmentsStore.canAddMore());
+
+const loadAttachmentsForItem = async (itemId: string): Promise<void> => {
+    await attachmentsStore.loadAttachments(itemId);
+};
+
+const onPaste = async (event: ClipboardEvent): Promise<void> => {
+    // Ignorar si el usuario está escribiendo en un campo de texto (descripción o comentarios)
+    const target = event.target as HTMLElement;
+    const isInTextField =
+        target.closest(".ProseMirror") || // MyRichText editor
+        target.closest("[contenteditable=true]") ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA";
+
+    if (isInTextField || isWritingComment.value || isEditingComment.value) {
+        return; // El usuario está escribiendo, dejar que el campo maneje el paste
+    }
+
+    if (!props.existingItem?.id) {
+        notifyError("Guarda el item primero para adjuntar archivos");
+        return;
+    }
+    await attachmentsStore.handlePaste(event, props.existingItem.id, "item");
+};
+
+const onFileSelect = async (files: FileList): Promise<void> => {
+    if (!props.existingItem?.id) return;
+    for (const file of Array.from(files)) {
+        await attachmentsStore.confirmAndUpload(file, props.existingItem.id, "item");
+    }
+};
+
+const onDragDrop = async (files: FileList): Promise<void> => {
+    if (!props.existingItem?.id) return;
+    for (const file of Array.from(files)) {
+        await attachmentsStore.confirmAndUpload(file, props.existingItem.id, "item");
+    }
+};
+
+const onRemoveAttachment = async (attachmentId: string, attachmentName?: string): Promise<void> => {
+    await attachmentsStore.removeAttachment(attachmentId, attachmentName);
+};
+
+// Cargar adjuntos cuando cambia el existingItem o cuando se abre el dialog
+watch(
+    () => props.existingItem?.id,
+    async (newId) => {
+        if (newId && props.visible) {
+            console.log("Watch triggered for item ID:", newId);
+            await loadAttachmentsForItem(newId);
+        }
+    },
+    { immediate: true },
+);
 
 const priorityOptions = ref(
     PRIORITY_OPTIONS.map((option: any) => ({

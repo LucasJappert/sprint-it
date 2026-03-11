@@ -14,7 +14,7 @@
                     <v-icon size="14" class="mr-1">mdi-file-document-alert-outline</v-icon>
                     From Changelog
                 </MyButton>
-                <MyButton @click="addCommentAsync" :disabled="!newCommentContent.trim()" class="custom-button"> Add Comment </MyButton>
+                <MyButton @click="addCommentAsync" :disabled="!hasNewCommentContent" class="custom-button"> Add Comment </MyButton>
             </div>
         </div>
 
@@ -109,8 +109,8 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{
     "comment-added": [comment: Comment];
-    "writing-comment": [isWriting: boolean];
-    "editing-comment": [isEditing: boolean];
+    "writing-comment": [hasContent: boolean];
+    "editing-comment": [hasContent: boolean];
 }>();
 
 const authStore = useAuthStore();
@@ -129,6 +129,17 @@ const changelogTextareaRef = ref();
 
 // Colores para autores: celeste claro y verde claro
 const AUTHOR_COLORS = ["#33c7ffaa", "#3a9962aa"];
+
+// Computed para verificar si hay contenido real (normalizado)
+const hasNewCommentContent = computed(() => {
+    const normalized = (newCommentContent.value || "").replace(/<p>\s*<\/p>/gi, "").trim();
+    return normalized.length > 0;
+});
+
+const hasEditCommentContent = computed(() => {
+    const normalized = (editCommentContent.value || "").replace(/<p>\s*<\/p>/gi, "").trim();
+    return normalized.length > 0;
+});
 
 const getAuthorColor = (userId: string): string => {
     const index = userId.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % AUTHOR_COLORS.length;
@@ -224,14 +235,24 @@ watch(
 
 // Watch for new comment content changes
 watch(newCommentContent, (newValue) => {
-    emit("writing-comment", newValue.trim().length > 0);
+    // Normalizar: si es <p></p> o similar, treat como vacío
+    const normalized = (newValue || "").replace(/<p>\s*<\/p>/gi, "").trim();
+    emit("writing-comment", normalized.length > 0);
+});
+
+// Watch for edit comment content changes
+watch(editCommentContent, (newValue) => {
+    // Normalizar: si es <p></p> o similar, treat como vacío
+    const normalized = (newValue || "").replace(/<p>\s*<\/p>/gi, "").trim();
+    emit("editing-comment", normalized.length > 0);
 });
 
 const addCommentAsync = async () => {
-    if (newCommentContent.value.trim()) {
+    if (hasNewCommentContent.value) {
         loadingStore.setLoading(true);
         try {
-            const description = newCommentContent.value.trim();
+            // Normalizar el contenido para guardar
+            const description = newCommentContent.value.replace(/<p>\s*<\/p>/gi, "").trim();
             const now = new Date();
             const newCommentData = {
                 associatedId: props.associatedId,
@@ -308,7 +329,7 @@ const startEditComment = (comment: Comment) => {
     editingCommentId.value = comment.id;
     editCommentContent.value = comment.description;
     originalContent.value = comment.description;
-    emit("editing-comment", true);
+    // El watch de editCommentContent se encarga de emitir editing-comment
 };
 
 const cancelCommentEdit = () => {
@@ -364,7 +385,7 @@ const deleteCommentAsync = async (commentId: string) => {
 
 // Warn about pending comments before unmounting
 onBeforeUnmount(async () => {
-    if (newCommentContent.value.trim()) {
+    if (hasNewCommentContent.value) {
         const confirmed = await MyAlerts.confirmAsync(
             "Comentario pendiente",
             "Tienes un comentario sin guardar. ¿Quieres guardarlo antes de continuar?",

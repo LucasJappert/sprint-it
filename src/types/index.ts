@@ -75,3 +75,15 @@ export interface ChangeHistory {
     userId: string; // user who made the change
     createdAt: Date;
 }
+
+export interface Attachment {
+    id: string;
+    associatedId: string;
+    associatedType: "item" | "task";
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    storageUrl: string;
+    uploadedBy: string;
+    uploadedAt: Date;
+}

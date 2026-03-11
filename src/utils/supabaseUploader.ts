@@ -1,7 +1,7 @@
 import { supabase } from "@/supabase";
 
-export const supabaseUploader = async (file: File): Promise<string> => {
-    const key = `detalles/${crypto.randomUUID()}_${file.name}`;
+export const supabaseUploader = async (file: File, customKey?: string): Promise<string> => {
+    const key = customKey || `detalles/${crypto.randomUUID()}_${file.name}`;
     const { error } = await supabase
         .storage
         .from("sprint-it")

@@ -8,13 +8,18 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AttachmentList: typeof import('./components/AttachmentList.vue')['default']
+    AttachmentsSection: typeof import('./components/dialogs/AttachmentsSection.vue')['default']
+    AttachmentUploader: typeof import('./components/AttachmentUploader.vue')['default']
     CommentContent: typeof import('./components/CommentContent.vue')['default']
     CommentSection: typeof import('./components/global/CommentSection.vue')['default']
     ContextMenu: typeof import('./components/ContextMenu.vue')['default']
     ContextSubmenu: typeof import('./components/ContextSubmenu.vue')['default']
     DeletedItemsSection: typeof import('./components/DeletedItemsSection.vue')['default']
+    DialogTabs: typeof import('./components/dialogs/DialogTabs.vue')['default']
     FullScreenImageDialog: typeof import('./components/FullScreenImageDialog.vue')['default']
     Header: typeof import('./components/Header.vue')['default']
+    HistorySection: typeof import('./components/dialogs/HistorySection.vue')['default']
     HistoryView: typeof import('./components/HistoryView.vue')['default']
     ImageLinkView: typeof import('./components/ImageLinkView.vue')['default']
     ImagePreview: typeof import('./components/ImagePreview.vue')['default']
