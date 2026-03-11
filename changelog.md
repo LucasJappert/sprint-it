@@ -4,7 +4,7 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
-## v1.1.30 - 2026-03-11
+## v1.1.31 - 2026-03-11
 
 ### Cambios
 

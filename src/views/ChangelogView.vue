@@ -35,6 +35,10 @@ const parseChangelog = (content: string): ParsedVersion[] => {
         const versionMatch = trimmedLine.match(/^##\s+v(\d+\.\d+\.\d+)\s*-\s*(\d{4}-\d{2}-\d{2})/);
         if (versionMatch) {
             if (currentVersion) {
+                // Guardar cambio actual antes de cambiar de versión
+                if (currentChange && (currentChange.title || currentChange.description)) {
+                    currentVersion.changes.push({ ...currentChange });
+                }
                 versions.push(currentVersion);
             }
             currentVersion = {
