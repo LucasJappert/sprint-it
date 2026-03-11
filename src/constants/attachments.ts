@@ -14,7 +14,7 @@ export const ATTACHMENT_CONFIG = {
         "application/zip",
         "application/x-rar-compressed",
     ],
-    ALLOWED_EXTENSIONS: [".pdf", ".xlsx", ".xls", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".zip", ".rar", ".json"],
+    ALLOWED_EXTENSIONS: [".pdf", ".xlsx", ".xls", ".csv", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".zip", ".rar", ".json"],
 } as const;
 
 export const formatFileSize = (bytes: number): string => {
