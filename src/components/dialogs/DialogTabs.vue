@@ -35,3 +35,6 @@ const localValue = computed({
     set: (value: DialogViewMode) => emit("update:modelValue", value),
 });
 </script>
+<style scoped lang="scss">
+@use "@/styles/dialog-form.scss";
+</style>

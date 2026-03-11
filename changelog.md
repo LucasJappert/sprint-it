@@ -4,6 +4,17 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.32 - 2026-03-11
+
+### Cambios
+
+- **Vista previa de imágenes en comentarios y descripciones**:
+    - Botones de pantalla completa y eliminar ahora solo visibles al pasar el mouse sobre la imagen (desktop)
+    - Estilado alinhado con los botones de editar/eliminar comentarios: `v-btn` de Vuetify, iconos outline, colores verde (#008035) y rojo (#f44336)
+    - Confirmación antes de eliminar una imagen
+
+---
+
 ## v1.1.31 - 2026-03-11
 
 ### Cambios
