@@ -4,6 +4,38 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.29 - 2026-03-11
+
+### Nuevas Funciones
+
+- **Sistema de Adjuntos**: Nueva funcionalidad para adjuntar archivos a items y tasks.
+    - Subida de archivos mediante: pegado desde portapapeles (Ctrl+V), arrastrar y soltar, o botón selector
+    - Almacenamiento en Supabase Storage (bucket `sprint-it`, carpeta `detalles/`)
+    - Límites: máximo 3MB por archivo, máximo 4 archivos por item/task
+    - Tipos permitidos: PDF, Excel, Word, imágenes, ZIP, RAR, JSON
+    - Confirmación antes de subir archivos
+    - Indicador visual durante la subida
+
+- **Pestañas en Diálogos**: Reemplazo del `v-btn-toggle` por `v-tabs` en ItemDialog y TaskDialog.
+    - Tres pestañas: Details, Attachments, History
+    - Componente reutilizable `DialogTabs.vue`
+
+### Cambios
+
+- **Detección de comentarios vacíos**: Mejorada la lógica para detectar contenido de comentarios.
+    - Se ignoran bloques `<p></p>` vacíos al validar si hay contenido pendiente
+    - Actualizado el comportamiento del botón "Add Comment" según el contenido real
+
+- **Historial de cambios**: Nuevo composable `useChangeHistory.ts` para gestionar el registro de modificaciones.
+
+### Arreglos
+
+- **Confirmación de cierre con comentarios pendientes**: Corregido el comportamiento al intentar cerrar con comentarios en edición.
+    - Ahora detecta correctamente cuando hay contenido de comentario sin guardar
+    - Funciona tanto para escribir nuevos comentarios como para editar existentes
+
+---
+
 ## v1.1.28 - 2026-03-10
 
 ### Nuevas Funciones
