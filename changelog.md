@@ -4,6 +4,12 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.30 - 2026-03-11
+
+### Cambios
+
+- **Permitir archivos adjuntos del tipo .csv**
+
 ## v1.1.29 - 2026-03-11
 
 ### Nuevas Funciones
