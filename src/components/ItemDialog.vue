@@ -6,20 +6,7 @@
                     <v-icon class="blue mr-1" size="30">mdi-clipboard-text</v-icon>
                     {{ isEditing ? "Edit Item" : "New Item" }}
                 </h3>
-                <v-tabs v-if="isEditing" v-model="viewMode" class="ml-4 view-mode-tabs" density="compact">
-                    <v-tab value="details">
-                        <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
-                        <span class="btn-text">Details</span>
-                    </v-tab>
-                    <v-tab value="attachments">
-                        <v-icon size="16" class="mr-1">mdi-paperclip</v-icon>
-                        <span class="btn-text">Attachments</span>
-                    </v-tab>
-                    <v-tab value="history">
-                        <v-icon size="16" class="mr-1">mdi-history</v-icon>
-                        <span class="btn-text">History</span>
-                    </v-tab>
-                </v-tabs>
+                <DialogTabs v-if="isEditing" v-model="viewMode" :show-tabs="isEditing" />
             </div>
             <v-icon class="close-btn" @click="handleClose" :size="24">mdi-close</v-icon>
         </div>
@@ -93,19 +80,18 @@
             </template>
 
             <template v-else-if="viewMode === 'attachments'">
-                <div class="attachments-section mt-2">
-                    <AttachmentUploader
-                        :is-uploading="attachmentsStore.isUploading.value"
-                        :disabled="!canAddMore"
-                        @file-select="onFileSelect"
-                        @drag-drop="onDragDrop"
-                    />
-                    <AttachmentList :attachments="attachmentsStore.attachments.value" @remove="onRemoveAttachment" class="mt-3" />
-                </div>
+                <AttachmentsSection
+                    :is-uploading="attachmentsStore.isUploading.value"
+                    :disabled="!canAddMore"
+                    :attachments="attachmentsStore.attachments.value"
+                    @file-select="onFileSelect"
+                    @drag-drop="onDragDrop"
+                    @remove="onRemoveAttachment"
+                />
             </template>
 
             <template v-else-if="viewMode === 'history'">
-                <HistoryView :change-history="changeHistory" :createdAt="existingItem?.createdAt" :createdBy="existingItem?.createdBy" />
+                <HistorySection :change-history="changeHistory" :created-at="existingItem?.createdAt" :created-by="existingItem?.createdBy" />
             </template>
         </div>
         <div class="footer">
@@ -132,9 +118,9 @@
 </template>
 
 <script setup lang="ts">
-import AttachmentList from "@/components/AttachmentList.vue";
-import AttachmentUploader from "@/components/AttachmentUploader.vue";
-import HistoryView from "@/components/HistoryView.vue";
+import AttachmentsSection from "@/components/dialogs/AttachmentsSection.vue";
+import DialogTabs from "@/components/dialogs/DialogTabs.vue";
+import HistorySection from "@/components/dialogs/HistorySection.vue";
 import MyAlertDialog from "@/components/my-elements/MyAlertDialog.vue";
 import { useAttachments } from "@/composables/useAttachments";
 import { useClipboard } from "@/composables/useClipboard";
@@ -192,6 +178,11 @@ const titleInputRef = ref();
 const isWritingComment = ref(false);
 const isEditingComment = ref(false);
 
+// Computed para verificar si hay comentarios pendientes con contenido real
+const hasPendingComment = computed(() => {
+    return isWritingComment.value || isEditingComment.value;
+});
+
 // Guardar el estado original para comparación
 const originalTitle = ref("");
 const originalDetail = ref("");
@@ -229,7 +220,7 @@ const canSave = computed(() => {
 const hasPendingChanges = computed(() => {
     // Solo mostrar pulso cuando se está editando un item existente
     if (!isEditing.value) return false;
-    return hasChanges.value || isWritingComment.value || isEditingComment.value;
+    return hasChanges.value || hasPendingComment.value;
 });
 
 const shouldShowCloseConfirmation = computed(() => {
@@ -251,6 +242,18 @@ const loadAttachmentsForItem = async (itemId: string): Promise<void> => {
 };
 
 const onPaste = async (event: ClipboardEvent): Promise<void> => {
+    // Ignorar si el usuario está escribiendo en un campo de texto (descripción o comentarios)
+    const target = event.target as HTMLElement;
+    const isInTextField =
+        target.closest(".ProseMirror") || // MyRichText editor
+        target.closest("[contenteditable=true]") ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA";
+
+    if (isInTextField || isWritingComment.value || isEditingComment.value) {
+        return; // El usuario está escribiendo, dejar que el campo maneje el paste
+    }
+
     if (!props.existingItem?.id) {
         notifyError("Guarda el item primero para adjuntar archivos");
         return;

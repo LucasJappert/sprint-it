@@ -30,7 +30,7 @@ export const useAttachments = () => {
         if (!isAllowedFileType(file)) {
             return {
                 valid: false,
-                error: "Tipo de archivo no permitido. Solo se admiten: PDF, Excel, Word, imágenes, ZIP, RAR",
+                error: "Tipo de archivo no permitido. Solo se admiten: PDF, Excel, Word, imágenes, ZIP, RAR y json",
             };
         }
         if (!isFileSizeValid(file)) {

@@ -1,6 +1,6 @@
 export const ATTACHMENT_CONFIG = {
-    MAX_FILE_SIZE: 2 * 1024 * 1024,
-    MAX_ATTACHMENTS_PER_ITEM: 2,
+    MAX_FILE_SIZE: 3 * 1024 * 1024,
+    MAX_ATTACHMENTS_PER_ITEM: 4,
     ALLOWED_TYPES: [
         "application/pdf",
         "application/vnd.ms-excel",
@@ -14,7 +14,7 @@ export const ATTACHMENT_CONFIG = {
         "application/zip",
         "application/x-rar-compressed",
     ],
-    ALLOWED_EXTENSIONS: [".pdf", ".xlsx", ".xls", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".zip", ".rar"],
+    ALLOWED_EXTENSIONS: [".pdf", ".xlsx", ".xls", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".zip", ".rar", ".json"],
 } as const;
 
 export const formatFileSize = (bytes: number): string => {

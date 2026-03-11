@@ -5,7 +5,7 @@
             <p class="text-grey mt-2">No hay archivos adjuntos</p>
         </div>
         <div v-else class="attachments-container">
-            <div v-for="attachment in attachments" :key="attachment.id" class="attachment-item my-1">
+            <div v-for="attachment in attachments" :key="attachment.id" class="attachment-item">
                 <v-icon :color="getIconColor(attachment.fileType)" size="24" class="mr-2">
                     {{ getFileIcon(attachment.fileType) }}
                 </v-icon>
@@ -101,13 +101,13 @@ const copyUrl = async (url: string): Promise<void> => {
 .attachments-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .attachment-item {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
+    padding: 4px 8px;
     border: 1px solid rgba(0, 0, 0, 0.12);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.05);
