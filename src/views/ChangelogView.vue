@@ -126,7 +126,9 @@ const formatBold = (text: string): string => {
 };
 
 const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
+    // Parsear la fecha como fecha local (no UTC) para evitar problemas de zona horaria
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
     return date.toLocaleDateString("es-AR", {
         year: "numeric",
         month: "long",

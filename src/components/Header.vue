@@ -60,9 +60,9 @@
                         <v-icon>mdi-logout</v-icon>
                         <span>Logout</span>
                     </div>
-                    <div class="menu-item version" @click="goToChangelog">
-                        <span>v{{ appVersion }} - <span class="changelog-link">See changelog</span></span>
-                    </div>
+                    <a class="menu-item version" href="/changelog" rel="noopener noreferrer">
+                        <span>v{{ appVersion }} - See changelog</span>
+                    </a>
                 </div>
             </v-menu>
         </div>
@@ -75,13 +75,7 @@
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { STATE_VALUES } from "@/constants/states";
 import MyAlerts from "@/plugins/my-alerts";
-import {
-    exportAllData,
-    exportSprintData as exportSprintDataAsync,
-    getFilteredSprintData as getFilteredSprintDataAsync,
-    getLastBackupDate,
-    updateLastBackupDate,
-} from "@/services/firestore";
+import { exportSprintData as exportSprintDataAsync, getFilteredSprintData as getFilteredSprintDataAsync, getLastBackupDate } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useSprintStore } from "@/stores/sprint";
 import { createFileInput, processImportedItems } from "@/utils/itemImport";
@@ -118,12 +112,6 @@ const handleScroll = () => {
     }
     lastScrollY = currentScrollY;
 };
-
-const getExportDataTitle = computed(() => {
-    if (!needsBackupPulse.value) return "";
-
-    return "Backup your data to stay safe!";
-});
 
 const getExportSprintTooltip = computed(() => {
     const sprint = sprintStore.currentSprint;
@@ -258,37 +246,9 @@ const logout = async () => {
     router.push("/");
 };
 
-const goToChangelog = () => {
-    router.push("/changelog");
-};
-
 const openExportDialog = (type: "json" | "full") => {
     exportType.value = type;
     showExportDialog.value = true;
-};
-
-const exportData = async () => {
-    try {
-        const data = await exportAllData();
-        const dataStr = JSON.stringify(data, null, 2);
-        const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-
-        const exportFileDefaultName = `sprint-data-${new Date().toISOString().split("T")[0]}.json`;
-
-        const linkElement = document.createElement("a");
-        linkElement.setAttribute("href", dataUri);
-        linkElement.setAttribute("download", exportFileDefaultName);
-        linkElement.click();
-
-        // Update last backup date in database
-        if (authStore.user?.id) {
-            await updateLastBackupDate(authStore.user.id);
-            await checkBackupStatus(); // Refresh pulse status
-        }
-    } catch (error) {
-        console.error("Error exporting data:", error);
-        alert("Error exporting data. Please try again.");
-    }
 };
 
 const exportSprintAsync = async () => {
@@ -526,18 +486,13 @@ const importItems = async () => {
     text-align: center;
     cursor: pointer;
     padding: 4px 16px;
+    display: block;
+    text-decoration: none !important;
+    transition: color 0.2s;
 
-    &:hover {
-        background-color: rgba(255, 255, 255, 0.04);
-
-        .changelog-link {
-            color: $primary;
-            text-decoration: underline;
-        }
-    }
-
-    .changelog-link {
-        transition: color 0.2s;
+    & *:hover {
+        color: $primary !important;
+        text-decoration: underline !important;
     }
 }
 

@@ -6,6 +6,7 @@
             dragDropStore.dragTask?.id === task.id ? 'dragging' : '',
             isHighlighted && highlightPosition === 'above' ? 'show-border-top' : '',
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
+            isAssignedToCurrentUserAndInProgress ? 'in-progress-current-user' : '',
         ]"
         @click.stop="onEditTask(task)"
         @contextmenu.prevent.stop="onRightClick"
@@ -72,7 +73,7 @@ import { useContextMenuOptions, type ContextMenuOption } from "@/composables/use
 import { useInProgressTime } from "@/composables/useInProgressTime";
 import { useTaskManagement } from "@/composables/useTaskManagement";
 import { PRIORITY_ICONS, PRIORITY_VALUES } from "@/constants/priorities";
-import { STATE_OPTIONS } from "@/constants/states";
+import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
@@ -157,6 +158,13 @@ const isHighlighted = computed(() => {
 const highlightPosition = computed(() => {
     const highlight = dragDropStore.highlightedTasks.find((h) => h.taskId === props.task.id);
     return highlight?.position || null;
+});
+
+// Computed para determinar si la task está en progreso Y asignada al usuario actual
+const isAssignedToCurrentUserAndInProgress = computed(() => {
+    const currentUser = authStore.user;
+    if (!currentUser) return false;
+    return props.task.state === STATE_VALUES.IN_PROGRESS && props.task.assignedUser === currentUser.id;
 });
 
 // Menú contextual
@@ -358,20 +366,6 @@ const onDragEnd = () => {
     height: 10px;
     border-radius: 50%;
     flex-shrink: 0;
-}
-
-.in-progress-timer {
-    display: flex;
-    align-items: center;
-    position: absolute;
-    right: 8px;
-    background: rgba($primary, 0.15);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: $primary;
-    white-space: nowrap;
 }
 
 .timer-text {
