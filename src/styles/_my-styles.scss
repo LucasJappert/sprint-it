@@ -409,3 +409,40 @@ a {
 .v-tab.v-tab.v-btn {
     min-width: auto !important;
 }
+
+.in-progress-timer {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 8px;
+    background: #154b5f;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: $primary;
+    white-space: nowrap;
+}
+
+/* Estilo para item/task en progreso asignado al usuario actual */
+.in-progress-current-user {
+    background: rgba($primary, 0.06) !important;
+    border: 1px solid rgba($primary, 0.5) !important;
+    box-shadow: 0 0 8px rgba($primary, 0.3) !important;
+    animation: pulse-in-progress 2s ease-in-out infinite;
+
+    &:hover {
+        background: rgba($primary, 0.2);
+        border: 1px solid rgba($primary, 0.7);
+    }
+}
+
+@keyframes pulse-in-progress {
+    0%,
+    100% {
+        box-shadow: 0 0 4px rgba($primary, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 6px rgba($primary, 0.5);
+    }
+}

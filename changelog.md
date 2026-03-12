@@ -4,6 +4,17 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.34 - 2026-03-12
+
+### Nuevas Funciones
+
+- **Destacar item/task en progreso para el usuario actual**: Los items y tasks que están en estado "In Progress" y asignados al usuario logueado ahora se muestran con un efecto visual destacado.
+    - Fondo azul claro con borde azul y efecto glow
+    - Animación de pulso para llamar la atención
+    - El efecto se aplica tanto al item padre como a las tasks individuales
+
+---
+
 ## v1.1.33 - 2026-03-12
 
 ### Nuevas Funciones

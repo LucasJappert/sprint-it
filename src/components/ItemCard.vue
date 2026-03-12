@@ -7,6 +7,7 @@
             isHighlighted && highlightPosition === 'above' ? 'show-border-top' : '',
             isHighlighted && highlightPosition === 'below' ? 'show-border-bottom' : '',
             props.isContextMenuOpen ? 'context-menu-open' : '',
+            isAssignedToCurrentUserAndInProgress ? 'in-progress-current-user' : '',
         ]"
         @click="onEditItem"
         @contextmenu.prevent.stop="onRightClick"
@@ -134,6 +135,20 @@ const highlightPosition = computed(() => {
 });
 
 const assignedUserName = ref("");
+
+// Computed para determinar si el item está en progreso Y asignado al usuario actual
+const isAssignedToCurrentUserAndInProgress = computed(() => {
+    const currentUser = authStore.user;
+    if (!currentUser) return false;
+
+    // Verificar si el item está en In Progress y asignado al usuario actual
+    if (props.item.state === STATE_VALUES.IN_PROGRESS && props.item.assignedUser === currentUser.id) {
+        return true;
+    }
+
+    // Verificar si alguna task está en In Progress y asignada al usuario actual
+    return props.item.tasks.some((task) => task.deletedAt === null && task.state === STATE_VALUES.IN_PROGRESS && task.assignedUser === currentUser.id);
+});
 
 const activeTasks = computed(() => {
     return props.item.tasks.filter((task) => task.deletedAt === null);
@@ -625,20 +640,6 @@ const onDrop = (e: DragEvent) => {
     width: 16px;
     height: 3px;
     border: 1px solid black;
-}
-
-.in-progress-timer {
-    display: flex;
-    align-items: center;
-    position: absolute;
-    right: 8px;
-    background: rgba($primary, 0.15);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: $primary;
-    white-space: nowrap;
 }
 
 .timer-text {
