@@ -266,11 +266,12 @@ export const getChangesByAssociatedId = async (associatedId: string): Promise<Ch
 };
 
 export const exportAllData = async () => {
-    const [sprintsSnapshot, usersSnapshot, commentsSnapshot, changesSnapshot] = await Promise.all([
+    const [sprintsSnapshot, usersSnapshot, commentsSnapshot, changesSnapshot, attachmentsSnapshot] = await Promise.all([
         getDocs(sprintsCollection),
         getDocs(usersCollection),
         getDocs(commentsCollection),
         getDocs(changesCollection),
+        getDocs(attachmentsCollection),
     ]);
 
     const sprints = sprintsSnapshot.docs.map(doc => ({
@@ -298,11 +299,18 @@ export const exportAllData = async () => {
         createdAt: doc.data().createdAt?.toDate() || new Date(),
     }));
 
+    const attachments = attachmentsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        uploadedAt: doc.data().uploadedAt?.toDate() || new Date(),
+    }));
+
     return {
         sprints,
         users,
         comments,
         changes,
+        attachments,
         exportedAt: new Date().toISOString(),
     };
 };
@@ -570,4 +578,15 @@ export const getAttachmentsByAssociatedId = async (associatedId: string): Promis
 export const deleteAttachment = async (attachmentId: string): Promise<void> => {
     const docRef = doc(attachmentsCollection, attachmentId);
     await deleteDoc(docRef);
+};
+
+// ============ EXPORT ALL DATA ============
+
+export const getAllAttachments = async (): Promise<Attachment[]> => {
+    const querySnapshot = await getDocs(attachmentsCollection);
+    return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        uploadedAt: doc.data().uploadedAt?.toDate() || new Date(),
+    })) as Attachment[];
 };;

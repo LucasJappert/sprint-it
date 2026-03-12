@@ -17,6 +17,7 @@ declare module 'vue' {
     ContextSubmenu: typeof import('./components/ContextSubmenu.vue')['default']
     DeletedItemsSection: typeof import('./components/DeletedItemsSection.vue')['default']
     DialogTabs: typeof import('./components/dialogs/DialogTabs.vue')['default']
+    ExportBackupDialog: typeof import('./components/ExportBackupDialog.vue')['default']
     FullScreenImageDialog: typeof import('./components/FullScreenImageDialog.vue')['default']
     Header: typeof import('./components/Header.vue')['default']
     HistorySection: typeof import('./components/dialogs/HistorySection.vue')['default']

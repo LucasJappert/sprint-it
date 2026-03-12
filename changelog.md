@@ -4,6 +4,53 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.33 - 2026-03-12
+
+### Nuevas Funciones
+
+- Sistema de Exportación de Base de Datos Completa: Nueva funcionalidad para exportar toda la información del sistema.
+    - Exportar JSON: Descarga un archivo JSON con toda la base de datos (sprints, items, tasks, usuarios, comentarios, historial de cambios, adjuntos)
+    - Generar Respaldo Completo (ZIP): Genera un archivo ZIP que incluye: base de datos (JSON con todos los datos), adjuntos (todos los archivos subidos), imagenes items (imágenes embebidas en descripciones), imagenes tasks (imágenes embebidas en descripciones), imagenes comentarios (imágenes embebidas en comentarios)
+    - Acceso desde el menú del avatar (submenú "Exportar")
+
+- Diálogo de estadísticas previo a la exportación: Antes de generar el respaldo, se muestra un diálogo con:
+    - Cantidad de sprints, items, tasks, usuarios, comentarios
+    - Cantidad de archivos adjuntos
+    - Cantidad total de imágenes (descripciones + comentarios)
+    - Tamaño estimado del archivo
+    - Tiempo estimado de exportación
+
+- Diálogo de progreso durante la exportación:
+    - Barra de progreso con porcentaje
+    - Etapa actual de la exportación
+    - Contador de tiempo transcurrido en formato mm:ss (o hh:mm:ss)
+    - Indicadores visuales de las etapas completadas
+
+- Notificación de tiempo al finalizar: Al completar la exportación, se muestra el tiempo total que tomó
+
+### Cambios
+
+- exportAllData(): Mejorada para incluir también los attachments (metadatos de archivos)
+
+- Cálculo de tiempo estimado: Fórmula mejorada basada en ~50 archivos por minuto para mayor precisión
+
+### Dependencias
+
+- Agregadas: jszip, file-saver, @types/file-saver
+
+---
+
+## v1.1.32 - 2026-03-11
+
+### Cambios
+
+- **Vista previa de imágenes en comentarios y descripciones**:
+    - Botones de pantalla completa y eliminar ahora solo visibles al pasar el mouse sobre la imagen (desktop)
+    - Estilado alinhado con los botones de editar/eliminar comentarios: `v-btn` de Vuetify, iconos outline, colores verde (#008035) y rojo (#f44336)
+    - Confirmación antes de eliminar una imagen
+
+---
+
 ## v1.1.31 - 2026-03-11
 
 ### Cambios

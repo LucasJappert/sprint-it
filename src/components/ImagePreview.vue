@@ -3,12 +3,12 @@
         <img :src="src" :alt="alt" class="preview-image" @click="handleMiddleClick" @auxclick="handleMiddleClick" />
 
         <div class="action-buttons">
-            <button class="action-btn fullscreen-btn" @click.stop="openFullscreen" title="Ver en pantalla completa">
-                <v-icon size="18">mdi-fullscreen</v-icon>
-            </button>
-            <button v-if="showDeleteButton" class="action-btn delete-btn" @click.stop="handleRemove" title="Eliminar imagen">
-                <v-icon size="18">mdi-delete-outline</v-icon>
-            </button>
+            <v-btn icon size="x-small" @click.stop="openFullscreen" title="Ver pantalla completa">
+                <v-icon size="28" class="green">mdi-fullscreen</v-icon>
+            </v-btn>
+            <v-btn v-if="showDeleteButton" icon size="x-small" @click.stop="handleRemove" title="Eliminar imagen">
+                <v-icon size="24" class="danger">mdi-trash-can-outline</v-icon>
+            </v-btn>
         </div>
 
         <FullScreenImageDialog :visible="fullscreenVisible" :src="src" :alt="alt" @close="fullscreenVisible = false" />
@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+import MyAlerts from "@/plugins/my-alerts";
 import { ref } from "vue";
 import FullScreenImageDialog from "./FullScreenImageDialog.vue";
 
@@ -42,8 +43,11 @@ const openFullscreen = () => {
     fullscreenVisible.value = true;
 };
 
-const handleRemove = () => {
-    emit("remove");
+const handleRemove = async () => {
+    const confirmed = await MyAlerts.confirmAsync("Eliminar imagen", "¿Estás seguro de que quieres eliminar esta imagen?", "warning");
+    if (confirmed) {
+        emit("remove");
+    }
 };
 
 const handleMiddleClick = (event: MouseEvent) => {
@@ -55,6 +59,8 @@ const handleMiddleClick = (event: MouseEvent) => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables";
+
 .image-preview {
     position: relative;
     display: inline-block;
@@ -69,6 +75,11 @@ const handleMiddleClick = (event: MouseEvent) => {
 
     &:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        .action-buttons {
+            opacity: 1;
+            visibility: visible;
+        }
     }
 }
 
@@ -91,42 +102,16 @@ const handleMiddleClick = (event: MouseEvent) => {
     right: 8px;
     z-index: 10;
     display: flex;
-    gap: 8px;
-}
+    gap: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
 
-.action-btn {
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: white;
-    transition: all 0.2s ease;
-
-    &:hover {
-        transform: scale(1.1);
-    }
-}
-
-.fullscreen-btn {
-    background: rgba(34, 197, 94, 0.8);
-
-    &:hover {
-        background: rgba(34, 197, 94, 1);
-        border-color: rgba(255, 255, 255, 0.6);
-    }
-}
-
-.delete-btn {
-    background: rgba(239, 68, 68, 0.8);
-
-    &:hover {
-        background: rgba(239, 68, 68, 1);
-        border-color: rgba(255, 255, 255, 0.6);
+    @media (hover: none) {
+        opacity: 1;
+        visibility: visible;
     }
 }
 </style>

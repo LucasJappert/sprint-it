@@ -30,11 +30,28 @@
                     <div class="menu-item">
                         <span>Hello {{ authStore.user?.name }}!</span>
                     </div>
-                    <div class="menu-item" @click="exportData" :title="getExportDataTitle">
-                        <v-icon>mdi-download</v-icon>
-                        <span>Export Data</span>
-                        <v-icon v-if="needsBackupPulse" size="16" class="ml-2 warning" :class="{ pulse: needsBackupPulse }">mdi-alert-circle</v-icon>
-                    </div>
+
+                    <!-- Export submenu -->
+                    <v-menu location="end" open-on-hover>
+                        <template #activator="{ props }">
+                            <div class="menu-item" v-bind="props">
+                                <v-icon>mdi-export</v-icon>
+                                <span>Exportar</span>
+                                <v-icon size="small" class="ml-auto">mdi-chevron-right</v-icon>
+                            </div>
+                        </template>
+                        <div class="menu submenu">
+                            <div class="menu-item" @click="openExportDialog('json')">
+                                <v-icon>mdi-code-json</v-icon>
+                                <span>Exportar JSON</span>
+                            </div>
+                            <div class="menu-item" @click="openExportDialog('full')">
+                                <v-icon>mdi-database-export</v-icon>
+                                <span>Generar Respaldo (ZIP)</span>
+                            </div>
+                        </div>
+                    </v-menu>
+
                     <div class="menu-item no-border" @click="importItems">
                         <v-icon>mdi-upload</v-icon>
                         <span>Import Data</span>
@@ -50,6 +67,8 @@
             </v-menu>
         </div>
     </v-app-bar>
+
+    <ExportBackupDialog v-model="showExportDialog" :export-type="exportType" />
 </template>
 
 <script setup lang="ts">
@@ -69,6 +88,7 @@ import { createFileInput, processImportedItems } from "@/utils/itemImport";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { version as appVersion } from "../../package.json";
+import ExportBackupDialog from "./ExportBackupDialog.vue";
 
 // Tipo para las opciones del selector de sprint
 interface SprintSelectOption {
@@ -86,6 +106,8 @@ const router = useRouter();
 const isVisible = ref(true);
 let lastScrollY = 0;
 const needsBackupPulse = ref(false);
+const showExportDialog = ref(false);
+const exportType = ref<"json" | "full">("json");
 
 const handleScroll = () => {
     const currentScrollY = window.scrollY;
@@ -238,6 +260,11 @@ const logout = async () => {
 
 const goToChangelog = () => {
     router.push("/changelog");
+};
+
+const openExportDialog = (type: "json" | "full") => {
+    exportType.value = type;
+    showExportDialog.value = true;
 };
 
 const exportData = async () => {
@@ -428,6 +455,11 @@ const importItems = async () => {
     min-width: 200px;
     padding: 4px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
+
+    &.submenu {
+        min-width: 180px;
+        margin-left: -4px;
+    }
 }
 
 .menu-item {
