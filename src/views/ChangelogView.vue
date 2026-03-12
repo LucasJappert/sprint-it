@@ -177,7 +177,12 @@ const goToDashboard = () => {
 
                     <div v-if="item.changes.length > 0" class="changes-list">
                         <template v-for="(change, changeIndex) in item.changes" :key="changeIndex">
-                            <div v-if="change.category" class="category-header mb-2 mt-3">
+                            <div
+                                v-if="
+                                    (change.category && changeIndex === 0) || (change.category && item.changes[changeIndex - 1]?.category !== change.category)
+                                "
+                                class="category-header mb-2 mt-3"
+                            >
                                 <VChip :color="getCategoryColor(change.category)" size="small" variant="tonal">
                                     {{ change.category }}
                                 </VChip>

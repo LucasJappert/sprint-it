@@ -59,7 +59,7 @@ const handleMiddleClick = (event: MouseEvent) => {
 </script>
 
 <style scoped lang="scss">
-@import "@/styles/variables";
+@use "@/styles/variables";
 
 .image-preview {
     position: relative;
