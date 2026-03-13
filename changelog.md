@@ -4,6 +4,17 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.35 - 2026-03-13
+
+### Cambios
+
+- **Logo en el header (solo desktop)**: Mejorado el diseño del header agregando el logo a la izquierda del selector de sprints.
+    - El logo es un enlace al dashboard
+    - Solo visible en desktop (resolución > 800px)
+    - Ocultado automáticamente en dispositivos móviles
+
+---
+
 ## v1.1.34 - 2026-03-12
 
 ### Nuevas Funciones

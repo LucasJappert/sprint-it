@@ -1,5 +1,3 @@
-import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
-
 const stripHtmlTags = (html: string): string => {
     if (!html) return "";
 
@@ -30,7 +28,6 @@ export const useClipboard = () => {
 
         try {
             await navigator.clipboard.writeText(textToCopy);
-            notifyOk("Copied to clipboard", "Title and description copied successfully");
         } catch (error) {
             console.error("Failed to copy to clipboard:", error);
         }
