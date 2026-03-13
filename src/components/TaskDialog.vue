@@ -8,7 +8,13 @@
                 </h3>
                 <DialogTabs v-if="isEditing" v-model="viewMode" :show-tabs="isEditing" />
             </div>
-            <v-icon class="close-btn" @click="handleClose" :size="24">mdi-close</v-icon>
+            <div class="header-right flex-center">
+                <div v-if="isInProgress && !isLoadingTimer" class="in-progress-timer desktop-only">
+                    <v-icon size="14" class="mr-1">mdi-clock-outline</v-icon>
+                    <span class="timer-text">{{ elapsedTime }}</span>
+                </div>
+                <v-icon class="close-btn" @click="handleClose" :size="24">mdi-close</v-icon>
+            </div>
         </div>
         <div class="body-scroll" @paste="onPaste">
             <template v-if="viewMode === 'details'">
@@ -112,6 +118,7 @@ import HistorySection from "@/components/dialogs/HistorySection.vue";
 import MyAlertDialog from "@/components/my-elements/MyAlertDialog.vue";
 import { useAttachments } from "@/composables/useAttachments";
 import { useClipboard } from "@/composables/useClipboard";
+import { useInProgressTime } from "@/composables/useInProgressTime";
 import { useProjectName } from "@/composables/useProjectName";
 import { useUrlManagement } from "@/composables/useUrlManagement";
 import { PRIORITY_OPTIONS, PRIORITY_VALUES } from "@/constants/priorities";
@@ -193,6 +200,11 @@ const estimatedEffort = ref("");
 const actualEffort = ref("");
 const assignedUser = ref("");
 const projectName = ref("");
+
+// Timer de progreso - se declara después de state para evitar "before initialization" error
+const getTaskId = (): string => props.existingTask?.id || "";
+const currentState = (): string => state.value;
+const { elapsedTime, isInProgress, isLoading: isLoadingTimer } = useInProgressTime(getTaskId(), "task", currentState);
 
 // Guardar el estado original para comparación
 const originalTitle = ref("");
@@ -700,4 +712,32 @@ watch(
 
 <style scoped lang="scss">
 @use "@/styles/dialog-form.scss";
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.in-progress-timer {
+    display: flex;
+    align-items: center;
+    background: #154b5f;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #5aa7ff;
+    white-space: nowrap;
+    margin-right: 8px;
+    right: auto !important;
+    position: relative !important;
+}
+
+// Desktop only - hide on mobile
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+}
 </style>

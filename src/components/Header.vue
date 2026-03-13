@@ -2,6 +2,9 @@
     <v-app-bar dark height="50" :class="{ 'header-hidden': !isVisible }" class="header-transition">
         <div class="header-content">
             <div class="dashboard-header">
+                <router-link to="/dashboard" class="logo-link desktop-only">
+                    <img src="/images/pwa-192x192.png" alt="Logo" class="header-logo" />
+                </router-link>
                 <div class="sprint-container-1">
                     <div style="width: 250px">
                         <MySelect
@@ -355,6 +358,7 @@ const importItems = async () => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/variables" as *;
 .v-app-bar {
     box-shadow: 0 0 5px #222 !important;
     transition: transform 0.3s ease-in-out;
@@ -382,7 +386,6 @@ const importItems = async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
     flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
@@ -528,6 +531,30 @@ const importItems = async () => {
     }
     100% {
         opacity: 1;
+    }
+}
+
+.logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+.header-logo {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Desktop only - hide on mobile */
+.desktop-only {
+    display: flex;
+}
+
+@media (max-width: $mobile-resolution) {
+    .desktop-only {
+        display: none;
     }
 }
 </style>

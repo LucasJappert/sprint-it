@@ -3,6 +3,9 @@
         <img :src="src" :alt="alt" class="preview-image" @click="handleMiddleClick" @auxclick="handleMiddleClick" />
 
         <div class="action-buttons">
+            <v-btn icon size="x-small" @click.stop="copyImage" title="Copiar imagen">
+                <v-icon size="24" class="info">mdi-content-copy</v-icon>
+            </v-btn>
             <v-btn icon size="x-small" @click.stop="openFullscreen" title="Ver pantalla completa">
                 <v-icon size="28" class="green">mdi-fullscreen</v-icon>
             </v-btn>
@@ -41,6 +44,20 @@ const fullscreenVisible = ref(false);
 
 const openFullscreen = () => {
     fullscreenVisible.value = true;
+};
+
+const copyImage = async (): Promise<void> => {
+    try {
+        const response = await fetch(props.src);
+        const blob = await response.blob();
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                [blob.type]: blob,
+            }),
+        ]);
+    } catch (error) {
+        console.error("Error al copiar imagen:", error);
+    }
 };
 
 const handleRemove = async () => {
