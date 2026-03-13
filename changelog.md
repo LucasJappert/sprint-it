@@ -4,6 +4,21 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.36 - 2026-03-13
+
+### Cambios
+
+- **Copiar imagen al portapapeles**: Nueva funcionalidad para copiar imágenes de comentarios y descripciones directamente al portapapeles.
+    - Botón con icono `mdi-content-copy` en cada imagen
+    - Funciona en comentarios y descripciones (Rich Text)
+
+- **Timer de progreso en diálogos**: Se muestra el timer de progreso en los diálogos de items y tasks.
+    - Ubicado a la izquierda del botón cerrar
+    - Solo visible en desktop (ocultar en móviles)
+    - Mismo estilado que el timer del listado
+
+---
+
 ## v1.1.35 - 2026-03-13
 
 ### Cambios
