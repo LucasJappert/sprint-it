@@ -219,20 +219,28 @@ export const useContextMenuOptions = () => {
                 // Encontrar el índice de este sprint en la lista completa
                 const sprintIndex = sprintStore.sprints.findIndex(s => s.id === sprint.id);
                 let label = sprint.titulo;
+                let labelStyle = "";
+                let iconColor = "";
 
-                // Agregar (Prev) si es el sprint inmediatamente anterior al actual
-                if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex - 1) {
-                    label = `${sprint.titulo} (⬅️ Prev)`;
+                // Agregar color verde si es el sprint inmediatamente siguiente al actual
+                if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex + 1) {
+                    labelStyle = "color: #19821d;";
+                    iconColor = "#19821d";
                 }
-                // Agregar (Next) si es el sprint inmediatamente siguiente al actual
-                else if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex + 1) {
-                    label = `${sprint.titulo} (Next ➡️)`;
+                // Agregar color amarillo transparentado si es el sprint inmediatamente anterior al actual
+                else if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex - 1) {
+                    labelStyle = "color: rgba(255, 235, 59, 0.41);";
+                    iconColor = "rgba(255, 235, 59, 0.41)";
                 }
+
+                // Envolver el label con estilo si corresponde
+                const finalLabel = labelStyle ? `<span style="${labelStyle}">${label}</span>` : label;
 
                 return {
                     key: `move-to-${sprint.id}`,
-                    label,
+                    label: finalLabel,
                     icon: "mdi-swap-horizontal",
+                    iconStyle: iconColor ? { color: iconColor } : undefined,
                     action: async () => {
                         await moveItemToSprint(sprint.id);
                     },

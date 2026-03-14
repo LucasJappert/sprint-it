@@ -4,6 +4,17 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.36 - 2026-03-14
+
+### Cambios
+
+- **Indicadores de color en opciones de mover a sprint**: Las opciones del submenú "Move to sprint" en el menú contextual ahora muestran colores distintivos:
+    - Sprint siguiente: Color verde (`#4caf50`) en icono y texto
+    - Sprint anterior: Color amarillo medio transparentado (`rgba(255, 235, 59, 0.7)`) en icono y texto
+    - Eliminado el texto "(Prev)" y "(Next)" que se mostraba anteriormente, ahora solo se diferencian por color
+
+---
+
 ## v1.1.35 - 2026-03-13
 
 ### Nuevas Funciones
