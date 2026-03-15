@@ -6,6 +6,12 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ## v1.1.36 - 2026-03-14
 
+### Nuevas Funciones
+
+- **Sistema de actualización automática**: Detecta nuevas versiones mediante Service Worker y muestra diálogo para actualizar (ahora/más tarde).
+    - Compatible con Android y Desktop (Chrome/Firefox/Edge)
+    - iOS/Safari puede tener limitaciones en la detección automática
+
 ### Cambios
 
 - **Indicadores de color en opciones de mover a sprint**: Las opciones del submenú "Move to sprint" en el menú contextual ahora muestran colores distintivos:
