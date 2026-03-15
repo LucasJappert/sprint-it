@@ -44,4 +44,8 @@ import { useAuthStore } from "@/stores/auth";
 const authStore = useAuthStore();
 authStore.initAuth();
 
+// Initialize app updater
+import { useAppUpdater } from "@/composables/useAppUpdater";
+useAppUpdater();
+
 app.mount("#app");

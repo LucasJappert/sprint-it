@@ -2,7 +2,7 @@
     <v-app-bar dark height="50" :class="{ 'header-hidden': !isVisible }" class="header-transition">
         <div class="header-content">
             <div class="dashboard-header">
-                <router-link to="/dashboard" class="logo-link desktop-only">
+                <router-link to="/dashboard" class="logo-link">
                     <img src="/images/pwa-192x192.png" alt="Logo" class="header-logo" />
                 </router-link>
                 <div class="sprint-container-1">
