@@ -191,17 +191,6 @@ const elapsedWorkingDays = computed(() => {
     return count;
 });
 
-// Calculate total sprint capacity (all working days * 8 hours)
-const totalSprintHours = computed(() => {
-    return sprintDays.value.length * 8; // 8 hours per working day
-});
-
-// Calculate expected hours per user up to current day
-const expectedHoursPerUser = computed(() => {
-    const hoursPerDay = 8; // Assuming 8 hours per working day
-    return elapsedWorkingDays.value * hoursPerDay;
-});
-
 // Calculate progress per user with 3-layer information
 const userProgress = computed(() => {
     const result: Record<

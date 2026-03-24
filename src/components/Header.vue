@@ -35,15 +35,20 @@
                     </div>
 
                     <!-- Export submenu -->
-                    <v-menu location="end" open-on-hover>
+                    <v-menu location="end" :open-on-hover="false" v-model="exportMenuOpen">
                         <template #activator="{ props }">
-                            <div class="menu-item" v-bind="props">
+                            <div 
+                                class="menu-item" 
+                                v-bind="props" 
+                                @click="toggleExportMenu"
+                                @mouseenter="exportMenuOpen = true"
+                            >
                                 <v-icon>mdi-export</v-icon>
                                 <span>Exportar</span>
                                 <v-icon size="small" class="ml-auto">mdi-chevron-right</v-icon>
                             </div>
                         </template>
-                        <div class="menu submenu">
+                        <div class="menu submenu" @mouseleave="exportMenuOpen = false">
                             <div class="menu-item" @click="openExportDialog('json')">
                                 <v-icon>mdi-code-json</v-icon>
                                 <span>Exportar JSON</span>
@@ -105,6 +110,7 @@ let lastScrollY = 0;
 const needsBackupPulse = ref(false);
 const showExportDialog = ref(false);
 const exportType = ref<"json" | "full">("json");
+const exportMenuOpen = ref(false);
 
 const handleScroll = () => {
     const currentScrollY = window.scrollY;
@@ -252,6 +258,11 @@ const logout = async () => {
 const openExportDialog = (type: "json" | "full") => {
     exportType.value = type;
     showExportDialog.value = true;
+    exportMenuOpen.value = false; // Cerrar el menú al seleccionar una opción
+};
+
+const toggleExportMenu = () => {
+    exportMenuOpen.value = !exportMenuOpen.value;
 };
 
 const exportSprintAsync = async () => {
