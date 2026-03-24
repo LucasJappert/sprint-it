@@ -64,6 +64,10 @@
                         <v-icon>mdi-upload</v-icon>
                         <span>Import Data</span>
                     </div>
+                    <div class="menu-item no-border" @click="openStorageCleanup">
+                        <v-icon color="warning">mdi-broom</v-icon>
+                        <span>Limpiar Storage Antiguo</span>
+                    </div>
                     <div class="menu-item" @click="logout">
                         <v-icon>mdi-logout</v-icon>
                         <span>Logout</span>
@@ -77,6 +81,7 @@
     </v-app-bar>
 
     <ExportBackupDialog v-model="showExportDialog" :export-type="exportType" />
+    <StorageCleanupDialog v-model="showStorageCleanupDialog" />
 </template>
 
 <script setup lang="ts">
@@ -91,6 +96,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { version as appVersion } from "../../package.json";
 import ExportBackupDialog from "./ExportBackupDialog.vue";
+import StorageCleanupDialog from "./StorageCleanupDialog.vue";
 
 // Tipo para las opciones del selector de sprint
 interface SprintSelectOption {
@@ -111,6 +117,7 @@ const needsBackupPulse = ref(false);
 const showExportDialog = ref(false);
 const exportType = ref<"json" | "full">("json");
 const exportMenuOpen = ref(false);
+const showStorageCleanupDialog = ref(false);
 
 const handleScroll = () => {
     const currentScrollY = window.scrollY;
@@ -248,6 +255,10 @@ const checkBackupStatus = async () => {
         console.error("Error checking backup status:", error);
         needsBackupPulse.value = true; // Default to pulse if error
     }
+};
+
+const openStorageCleanup = () => {
+    showStorageCleanupDialog.value = true;
 };
 
 const logout = async () => {

@@ -107,12 +107,12 @@ $mobile-resolution: 600px !default;
 }
 
 .my-dialog {
-    background-color: $bg-primary;
+    // background-color: $bg-primary;
     border-radius: 14px;
     width: 1000px;
     min-width: v-bind("formattedMinWidth");
     max-width: 90%;
-    box-shadow: 0 2px 10px #000000cc;
+    // box-shadow: 0 2px 10px #000000cc;
 
     &.bg-transparent {
         background: transparent !important;

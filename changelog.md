@@ -4,24 +4,25 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.38 - 2026-03-24
+
+### Nuevas Funciones
+
+---
+
 ## v1.1.37 - 2026-03-24
 
 ### Nuevas Funciones
 
+- **Sistema de Limpieza de Storage**: Nueva funcionalidad para eliminar archivos antiguos del storage de Supabase con diálogo completo de validación, preview detallado y estadísticas de limpieza. Optimizado con consultas batch y verificación paralela de imágenes.
+
 - **Optimización de descargas en paralelo para respaldos completos**: Implementada nueva función `batchDownload` para procesar archivos adjuntos e imágenes en paralelo.
-    - Descarga hasta 15 archivos simultáneamente (configurable)
-    - Reducción del 60-80% en tiempo de descarga para respaldos con muchos archivos
-    - Mejor manejo de errores con `Promise.allSettled`
-    - Soporte completo para `AbortSignal` y cancelación responsive
-    - Eliminación de URLs duplicadas para evitar descargas redundantes
 
 ### Cambios
 
-- **Estimación de tiempo mejorada**: Actualizado cálculo de ~50 a ~200 archivos por minuto (4x más rápido) para reflejar la mejora de rendimiento con descargas paralelas
-
-- **UserProgressChart.vue**: Eliminadas variables `expectedHoursPerUser` y `totalSprintHours` que no se utilizaban
-    - Ambas variables eran redundantes con información ya disponible en otros computed properties
-    - Código más limpio y eficiente sin funcionalidad duplicada
+- Mejoras de rendimiento en descargas (15 archivos simultáneos, 60-80% más rápido)
+- Actualización de estimación de tiempo a ~200 archivos por minuto
+- Limpieza de código en UserProgressChart.vue (eliminadas variables no utilizadas)
 
 ---
 

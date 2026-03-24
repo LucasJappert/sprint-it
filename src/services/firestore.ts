@@ -589,4 +589,14 @@ export const getAllAttachments = async (): Promise<Attachment[]> => {
         ...doc.data(),
         uploadedAt: doc.data().uploadedAt?.toDate() || new Date(),
     })) as Attachment[];
-};;
+};
+
+export const getAllComments = async (): Promise<Comment[]> => {
+    const querySnapshot = await getDocs(commentsCollection);
+    return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    })) as Comment[];
+};
