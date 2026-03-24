@@ -44,6 +44,7 @@ declare module 'vue' {
     ResizableImageView: typeof import('./components/ResizableImageView.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StorageCleanupDialog: typeof import('./components/StorageCleanupDialog.vue')['default']
     TaskCard: typeof import('./components/TaskCard.vue')['default']
     TaskDialog: typeof import('./components/TaskDialog.vue')['default']
     UserProgressChart: typeof import('./components/UserProgressChart.vue')['default']

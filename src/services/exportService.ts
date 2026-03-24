@@ -1,5 +1,5 @@
 import { exportAllData, getAllAttachments } from "@/services/firestore";
-import type { Attachment, Comment, Item, Sprint, Task } from "@/types";
+import type { Comment, Item, Sprint, Task } from "@/types";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
@@ -128,7 +128,7 @@ export const getExportStats = async (): Promise<ExportStats> => {
     }
 
     const totalFiles = attachments.length + imagesInDescriptionsCount + imagesInCommentsCount;
-    const estimatedTimeMinutes = Math.max(1, Math.ceil(totalFiles / 50)); // ~50 archivos por minuto
+    const estimatedTimeMinutes = Math.max(1, Math.ceil(totalFiles / 200)); // ~200 archivos por minuto con descargas en paralelo
 
     const estimatedSizeMB = (
         attachments.length * 0.5 +
@@ -162,6 +162,51 @@ const downloadFile = async (url: string): Promise<ArrayBuffer | null> => {
     } catch {
         return null;
     }
+};
+
+/**
+ * Descarga múltiples archivos en paralelo con control de concurrencia
+ */
+export const batchDownload = async <T>(
+    items: Array<{ url: string; metadata: T }>,
+    concurrency: number = 15,
+    onProgress?: (completed: number, total: number) => void,
+    signal?: AbortSignal
+): Promise<Array<{ metadata: T; data: ArrayBuffer | null }>> => {
+    const results: Array<{ metadata: T; data: ArrayBuffer | null }> = [];
+    let completed = 0;
+
+    // Función para procesar un lote de items
+    const processBatch = async (batch: Array<{ url: string; metadata: T }>) => {
+        const batchResults = await Promise.allSettled(
+            batch.map(async (item) => {
+                if (signal?.aborted) throw new Error("Exportación cancelada");
+                const data = await downloadFile(item.url);
+                return { metadata: item.metadata, data };
+            })
+        );
+
+        return batchResults.map((result) => {
+            if (result.status === "fulfilled") {
+                return result.value;
+            }
+            return { metadata: (result.reason as any)?.metadata || batch[0]?.metadata, data: null };
+        });
+    };
+
+    // Procesar items en lotes según el límite de concurrencia
+    for (let i = 0; i < items.length; i += concurrency) {
+        if (signal?.aborted) throw new Error("Exportación cancelada");
+
+        const batch = items.slice(i, i + concurrency);
+        const batchResults = await processBatch(batch);
+        results.push(...batchResults);
+
+        completed += batch.length;
+        onProgress?.(completed, items.length);
+    }
+
+    return results;
 };
 
 /**
@@ -220,24 +265,34 @@ export const generateFullBackup = async (
         updateProgress({ stage: "attachments", progress: 20, currentItem: `Descargando ${attachments.length} archivos adjuntos...` });
 
         const attachmentsFolder = zip.folder("adjuntos");
-        let downloadedAttachments = 0;
+        
+        // Preparar items para descarga en paralelo
+        const attachmentItems = attachments.map((attachment) => ({
+            url: attachment.storageUrl,
+            metadata: attachment
+        }));
 
-        for (const attachment of attachments as Attachment[]) {
-            if (signal?.aborted) throw new Error("Exportación cancelada");
+        // Descargar adjuntos en paralelo
+        const attachmentResults = await batchDownload(
+            attachmentItems,
+            15, // concurrencia
+            (completed, total) => {
+                const attachProgress = 20 + Math.floor((completed / Math.max(1, total)) * 30);
+                updateProgress({
+                    stage: "attachments",
+                    progress: attachProgress,
+                    currentItem: `Descargando adjuntos (${completed}/${total})`
+                });
+            },
+            signal
+        );
 
-            const fileData = await downloadFile(attachment.storageUrl);
-            if (fileData && attachmentsFolder) {
-                attachmentsFolder.file(attachment.fileName, fileData);
+        // Agregar archivos descargados al ZIP
+        attachmentResults.forEach((result) => {
+            if (result.data && attachmentsFolder) {
+                attachmentsFolder.file(result.metadata.fileName, result.data);
             }
-
-            downloadedAttachments++;
-            const attachProgress = 20 + Math.floor((downloadedAttachments / Math.max(1, attachments.length)) * 30);
-            updateProgress({
-                stage: "attachments",
-                progress: attachProgress,
-                currentItem: `Descargando adjuntos (${downloadedAttachments}/${attachments.length})`
-            });
-        }
+        });
 
         if (signal?.aborted) throw new Error("Exportación cancelada");
 
@@ -269,39 +324,49 @@ export const generateFullBackup = async (
         const tasksImagesFolder = imagesFolder?.folder("tasks");
         const commentsImagesFolder = imagesFolder?.folder("comentarios");
 
-        let downloadedImages = 0;
-        const downloadedUrls = new Set<string>();
+        // Eliminar URLs duplicadas para evitar descargas redundantes
+        const uniqueImageUrls = allImageUrls.filter((img, index, self) =>
+            index === self.findIndex((i) => i.url === img.url)
+        );
 
-        for (const img of allImageUrls) {
-            if (signal?.aborted) throw new Error("Exportación cancelada");
+        // Preparar items para descarga en paralelo
+        const imageItems = uniqueImageUrls.map((img) => ({
+            url: img.url,
+            metadata: img
+        }));
 
-            if (downloadedUrls.has(img.url)) continue;
-            downloadedUrls.add(img.url);
+        // Descargar imágenes en paralelo
+        const imageResults = await batchDownload(
+            imageItems,
+            15, // concurrencia
+            (completed, total) => {
+                const imgProgress = 60 + Math.floor((completed / Math.max(1, total)) * 30);
+                updateProgress({
+                    stage: "images",
+                    progress: imgProgress,
+                    currentItem: `Descargando imágenes (${completed}/${total})`
+                });
+            },
+            signal
+        );
 
-            const fileData = await downloadFile(img.url);
-            if (fileData) {
-                const fileName = getFileNameFromUrl(img.url);
+        // Agregar imágenes descargadas al ZIP manteniendo la estructura de carpetas
+        imageResults.forEach((result) => {
+            if (result.data) {
+                const fileName = getFileNameFromUrl(result.metadata.url);
                 let parentFolder;
-                if (img.type === "item") {
-                    parentFolder = itemsImagesFolder?.folder(img.parentId);
-                } else if (img.type === "task") {
-                    parentFolder = tasksImagesFolder?.folder(img.parentId);
+                if (result.metadata.type === "item") {
+                    parentFolder = itemsImagesFolder?.folder(result.metadata.parentId);
+                } else if (result.metadata.type === "task") {
+                    parentFolder = tasksImagesFolder?.folder(result.metadata.parentId);
                 } else {
-                    parentFolder = commentsImagesFolder?.folder(img.parentId);
+                    parentFolder = commentsImagesFolder?.folder(result.metadata.parentId);
                 }
                 if (parentFolder) {
-                    parentFolder.file(fileName, fileData);
+                    parentFolder.file(fileName, result.data);
                 }
             }
-
-            downloadedImages++;
-            const imgProgress = 60 + Math.floor((downloadedImages / Math.max(1, allImageUrls.length)) * 30);
-            updateProgress({
-                stage: "images",
-                progress: imgProgress,
-                currentItem: `Descargando imágenes (${downloadedImages}/${allImageUrls.length})`
-            });
-        }
+        });
 
         if (signal?.aborted) throw new Error("Exportación cancelada");
 

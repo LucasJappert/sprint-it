@@ -35,15 +35,20 @@
                     </div>
 
                     <!-- Export submenu -->
-                    <v-menu location="end" open-on-hover>
+                    <v-menu location="end" :open-on-hover="false" v-model="exportMenuOpen">
                         <template #activator="{ props }">
-                            <div class="menu-item" v-bind="props">
+                            <div 
+                                class="menu-item" 
+                                v-bind="props" 
+                                @click="toggleExportMenu"
+                                @mouseenter="exportMenuOpen = true"
+                            >
                                 <v-icon>mdi-export</v-icon>
                                 <span>Exportar</span>
                                 <v-icon size="small" class="ml-auto">mdi-chevron-right</v-icon>
                             </div>
                         </template>
-                        <div class="menu submenu">
+                        <div class="menu submenu" @mouseleave="exportMenuOpen = false">
                             <div class="menu-item" @click="openExportDialog('json')">
                                 <v-icon>mdi-code-json</v-icon>
                                 <span>Exportar JSON</span>
@@ -59,6 +64,10 @@
                         <v-icon>mdi-upload</v-icon>
                         <span>Import Data</span>
                     </div>
+                    <div class="menu-item no-border" @click="openStorageCleanup">
+                        <v-icon color="warning">mdi-broom</v-icon>
+                        <span>Limpiar Storage Antiguo</span>
+                    </div>
                     <div class="menu-item" @click="logout">
                         <v-icon>mdi-logout</v-icon>
                         <span>Logout</span>
@@ -72,6 +81,7 @@
     </v-app-bar>
 
     <ExportBackupDialog v-model="showExportDialog" :export-type="exportType" />
+    <StorageCleanupDialog v-model="showStorageCleanupDialog" />
 </template>
 
 <script setup lang="ts">
@@ -86,6 +96,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { version as appVersion } from "../../package.json";
 import ExportBackupDialog from "./ExportBackupDialog.vue";
+import StorageCleanupDialog from "./StorageCleanupDialog.vue";
 
 // Tipo para las opciones del selector de sprint
 interface SprintSelectOption {
@@ -105,6 +116,8 @@ let lastScrollY = 0;
 const needsBackupPulse = ref(false);
 const showExportDialog = ref(false);
 const exportType = ref<"json" | "full">("json");
+const exportMenuOpen = ref(false);
+const showStorageCleanupDialog = ref(false);
 
 const handleScroll = () => {
     const currentScrollY = window.scrollY;
@@ -244,6 +257,10 @@ const checkBackupStatus = async () => {
     }
 };
 
+const openStorageCleanup = () => {
+    showStorageCleanupDialog.value = true;
+};
+
 const logout = async () => {
     await authStore.logout();
     router.push("/");
@@ -252,6 +269,11 @@ const logout = async () => {
 const openExportDialog = (type: "json" | "full") => {
     exportType.value = type;
     showExportDialog.value = true;
+    exportMenuOpen.value = false; // Cerrar el menú al seleccionar una opción
+};
+
+const toggleExportMenu = () => {
+    exportMenuOpen.value = !exportMenuOpen.value;
 };
 
 const exportSprintAsync = async () => {

@@ -4,6 +4,23 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.37 - 2026-03-24
+
+### Nuevas Funciones
+
+- **Sistema de Limpieza de Storage**: Nueva funcionalidad para eliminar archivos antiguos del storage de Supabase con diálogo completo de validación, preview detallado y estadísticas de limpieza. Optimizado con consultas batch y verificación paralela de imágenes.
+
+- **Optimización de descargas en paralelo para respaldos completos**: Implementada nueva función `batchDownload` para procesar archivos adjuntos e imágenes en paralelo.
+
+### Cambios
+
+- **Aumento del límite de tamaño de archivos adjuntos**: El tamaño máximo permitido para archivos adjuntos se ha aumentado de 3MB a 20MB.
+- Mejoras de rendimiento en descargas (15 archivos simultáneos, 60-80% más rápido)
+- Actualización de estimación de tiempo a ~200 archivos por minuto
+- Limpieza de código en UserProgressChart.vue (eliminadas variables no utilizadas)
+
+---
+
 ## v1.1.36 - 2026-03-14
 
 ### Nuevas Funciones
