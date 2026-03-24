@@ -1,5 +1,5 @@
 export const ATTACHMENT_CONFIG = {
-    MAX_FILE_SIZE: 3 * 1024 * 1024,
+    MAX_FILE_SIZE: 20 * 1024 * 1024,
     MAX_ATTACHMENTS_PER_ITEM: 4,
     ALLOWED_TYPES: [
         "application/pdf",

@@ -4,12 +4,6 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
-## v1.1.38 - 2026-03-24
-
-### Nuevas Funciones
-
----
-
 ## v1.1.37 - 2026-03-24
 
 ### Nuevas Funciones
@@ -20,6 +14,7 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ### Cambios
 
+- **Aumento del límite de tamaño de archivos adjuntos**: El tamaño máximo permitido para archivos adjuntos se ha aumentado de 3MB a 20MB.
 - Mejoras de rendimiento en descargas (15 archivos simultáneos, 60-80% más rápido)
 - Actualización de estimación de tiempo a ~200 archivos por minuto
 - Limpieza de código en UserProgressChart.vue (eliminadas variables no utilizadas)
