@@ -1,6 +1,20 @@
 import { STATE_VALUES } from "@/constants/states";
 import type { Attachment, ChangeHistory, Comment, Sprint, User } from "@/types";
-import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
+import {
+    addDoc,
+    arrayUnion,
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    onSnapshot,
+    query,
+    setDoc,
+    updateDoc,
+    where,
+    type DocumentData,
+} from "firebase/firestore";
 import { db } from "./firebase";
 
 // Global cache for user display names to avoid multiple Firestore calls
@@ -126,7 +140,7 @@ export const getUser = async (userId: string) => {
 };
 
 export const getUserByUsername = async (username: string) => {
-    const q = query(usersCollection, where('username', '==', username));
+    const q = query(usersCollection, where("username", "==", username));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
         const docSnap = querySnapshot.docs[0];
@@ -137,7 +151,7 @@ export const getUserByUsername = async (username: string) => {
     return null;
 };
 
-export const validateUsernames = async (usernames: string[]): Promise<{ valid: string[], invalid: string[]; }> => {
+export const validateUsernames = async (usernames: string[]): Promise<{ valid: string[]; invalid: string[] }> => {
     const valid: string[] = [];
     const invalid: string[] = [];
 
@@ -167,7 +181,7 @@ export const getUsernameById = async (userId: string): Promise<string | null> =>
 
 export const getAllSprints = async (): Promise<Sprint[]> => {
     const querySnapshot = await getDocs(sprintsCollection);
-    return querySnapshot.docs.map(doc => {
+    return querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
             ...data,
@@ -185,7 +199,7 @@ export const addCommentToItem = async (sprintId: string, itemId: string, comment
     };
 
     await updateDoc(sprintRef, {
-        [`items.${itemId}.comments`]: arrayUnion(commentData)
+        [`items.${itemId}.comments`]: arrayUnion(commentData),
     });
 };
 
@@ -197,7 +211,7 @@ export const addCommentToTask = async (sprintId: string, itemId: string, taskId:
     };
 
     await updateDoc(sprintRef, {
-        [`items.${itemId}.tasks.${taskId}.comments`]: arrayUnion(commentData)
+        [`items.${itemId}.tasks.${taskId}.comments`]: arrayUnion(commentData),
     });
 };
 
@@ -214,7 +228,7 @@ export const addComment = async (comment: Omit<Comment, "id">): Promise<string> 
 export const getCommentsByAssociatedId = async (associatedId: string): Promise<Comment[]> => {
     const q = query(commentsCollection, where("associatedId", "==", associatedId));
     const querySnapshot = await getDocs(q);
-    const comments = querySnapshot.docs.map(doc => ({
+    const comments = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
@@ -237,7 +251,7 @@ export const deleteComment = async (commentId: string) => {
 
 export const getAllUsers = async (): Promise<User[]> => {
     const querySnapshot = await getDocs(usersCollection);
-    return querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     })) as User[];
@@ -252,10 +266,24 @@ export const addChange = async (change: Omit<ChangeHistory, "id">): Promise<stri
     return docRef.id;
 };
 
+export const getAllChangesRecent = async (daysAgo: number = 7): Promise<ChangeHistory[]> => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - daysAgo);
+
+    const q = query(changesCollection, where("createdAt", ">=", sevenDaysAgo));
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+    })) as ChangeHistory[];
+};
+
 export const getChangesByAssociatedId = async (associatedId: string): Promise<ChangeHistory[]> => {
     const q = query(changesCollection, where("associatedId", "==", associatedId));
     const querySnapshot = await getDocs(q);
-    const changes = querySnapshot.docs.map(doc => ({
+    const changes = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
@@ -274,32 +302,32 @@ export const exportAllData = async () => {
         getDocs(attachmentsCollection),
     ]);
 
-    const sprints = sprintsSnapshot.docs.map(doc => ({
+    const sprints = sprintsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         fechaDesde: doc.data().fechaDesde?.toDate() || new Date(),
         fechaHasta: doc.data().fechaHasta?.toDate() || new Date(),
     }));
 
-    const users = usersSnapshot.docs.map(doc => ({
+    const users = usersSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
     }));
 
-    const comments = commentsSnapshot.docs.map(doc => ({
+    const comments = commentsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
     }));
 
-    const changes = changesSnapshot.docs.map(doc => ({
+    const changes = changesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
     }));
 
-    const attachments = attachmentsSnapshot.docs.map(doc => ({
+    const attachments = attachmentsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         uploadedAt: doc.data().uploadedAt?.toDate() || new Date(),

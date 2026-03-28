@@ -4,6 +4,21 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.38 - 2026-03-28
+
+### Nuevas Funciones
+
+- **Monitor de Actividad de Usuarios**: Nueva funcionalidad accesible desde un botón flotante en el dashboard que permite visualizar la actividad reciente de los usuarios del equipo.
+    - Botón flotante ubicado en la esquina inferior derecha
+    - Muestra todos los cambios realizados por cada usuario en los últimos 7 días
+    - Incluye: cambios de estado, prioridad, esfuerzos, asignaciones, ediciones de títulos y detalles, creación de items/tasks
+    - Formato de fecha/hora argentino: "Hoy HH:mm" para el día actual, "DD/MM/YYYY HH:mm" para días anteriores
+    - Distintivo de color en cada actividad según el tipo de cambio (estado, prioridad, esfuerzo, asignación, etc.)
+    - Contador de actividades totales por usuario
+    - Interfaz intuitiva con selector de usuario y navegación fluida
+
+---
+
 ## v1.1.37 - 2026-03-24
 
 ### Nuevas Funciones
