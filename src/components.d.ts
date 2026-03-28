@@ -47,6 +47,8 @@ declare module 'vue' {
     StorageCleanupDialog: typeof import('./components/StorageCleanupDialog.vue')['default']
     TaskCard: typeof import('./components/TaskCard.vue')['default']
     TaskDialog: typeof import('./components/TaskDialog.vue')['default']
+    UserActivityButton: typeof import('./components/UserActivityButton.vue')['default']
+    UserActivityDialog: typeof import('./components/UserActivityDialog.vue')['default']
     UserProgressChart: typeof import('./components/UserProgressChart.vue')['default']
     UserWorkingDaysToggles: typeof import('./components/UserWorkingDaysToggles.vue')['default']
     VersionUpdateNotification: typeof import('./components/VersionUpdateNotification.vue')['default']
