@@ -77,10 +77,10 @@ onMounted(async () => {
     <MyDialog :visible="showDialog" :min-width="'98vw'" my-dialog-styles="width: 98vw; height: 98vh; max-width: 98vw; max-height: 98vh;" @close="closeDialog">
         <div class="notes-dialog-container">
             <div class="header">
-                <h2 class="dialog-title">
+                <div class="dialog-title">
                     <VIcon icon="mdi-note-text-outline" class="mr-2" />
                     Mis Notas
-                </h2>
+                </div>
                 <VIcon class="close-btn" @click="closeDialog" :size="24">mdi-close</VIcon>
             </div>
 
@@ -99,7 +99,7 @@ onMounted(async () => {
                 </div>
 
                 <div class="notes-list-section">
-                    <h3 class="section-title">Notas Guardadas ({{ notes.notes.value.length }})</h3>
+                    <div class="section-title">Notas Guardadas ({{ notes.notes.value.length }})</div>
                     <div class="notes-list">
                         <div v-if="notes.loading.value" class="loading-state">
                             <VProgressCircular indeterminate color="primary" />
@@ -158,7 +158,7 @@ onMounted(async () => {
 
 .dialog-title {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 500;
     display: flex;
     align-items: center;
@@ -184,7 +184,7 @@ onMounted(async () => {
 
 .section-title {
     margin: 0 0 12px 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 500;
 }
 

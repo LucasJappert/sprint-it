@@ -61,10 +61,10 @@ watch(
         <div class="edit-note-dialog">
             <div class="header">
                 <div>
-                    <h2 class="dialog-title">
+                    <div class="dialog-title">
                         <VIcon icon="mdi-pencil" class="mr-2" />
                         Editar Nota
-                    </h2>
+                    </div>
                     <p class="note-meta">Creada: {{ formatDate(note.createdAt) }}</p>
                 </div>
                 <VIcon class="close-btn" @click="handleCancel" :size="24">mdi-close</VIcon>
@@ -97,7 +97,7 @@ watch(
 
 .dialog-title {
     margin: 0;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 500;
     display: flex;
     align-items: center;
