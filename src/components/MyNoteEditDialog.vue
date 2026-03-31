@@ -75,8 +75,8 @@ watch(
             </div>
 
             <div class="footer">
-                <VBtn @click="handleCancel" variant="outlined">Cancelar</VBtn>
-                <VBtn @click="handleSave" color="primary" :disabled="!editContent || editContent === '<p></p>'">Guardar Cambios</VBtn>
+                <MyButton btn-class="px-2" secondary @click="handleCancel">Cancelar</MyButton>
+                <MyButton btn-class="px-2" @click="handleSave" :disabled="!editContent || editContent === '<p></p>'">Guardar Cambios</MyButton>
             </div>
         </div>
     </MyDialog>
