@@ -87,3 +87,19 @@ export interface Attachment {
     uploadedBy: string;
     uploadedAt: Date;
 }
+
+export interface Note {
+    id: string;
+    userId: string;
+    content: string;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+}
+
+export interface Draft {
+    id: string;
+    userId: string;
+    content: string;
+    updatedAt: Date;
+}

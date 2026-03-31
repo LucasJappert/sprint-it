@@ -1,11 +1,13 @@
 <template>
-    <div v-if="visible" class="my-dialog-overlay" @mousedown.self="closeDialog">
-        <div class="my-dialog" :class="{ 'full-size': fullSize, bgTransparent: bgTransparent, pulse: pulse }" :style="myDialogStyles">
-            <div :class="{ 'slot-container': hasMinWidth }">
-                <slot />
+    <Teleport to="body">
+        <div v-if="visible" class="my-dialog-overlay" @mousedown.self="closeDialog">
+            <div class="my-dialog" :class="{ 'full-size': fullSize, bgTransparent: bgTransparent, pulse: pulse }" :style="myDialogStyles">
+                <div :class="{ 'slot-container': hasMinWidth }">
+                    <slot />
+                </div>
             </div>
         </div>
-    </div>
+    </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -92,7 +94,7 @@ $mobile-resolution: 600px !default;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 9999;
 }
 
 :global(html:has(.my-dialog-overlay)) {
@@ -190,6 +192,8 @@ $pulse-color: #00a2ff;
 }
 
 .slot-container {
+    height: 100%;
+
     @media (max-width: $mobile-resolution) {
         min-width: auto; /* Allow flexible width on mobile */
     }

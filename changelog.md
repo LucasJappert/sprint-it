@@ -4,6 +4,37 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.39 - 2026-03-31
+
+### Nuevas Funciones
+
+- **Sistema de Notas Personales**: Nueva funcionalidad de notas flotantes accesible desde un botón en la esquina superior derecha del dashboard.
+    - Botón flotante con icono de nota y título "Mis Notas"
+    - Dialog de 98% x 98% con dos secciones principales:
+        - **Borrador (70% superior)**: Editor de texto enriquecido (TipTap) con soporte para negrita, subrayado e imágenes
+        - **Notas guardadas (30% inferior)**: Grid de cards con preview, fecha y acciones
+    - **Autoguardado del borrador**: Guardado automático 500ms después de dejar de escribir (debounce)
+    - **Recuperación automática**: Al abrir el dialog se carga el borrador guardado
+    - **Notas privadas por usuario**: Cada usuario solo ve sus propias notas
+    - **Edición completa**: Dialog modal para ver y editar notas guardadas
+    - **Borrado lógico**: Confirmación antes de eliminar con soft delete
+    - **Formato argentino**: Fechas en formato dd/mm/yyyy
+    - **ID autonumérico**: Numeración descendente basada en orden de creación
+    - Botón "Guardar Nota" con estilo consistente (azul celeste, igual que "Nuevo Item")
+    - Contenedor de botones flotantes que agrupa "Mis Notas" y "Actividad de usuarios"
+    - Botones flotantes ocultos al 50% con animación de deslizamiento al hacer hover
+    - Diálogos renderizados con Teleport al body para correcto z-index sobre el header
+
+### Estructura Técnica
+
+- Nuevas colecciones en Firestore: `notes` y `drafts`
+- Nuevas interfaces TypeScript: `Note` y `Draft`
+- Nuevo composable: `useNotes.ts` con watch para autoguardado
+- Nuevos componentes: `MyNotesButton.vue`, `MyNotesDialog.vue`, `MyNoteEditDialog.vue`
+- Funciones CRUD completas en `firestore.ts`
+
+---
+
 ## v1.1.38 - 2026-03-28
 
 ### Nuevas Funciones
