@@ -1,5 +1,5 @@
 import { STATE_VALUES } from "@/constants/states";
-import type { Attachment, ChangeHistory, Comment, Sprint, User } from "@/types";
+import type { Attachment, ChangeHistory, Comment, Draft, Note, Sprint, User } from "@/types";
 import {
     addDoc,
     arrayUnion,
@@ -26,6 +26,8 @@ const commentsCollection = collection(db, "comments");
 const changesCollection = collection(db, "changes");
 const backupsCollection = collection(db, "backups");
 const attachmentsCollection = collection(db, "attachments");
+const notesCollection = collection(db, "notes");
+const draftsCollection = collection(db, "drafts");
 
 /**
  * Get user display name from cache or Firestore (async, private)
@@ -627,4 +629,85 @@ export const getAllComments = async (): Promise<Comment[]> => {
         createdAt: doc.data().createdAt?.toDate() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
     })) as Comment[];
+};
+
+// ============ NOTES CRUD ============
+
+export const addNote = async (note: Omit<Note, "id">): Promise<string> => {
+    const noteData = {
+        ...note,
+        createdAt: note.createdAt,
+        updatedAt: note.updatedAt,
+    };
+    const docRef = await addDoc(notesCollection, noteData);
+    return docRef.id;
+};
+
+export const getNotesByUserId = async (userId: string): Promise<Note[]> => {
+    const q = query(notesCollection, where("userId", "==", userId), where("deletedAt", "==", null));
+    const querySnapshot = await getDocs(q);
+    const notes = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        deletedAt: doc.data().deletedAt?.toDate() || null,
+    })) as Note[];
+
+    return notes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+};
+
+export const updateNote = async (noteId: string, updates: Partial<Note>): Promise<void> => {
+    const docRef = doc(notesCollection, noteId);
+    await updateDoc(docRef, updates);
+};
+
+export const deleteNote = async (noteId: string): Promise<void> => {
+    const docRef = doc(notesCollection, noteId);
+    await updateDoc(docRef, { deletedAt: new Date() });
+};
+
+// ============ DRAFTS CRUD ============
+
+export const saveDraft = async (userId: string, content: string): Promise<void> => {
+    const docRef = doc(draftsCollection, userId);
+    await setDoc(
+        docRef,
+        {
+            userId,
+            content,
+            updatedAt: new Date(),
+        },
+        { merge: true },
+    );
+};
+
+export const getDraft = async (userId: string): Promise<Draft | null> => {
+    const docRef = doc(draftsCollection, userId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        return {
+            id: docSnap.id,
+            userId: data.userId,
+            content: data.content || "",
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+        } as Draft;
+    }
+
+    return null;
+};
+
+export const clearDraft = async (userId: string): Promise<void> => {
+    const docRef = doc(draftsCollection, userId);
+    await setDoc(
+        docRef,
+        {
+            userId,
+            content: "",
+            updatedAt: new Date(),
+        },
+        { merge: true },
+    );
 };

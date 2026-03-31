@@ -1,0 +1,96 @@
+# Agent Development Rules - Vue 3 Frontend (Vite + TS)
+
+## 🌐 Idioma de Comunicación
+
+- **Siempre responder en español**, excepto términos técnicos sin traducción directa.
+- Toda comunicación, comentarios y documentación debe estar en español.
+
+## 🔧 Development Patterns (Vue 3 & TypeScript)
+
+### TypeScript & Estándares
+
+- **TypeScript Strict**: Usar interfaces para Props, Emits y modelos de datos. Evitar el uso de `any`.
+- **SFC (Single File Components)**: Usar siempre `<script setup lang="ts">`.
+- **Arrow Functions**: Preferir funciones flecha para lógica interna, computadas y watchers.
+- **Naming Convenciones**:
+    - **Componentes**: PascalCase (ej: `UserCard.vue`).
+    - **Funciones Async**: Terminar con "Async" (ej: `fetchDataAsync`).
+    - **Variables Reactivas**: Nombres descriptivos (ej: `isPending`, `userList`).
+- **Logging**: Eliminar todos los `console.log` antes de finalizar la tarea.
+
+### Estructura de Archivos (.vue)
+
+El orden interno de los archivos `.vue` debe seguir esta jerarquía para mantener la consistencia:
+
+1. `<script setup>` (Imports -> Props/Emits -> Estado/Refs -> Computadas -> Métodos -> Lifecycle hooks).
+2. `<template>`.
+3. `<style scoped>` (Solo CSS/SCSS necesario).
+
+### Patrones de Estado y API
+
+- **Composables**: Extraer lógica reutilizable a la carpeta `/composables` (ej: `useAuth.ts`).
+- **Services**: Las llamadas a API deben estar en `/services`, totalmente desacopladas de la UI.
+- **Gestión de Estado**: Si se requiere estado global, usar **Pinia** con sintaxis de "Setup Stores".
+- **Props**: Definir interfaces claras mediante `defineProps<{ ... }>()`.
+
+## 📁 Project Structure & Organization
+
+- **Componentes**: Dividir en `components/base` (atómicos/reutilizables) y `components/features` (lógica de negocio).
+- **Views**: Páginas principales en la carpeta `views/`.
+- **Assets**: Recursos estáticos y estilos globales en `assets/`.
+- **Imports**: Usar alias `@/` para referenciar la carpeta `src/`.
+- **Multi-edit**: Mantener los imports organizados y agrupados al principio del archivo.
+
+## 🐛 Bug Fixes & UI Best Practices
+
+- **Manejo de Errores**: Implementar feedback visual (Toasts, Modales o Alertas) para fallos de API.
+- **Loading States**: Manejar siempre estados de carga (`isLoading`) para mejorar la UX.
+- **Limpieza**: Usar `onUnmounted` para limpiar event listeners, timers o suscripciones manuales.
+- **Reactividad**: No desestructurar `props` directamente (usar `toRefs` si es necesario para mantener la reactividad).
+
+## 🔄 Review Process
+
+1. Eliminar logs de depuración y comentarios temporales.
+2. Verificar que no haya errores de TypeScript en la terminal.
+3. Probar responsividad básica en diferentes tamaños de pantalla.
+4. Validar que los componentes se destruyan correctamente (sin memory leaks).
+5. Revisar que la nomenclatura siga las reglas establecidas.
+
+## 🌿 Git Branch Management
+
+- **Formato**: `sprint-xx/xxxx` (sprint-número/descripción corta).
+- **Proceso**: Crear rama → Desarrollar/Verificar → Push bajo solicitud explícita.
+- **Confirmación**: Esperar a que el usuario especifique el número de sprint y la descripción.
+
+## 📝 Changelog Management
+
+- **Actualización**: Agregar cambios a la última versión existente en `changelog.md`.
+- **Sincronización**: Al subir versión, validar que coincida con el `version` de `package.json`.
+- **Contenido**: Enfocarse en mejoras de UI, nuevos componentes y correcciones de bugs.
+
+## 🧪 Testing Guidelines
+
+- **NO crear archivos de prueba**: No generar archivos `.spec.ts` o `.test.ts` por cuenta propia.
+- **Solo bajo solicitud**: Crear tests (Vitest/Cypress) únicamente si el usuario lo pide.
+- **Validación Técnica**: Verificar que el código compile sin errores de TypeScript y que la lógica de los estados reactivos coincida con lo solicitado.
+
+## 🚫 Server Management Rules
+
+- **NO LEVANTAR SERVIDOR**: Nunca iniciar el comando `npm run dev` sin autorización explícita.
+
+## 🚫 Git Management Rules
+
+- **NO HACER COMMITS**: Nunca ejecutar `git commit` sin autorización explícita ("haz commit", "puedes commitear").
+- **Mantener cambios staged**: Se permite el uso de `git add`, pero no el commit final.
+- **No hacer push**: Nunca ejecutar `git push` sin permiso explícito.
+
+## 🤖 Mode Management Rules
+
+- **Priorizar Plan Mode**: Ante cualquier tarea nueva o cambio estructural, el agente DEBE permanecer en `Plan Mode` y presentar un plan de acción detallado.
+- **Confirmación antes de Code Mode**: Queda estrictamente PROHIBIDO pasar a `Code Mode` o ejecutar ediciones de archivos sin recibir una confirmación explícita del usuario (ej: "Procede", "Dale", "Aplica los cambios").
+- **Ask Mode para Dudas**: Si falta información para completar un plan, usar `Ask Mode` en lugar de asumir y codificar.
+
+---
+
+**Última actualización**: 2026-03-31  
+**Versión**: 1.5 (Adaptada para Vue 3 + Vite + TS)

@@ -31,17 +31,15 @@ const openDialog = async () => {
 <style scoped lang="scss">
 .user-activity-floating-wrapper {
     position: fixed;
-    bottom: 5px;
+    top: calc(20px + 56px + 10px);
     right: 0;
     z-index: 1000;
     transition: transform 0.3s ease;
     display: flex;
     align-items: center;
 
-    // Ocultar la mitad del botón por defecto (mostrar solo la mitad izquierda)
-    transform: translateX(20%);
+    transform: translateX(50%);
 
-    // Mostrar completamente cuando el botón está en hover
     &:has(.user-activity-floating-btn:hover) {
         transform: translateX(0);
 

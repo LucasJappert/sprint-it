@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MyNotesButton from "@/components/MyNotesButton.vue";
 import UserActivityButton from "@/components/UserActivityButton.vue";
 import MyNotificationsHost from "@/plugins/my-notification-helper/MyNotificationsHost.vue";
 import { initPWAUpdater } from "@/plugins/pwa-updater";
@@ -17,6 +18,7 @@ initPWAUpdater();
         <MyNotificationsHost />
         <VersionUpdateNotification />
         <PwaInstallButton />
+        <MyNotesButton />
         <UserActivityButton />
     </v-app>
 </template>
