@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MyButton from "@/components/global/MyButton.vue";
 import MyDialog from "@/components/global/MyDialog.vue";
 import MyRichText from "@/components/global/MyRichText.vue";
 import { useNotes } from "@/composables/useNotes";
@@ -84,15 +85,17 @@ onMounted(async () => {
             </div>
 
             <div class="notes-content">
-                <div class="draft-section">
-                    <h3 class="section-title">Borrador</h3>
-                    <div class="draft-editor-wrapper">
-                        <MyRichText v-model="notes.draftContent.value" placeholder="Escribí tu nota aquí..." :show-toolbar="true" />
-                        <VBtn class="save-btn" color="primary" @click="handleSaveNote" :disabled="!notes.draftContent.value || notes.draftContent.value === '<p></p>'">
-                            <VIcon icon="mdi-content-save" class="mr-1" size="18" />
-                            Guardar Nota
-                        </VBtn>
-                    </div>
+                <div class="draft-editor-wrapper">
+                    <MyRichText v-model="notes.draftContent.value" placeholder="Escribí tu nota aquí..." :show-toolbar="true" />
+                    <MyButton
+                        class="save-btn"
+                        accent="blue"
+                        @click="handleSaveNote"
+                        :disabled="!notes.draftContent.value || notes.draftContent.value === '<p></p>'"
+                    >
+                        <VIcon icon="mdi-content-save" class="mr-1" size="18" />
+                        Guardar Nota
+                    </MyButton>
                 </div>
 
                 <div class="notes-list-section">
@@ -116,12 +119,14 @@ onMounted(async () => {
                                 </div>
                                 <div class="note-preview">{{ getNotePreview(note.content) }}</div>
                                 <div class="note-actions">
-                                    <VBtn icon size="small" @click="handleEditNote(note)" color="primary">
-                                        <VIcon icon="mdi-pencil" size="18" />
-                                    </VBtn>
-                                    <VBtn icon size="small" @click="handleDeleteNote(note.id)" color="error">
+                                    <div class="action-btn delete-btn" @click="handleDeleteNote(note.id)">
                                         <VIcon icon="mdi-delete" size="18" />
-                                    </VBtn>
+                                        <span>Eliminar</span>
+                                    </div>
+                                    <div class="action-btn edit-btn" @click="handleEditNote(note)">
+                                        <VIcon icon="mdi-pencil" size="18" />
+                                        <span>Ver/Editar</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -173,18 +178,8 @@ onMounted(async () => {
     flex-direction: column;
     flex: 1;
     overflow: hidden;
-    padding: 20px;
+    padding: 10px;
     gap: 20px;
-}
-
-.draft-section {
-    flex: 0 0 50%;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
-    padding: 16px;
-    background-color: rgba(var(--v-theme-surface-variant), 0.3);
 }
 
 .section-title {
@@ -195,20 +190,47 @@ onMounted(async () => {
 
 .draft-editor-wrapper {
     position: relative;
-    flex: 1;
+    flex: 0 0 70%;
     display: flex;
     flex-direction: column;
+    border-radius: 8px;
+    padding: 0;
+    background-color: transparent;
+    min-height: 0;
+
+    :deep(.my-richtext) {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    :deep(.editor-container) {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    :deep(.editor-content) {
+        flex: 1;
+        max-height: none !important;
+        overflow-y: auto;
+    }
+
+    :deep(.ProseMirror) {
+        min-height: 100%;
+    }
 }
 
 .save-btn {
     position: absolute;
-    bottom: 12px;
-    right: 12px;
+    bottom: 5px;
+    right: 0px;
     z-index: 10;
 }
 
 .notes-list-section {
-    flex: 0 0 50%;
+    flex: 0 0 30%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -245,25 +267,25 @@ onMounted(async () => {
 }
 
 .notes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 16px;
 }
 
 .note-card {
-    background-color: rgba(var(--v-theme-surface-variant), 0.5);
+    background-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
     padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    width: 300px;
     transition: all 0.2s;
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        cursor: pointer;
     }
 }
 
@@ -295,13 +317,36 @@ onMounted(async () => {
 
 .note-actions {
     display: flex;
-    gap: 8px;
-    justify-content: flex-end;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: opacity 0.2s;
+
+    &:hover {
+        opacity: 0.7;
+    }
+}
+
+.delete-btn {
+    color: #ef4444;
+}
+
+.edit-btn {
+    color: #22c55e;
 }
 
 @media (max-width: 768px) {
     .notes-content {
         flex-direction: column;
+        padding: 5px;
     }
 
     .draft-section,
@@ -310,7 +355,12 @@ onMounted(async () => {
     }
 
     .notes-grid {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+
+    .note-card {
+        width: 100%;
+        max-width: 100%;
     }
 }
 </style>

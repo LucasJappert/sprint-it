@@ -130,7 +130,7 @@ export const useNotes = () => {
 
         autoSaveTimeout = setTimeout(() => {
             autoSaveDraft(newContent);
-        }, 5000);
+        }, 500);
     });
 
     return {

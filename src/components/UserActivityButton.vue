@@ -30,30 +30,25 @@ const openDialog = async () => {
 
 <style scoped lang="scss">
 .user-activity-floating-wrapper {
-    position: fixed;
-    top: calc(20px + 56px + 10px);
-    right: 0;
-    z-index: 1000;
+    position: relative;
     transition: transform 0.3s ease;
-    display: flex;
-    align-items: center;
-
     transform: translateX(50%);
 
-    &:has(.user-activity-floating-btn:hover) {
+    &:hover {
         transform: translateX(0);
 
         .user-activity-title {
             opacity: 1;
             visibility: visible;
-            background-color: #00000050;
-            padding: 2px 5px;
-            border-radius: 5px 0 0 5px;
         }
     }
 }
 
 .user-activity-title {
+    position: absolute;
+    left: -210px;
+    top: 50%;
+    transform: translateY(-50%);
     color: white;
     text-shadow:
         0 0 5px #000000,
@@ -61,12 +56,15 @@ const openDialog = async () => {
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
-    margin-right: 0;
     opacity: 0;
     visibility: hidden;
     transition:
         opacity 0.3s ease,
         visibility 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+    width: 200px;
+    text-align: right;
 }
 
 .user-activity-floating-btn {
@@ -83,12 +81,5 @@ const openDialog = async () => {
 :deep(.v-dialog .v-card-title) {
     background-color: rgb(var(--v-theme-surface)) !important;
     border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
-}
-
-// Ocultar en móviles
-@media (max-width: 768px) {
-    .only-desktop {
-        display: none !important;
-    }
 }
 </style>

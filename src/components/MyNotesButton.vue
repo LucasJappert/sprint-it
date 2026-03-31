@@ -26,30 +26,25 @@ const openDialog = () => {
 
 <style scoped lang="scss">
 .notes-floating-wrapper {
-    position: fixed;
-    top: 30px;
-    right: 0;
-    z-index: 1000;
+    position: relative;
     transition: transform 0.3s ease;
-    display: flex;
-    align-items: center;
-
     transform: translateX(50%);
 
-    &:has(.notes-floating-btn:hover) {
+    &:hover {
         transform: translateX(0);
 
         .notes-title {
             opacity: 1;
             visibility: visible;
-            background-color: #00000050;
-            padding: 2px 5px;
-            border-radius: 5px 0 0 5px;
         }
     }
 }
 
 .notes-title {
+    position: absolute;
+    left: -210px;
+    top: 50%;
+    transform: translateY(-50%);
     color: white;
     text-shadow:
         0 0 5px #000000,
@@ -57,23 +52,20 @@ const openDialog = () => {
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
-    margin-right: 0;
     opacity: 0;
     visibility: hidden;
     transition:
         opacity 0.3s ease,
         visibility 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+    width: 200px;
+    text-align: right;
 }
 
 .notes-floating-btn {
     border-radius: 8px 0 0 8px !important;
     box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.15);
     background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%) !important;
-}
-
-@media (max-width: 768px) {
-    .only-desktop {
-        display: none !important;
-    }
 }
 </style>

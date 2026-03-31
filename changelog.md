@@ -9,18 +9,21 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 ### Nuevas Funciones
 
 - **Sistema de Notas Personales**: Nueva funcionalidad de notas flotantes accesible desde un botón en la esquina superior derecha del dashboard.
-    - Botón flotante con icono de nota y título "Mis notas"
+    - Botón flotante con icono de nota y título "Mis Notas"
     - Dialog de 98% x 98% con dos secciones principales:
-        - **Borrador (50% superior)**: Editor de texto enriquecido (TipTap) con soporte para negrita, subrayado e imágenes
-        - **Notas guardadas (50% inferior)**: Grid de cards con preview, fecha y acciones
-    - **Autoguardado del borrador**: Guardado automático cada 5 segundos en Firestore (silencioso)
+        - **Borrador (70% superior)**: Editor de texto enriquecido (TipTap) con soporte para negrita, subrayado e imágenes
+        - **Notas guardadas (30% inferior)**: Grid de cards con preview, fecha y acciones
+    - **Autoguardado del borrador**: Guardado automático 500ms después de dejar de escribir (debounce)
     - **Recuperación automática**: Al abrir el dialog se carga el borrador guardado
     - **Notas privadas por usuario**: Cada usuario solo ve sus propias notas
     - **Edición completa**: Dialog modal para ver y editar notas guardadas
     - **Borrado lógico**: Confirmación antes de eliminar con soft delete
     - **Formato argentino**: Fechas en formato dd/mm/yyyy
     - **ID autonumérico**: Numeración descendente basada en orden de creación
-    - Botón de actividad de usuarios reposicionado debajo del botón de notas
+    - Botón "Guardar Nota" con estilo consistente (azul celeste, igual que "Nuevo Item")
+    - Contenedor de botones flotantes que agrupa "Mis Notas" y "Actividad de usuarios"
+    - Botones flotantes ocultos al 50% con animación de deslizamiento al hacer hover
+    - Diálogos renderizados con Teleport al body para correcto z-index sobre el header
 
 ### Estructura Técnica
 
