@@ -18,6 +18,7 @@ declare module 'vue' {
     DeletedItemsSection: typeof import('./components/DeletedItemsSection.vue')['default']
     DialogTabs: typeof import('./components/dialogs/DialogTabs.vue')['default']
     ExportBackupDialog: typeof import('./components/ExportBackupDialog.vue')['default']
+    FloatingActionButton: typeof import('./components/FloatingActionButton.vue')['default']
     FloatingButtonsContainer: typeof import('./components/FloatingButtonsContainer.vue')['default']
     FullScreenImageDialog: typeof import('./components/FullScreenImageDialog.vue')['default']
     Header: typeof import('./components/Header.vue')['default']
