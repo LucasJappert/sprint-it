@@ -18,7 +18,7 @@ export default defineConfig({
         vuetify({ autoImport: true }),
         VitePWA({
             registerType: "autoUpdate",
-            manifestFilename: 'manifest.json',
+            manifestFilename: "manifest.json",
             includeAssets: [`images/pwa-192x192.png?v=${pkg.version}`, "apple-touch-icon.png", "masked-icon.svg"],
             manifest: {
                 name: "Sprint It",
@@ -52,6 +52,7 @@ export default defineConfig({
             workbox: {
                 cleanupOutdatedCaches: true,
                 globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+                maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
                 runtimeCaching: [
                     {
                         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -77,8 +78,8 @@ export default defineConfig({
                 // Auto-import specific stores
                 {
                     from: "@/stores/dragDrop",
-                    imports: ["useDragDropStore"]
-                }
+                    imports: ["useDragDropStore"],
+                },
             ],
             dts: "src/auto-imports.d.ts",
         }),
@@ -94,6 +95,20 @@ export default defineConfig({
             "@": fileURLToPath(new URL("./src", import.meta.url)),
         },
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ["vue", "vue-router", "pinia"],
+                    charts: ["chart.js", "apexcharts", "vue-chartjs", "vue3-apexcharts"],
+                    editor: ["@tiptap/starter-kit", "@tiptap/vue-3"],
+                    firebase: ["firebase"],
+                    utils: ["file-saver", "jszip", "bcryptjs"],
+                },
+            },
+        },
+        chunkSizeWarningLimit: 1000,
+    },
     css: {
         preprocessorOptions: {
             scss: {
@@ -103,8 +118,6 @@ export default defineConfig({
     },
     optimizeDeps: {
         exclude: ["vuetify"],
-        entries: [
-            "./src/**/*.vue",
-        ],
+        entries: ["./src/**/*.vue"],
     },
 });
