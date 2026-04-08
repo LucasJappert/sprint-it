@@ -4,6 +4,16 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.40 - 2026-04-08
+
+### Mejoras
+
+- **Soporte para archivos Markdown**: Ahora es posible adjuntar archivos `.md` en tasks e items.
+    - Se agregaron MIME types `text/markdown` y `text/plain`
+    - Extensiones permitidas: `.md` y `.txt`
+
+---
+
 ## v1.1.39 - 2026-03-31
 
 ### Nuevas Funciones
