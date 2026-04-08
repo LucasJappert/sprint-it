@@ -13,8 +13,10 @@ export const ATTACHMENT_CONFIG = {
         "image/webp",
         "application/zip",
         "application/x-rar-compressed",
+        "text/markdown",
+        "text/plain",
     ],
-    ALLOWED_EXTENSIONS: [".pdf", ".xlsx", ".xls", ".csv", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".zip", ".rar", ".json"],
+    ALLOWED_EXTENSIONS: [".pdf", ".xlsx", ".xls", ".csv", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".zip", ".rar", ".json", ".md", ".txt"],
 } as const;
 
 export const formatFileSize = (bytes: number): string => {
@@ -32,7 +34,7 @@ export const getFileExtension = (fileName: string): string => {
 
 export const isAllowedFileType = (file: File): boolean => {
     const extension = getFileExtension(file.name);
-    return ATTACHMENT_CONFIG.ALLOWED_EXTENSIONS.includes(extension as typeof ATTACHMENT_CONFIG.ALLOWED_EXTENSIONS[number]);
+    return ATTACHMENT_CONFIG.ALLOWED_EXTENSIONS.includes(extension as (typeof ATTACHMENT_CONFIG.ALLOWED_EXTENSIONS)[number]);
 };
 
 export const isFileSizeValid = (file: File): boolean => {
