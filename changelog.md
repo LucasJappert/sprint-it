@@ -4,6 +4,16 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.41 - 2026-04-13
+
+### Arreglos
+
+- **Superposición de diálogos de confirmación**: Corregido el problema donde los diálogos de confirmación (MyAlertDialog) se mostraban detrás de los diálogos principales (TaskDialog, ItemDialog).
+    - Agregado `z-index="10000"` explícito al `v-dialog` en MyAlertDialog
+    - Ahora los diálogos de confirmación siempre aparecen encima de los diálogos principales (que tienen z-index 9999)
+
+---
+
 ## v1.1.40 - 2026-04-08
 
 ### Mejoras
