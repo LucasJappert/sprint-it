@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="open" :max-width="maxWidth" :persistent="persistent" scrim="rgba(0,0,0,0.5)">
+    <v-dialog v-model="open" :max-width="maxWidth" :persistent="persistent" scrim="rgba(0,0,0,0.5)" :z-index="10000">
         <v-card class="alert-card" :aria-labelledby="titleId" :aria-describedby="bodyId" role="dialog">
             <v-card-title class="justify-center pt-6" v-if="!hideIcon && icon && iconName">
                 <slot name="icon">
