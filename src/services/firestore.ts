@@ -553,11 +553,11 @@ export const exportSprintData = async (sprintId: string) => {
     }
 
     // Prompt para ChatGPT - mejorado para usar projectEffortSummary
-    const prompt = `Generame un resumen del sprint MUY breve (maximo 10-12 lineas por seccion), en formato ideal para WhatsApp, listo para copiar y pegar, asi que no hagas preguntas finales ni saludos o introducciones de ninguna manera. 
+    const prompt = `Generame un resumen del sprint MUY breve (maximo 10-12 lineas por seccion), en formato ideal para WhatsApp, listo para copiar y pegar, asi que no hagas preguntas finales ni saludos o introducciones de ninguna manera.
 
 Formato requerido:
 - Usa el objeto projectEffortSummary para obtener las horas y porcentajes por proyecto (ya están calculados)
-- Organizar por secciones segun el projectName (ej: 🟢 APIX, 🔵 Agroideas-In, 🟠 Tracker, 📋 Dashboard, 🟣 Meetings)
+- Organizar por secciones segun el projectName (ej: 🟢 APIX, 🔵 Agroideas-In, 🟡 Agroideas WEB, 🔴 Agroideas API, 🟠 Tracker, 📋 Dashboard, 🟣 Meetings)
 - Cada seccion debe mostrar: "[emoji] [projectName]: [porcentaje]% ([horas]h) - [items] items, [tasks] tasks"
 - Priorizar impacto funcional y de negocio por sobre detalles tecnicos
 - Redactar para colegas que no son del area de sistemas (claro, directo y simple)
