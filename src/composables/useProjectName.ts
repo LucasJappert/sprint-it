@@ -22,6 +22,18 @@ const PROJECTS = {
         name: "🔵 Agroideas-In",
         color: "#2196F3",
     },
+    AGROIDEAS_WEB: {
+        name: "🟡 Agroideas WEB",
+        color: "#FFC107",
+    },
+    AGROIDEAS_API: {
+        name: "🔴 Agroideas API",
+        color: "#F44336",
+    },
+    TRACKER: {
+        name: "🟠 Tracker",
+        color: "#FF9800",
+    },
     MEETINGS: {
         name: "🟣 Meetings",
         color: "#9b44f8",
@@ -29,7 +41,7 @@ const PROJECTS = {
     VARIOS: {
         name: "⚫ Varios",
         color: "#282828",
-    }
+    },
 } as const;
 
 // Retrocompatibilidad: array de nombres default para funciones existentes
@@ -146,8 +158,14 @@ export const useProjectName = () => {
 
         // Buscar en PROJECTS comparando el texto sin emoji
         for (const project of Object.values(PROJECTS)) {
-            const projectText = project.name.replace(/[^a-zA-Z0-9\s]/g, "").trim().toLowerCase();
-            const searchText = trimmedName.replace(/[^a-zA-Z0-9\s]/g, "").trim().toLowerCase();
+            const projectText = project.name
+                .replace(/[^a-zA-Z0-9\s]/g, "")
+                .trim()
+                .toLowerCase();
+            const searchText = trimmedName
+                .replace(/[^a-zA-Z0-9\s]/g, "")
+                .trim()
+                .toLowerCase();
 
             // Comparar si el texto del proyecto está contenido en el nombre buscado
             if (projectText.includes(searchText) || searchText.includes(projectText)) {
