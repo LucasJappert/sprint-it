@@ -4,6 +4,17 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.42 - 2026-04-22
+
+### Cambios
+
+- **Nuevos proyectos en Effort by Project**: Agregados 3 proyectos nuevos a la configuración de proyectos:
+    - 🟡 Agroideas WEB (color amarillo #FFC107)
+    - 🔴 Agroideas API (color rojo #F44336)
+    - 🟠 Tracker (color naranja #FF9800)
+
+---
+
 ## v1.1.41 - 2026-04-13
 
 ### Arreglos
