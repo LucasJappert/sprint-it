@@ -110,7 +110,7 @@ $mobile-resolution: 600px !default;
 
 .my-dialog {
     border-radius: 14px;
-    width: 1000px;
+    width: 1100px;
     min-width: v-bind("formattedMinWidth");
     max-width: 90%;
 
@@ -138,20 +138,20 @@ $mobile-resolution: 600px !default;
     }
 
     :deep(.header) {
-        padding: 14px 16px;
+        padding: 4px 8px;
         background: $bg-secondary;
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px 14px 0 0;
     }
     :deep(.body-scroll) {
-        padding: 16px;
+        padding: 8px;
         max-height: 80vh;
         overflow-y: auto;
         background-color: $bg-primary;
         box-shadow: 0 2px 10px #000000cc;
     }
     :deep(.footer) {
-        padding: 12px 16px 16px;
+        padding: 8px;
         background: $bg-secondary;
         border-top: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 0 0 14px 14px;

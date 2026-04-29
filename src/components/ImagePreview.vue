@@ -83,8 +83,8 @@ const handleMiddleClick = (event: MouseEvent) => {
     display: inline-block;
     min-width: 200px;
     min-height: 200px;
-    max-width: 800px;
-    max-height: 800px;
+    max-width: 300px;
+    max-height: 300px;
     margin: 8px 0;
     border-radius: 8px;
     overflow: hidden;
@@ -106,8 +106,8 @@ const handleMiddleClick = (event: MouseEvent) => {
     height: auto;
     min-width: 200px;
     min-height: 200px;
-    max-width: 800px;
-    max-height: 800px;
+    max-width: 300px;
+    max-height: 300px;
     object-fit: contain;
     border-radius: 8px;
     cursor: pointer;
