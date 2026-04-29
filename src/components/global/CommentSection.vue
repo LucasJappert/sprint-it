@@ -400,9 +400,9 @@ onBeforeUnmount(async () => {
 
 <style scoped lang="scss">
 .comments-section {
-    margin-top: 12px;
-    padding: 12px;
-    border-radius: 12px;
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 8px;
     background: rgba(0, 0, 0, 0.05);
 }
 
@@ -430,7 +430,7 @@ onBeforeUnmount(async () => {
 .comments-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 }
 
 .comment-item {
@@ -444,7 +444,6 @@ onBeforeUnmount(async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
     font-size: 0.9rem;
 }
 

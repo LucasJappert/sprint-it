@@ -86,7 +86,13 @@
 /* Textarea styling */
 .detail-textarea {
     width: 100%;
+    position: relative;
     // margin-top: 16px;
+}
+.detail-textarea :deep(.toolbar) {
+    position: absolute !important;
+    bottom: 6px !important;
+    right: 6px !important;
 }
 
 .detail-textarea :deep(.v-field) {
