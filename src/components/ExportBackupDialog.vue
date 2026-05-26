@@ -33,11 +33,31 @@
 
                         <v-list-item>
                             <template #prepend>
+                                <v-icon color="primary">mdi-inbox</v-icon>
+                            </template>
+                            <v-list-item-title>{{ t("stats.draftItems") }}</v-list-item-title>
+                            <template #append>
+                                <span class="stat-value">{{ stats?.draftItemsCount || 0 }}</span>
+                            </template>
+                        </v-list-item>
+
+                        <v-list-item>
+                            <template #prepend>
                                 <v-icon color="primary">mdi-checkbox-marked-outline</v-icon>
                             </template>
                             <v-list-item-title>{{ t("stats.tasks") }}</v-list-item-title>
                             <template #append>
                                 <span class="stat-value">{{ stats?.tasksCount || 0 }}</span>
+                            </template>
+                        </v-list-item>
+
+                        <v-list-item>
+                            <template #prepend>
+                                <v-icon color="primary">mdi-inbox-outline</v-icon>
+                            </template>
+                            <v-list-item-title>{{ t("stats.draftTasks") }}</v-list-item-title>
+                            <template #append>
+                                <span class="stat-value">{{ stats?.draftTasksCount || 0 }}</span>
                             </template>
                         </v-list-item>
 
@@ -190,8 +210,14 @@ const t = (key: string): string => {
         "stats.items": {
             es: "Items",
         },
+        "stats.draftItems": {
+            es: "Items en Draft",
+        },
         "stats.tasks": {
             es: "Tasks",
+        },
+        "stats.draftTasks": {
+            es: "Tasks en Draft",
         },
         "stats.users": {
             es: "Usuarios",

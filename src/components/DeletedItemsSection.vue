@@ -11,10 +11,10 @@
 
         <!-- Contenido de la sección -->
         <div v-if="isExpanded" class="section-content">
-            <!-- Items eliminados -->
-            <div v-if="deletedItems.length > 0" class="deleted-group">
-                <div class="group-title">Items</div>
-                <div v-for="item in deletedItems" :key="item.id" class="deleted-item-card">
+            <!-- Items eliminados del sprint -->
+            <div v-if="deletedSprintItems.length > 0" class="deleted-group">
+                <div class="group-title">Items (Sprint)</div>
+                <div v-for="item in deletedSprintItems" :key="`sprint-${item.id}`" class="deleted-item-card">
                     <div class="deleted-item-header">
                         <div class="item-info">
                             <span class="item-order">#{{ item.order }}</span>
@@ -22,23 +22,22 @@
                             <span v-if="item.projectName" class="item-project">({{ item.projectName }})</span>
                         </div>
                         <div class="item-actions">
-                            <v-btn size="x-small" color="success" variant="tonal" @click="onRestoreItem(item)" title="Restore item">
+                            <v-btn size="x-small" color="success" variant="tonal" @click="onRestoreSprintItem(item)" title="Restore item">
                                 <v-icon size="16" left>mdi-restore</v-icon>
                                 Restore
                             </v-btn>
-                            <v-btn size="x-small" color="error" variant="tonal" @click="onPermanentDeleteItem(item)" title="Permanently delete" class="ml-2">
+                            <v-btn size="x-small" color="error" variant="tonal" @click="onPermanentDeleteSprintItem(item)" title="Permanently delete" class="ml-2">
                                 <v-icon size="16" left>mdi-delete-forever</v-icon>
                                 Delete
                             </v-btn>
                         </div>
                     </div>
-                    <!-- Tareas eliminadas dentro del item eliminado -->
                     <div v-if="getDeletedTasks(item).length > 0" class="deleted-tasks">
                         <div class="task-info" v-for="task in getDeletedTasks(item)" :key="task.id">
                             <v-icon size="14" class="mr-1">mdi-checkbox-blank-outline</v-icon>
                             <span class="task-title">{{ task.title }}</span>
                             <v-chip size="x-small" color="error" variant="tonal" class="ml-2">deleted</v-chip>
-                            <v-btn size="x-small" icon variant="text" color="success" @click="onRestoreTask(task, item)" title="Restore task">
+                            <v-btn size="x-small" icon variant="text" color="success" @click="onRestoreSprintTask(task, item)" title="Restore task">
                                 <v-icon size="14">mdi-restore</v-icon>
                             </v-btn>
                         </div>
@@ -51,9 +50,47 @@
                 </div>
             </div>
 
-            <!-- Tareas eliminadas de items activos -->
+            <!-- Items eliminados del Draft -->
+            <div v-if="deletedDraftItems.length > 0" class="deleted-group">
+                <div class="group-title">Items (Draft)</div>
+                <div v-for="item in deletedDraftItems" :key="`draft-${item.id}`" class="deleted-item-card">
+                    <div class="deleted-item-header">
+                        <div class="item-info">
+                            <v-chip size="x-small" color="primary" variant="tonal" class="mr-2">Draft</v-chip>
+                            <span class="item-order">#{{ item.order }}</span>
+                            <span class="item-title">{{ item.title }}</span>
+                            <span v-if="item.projectName" class="item-project">({{ item.projectName }})</span>
+                        </div>
+                        <div class="item-actions">
+                            <v-btn size="x-small" color="success" variant="tonal" @click="onRestoreDraftItem(item)" title="Restore item">
+                                <v-icon size="16" left>mdi-restore</v-icon>
+                                Restore
+                            </v-btn>
+                            <v-btn size="x-small" color="error" variant="tonal" @click="onPermanentDeleteDraftItem(item)" title="Permanently delete" class="ml-2">
+                                <v-icon size="16" left>mdi-delete-forever</v-icon>
+                                Delete
+                            </v-btn>
+                        </div>
+                    </div>
+                    <div v-if="getDeletedTasks(item).length > 0" class="deleted-tasks">
+                        <div class="task-info" v-for="task in getDeletedTasks(item)" :key="task.id">
+                            <v-icon size="14" class="mr-1">mdi-checkbox-blank-outline</v-icon>
+                            <span class="task-title">{{ task.title }}</span>
+                            <v-btn size="x-small" icon variant="text" color="success" @click="onRestoreDraftTask(task, item)" title="Restore task">
+                                <v-icon size="14">mdi-restore</v-icon>
+                            </v-btn>
+                        </div>
+                    </div>
+                    <div class="deleted-date">
+                        <span class="item-id">#{{ item.id }}</span>
+                        <span>Deleted: {{ formatDate(item.deletedAt) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tareas eliminadas de items activos del sprint -->
             <div v-if="itemsWithDeletedTasks.length > 0" class="deleted-group">
-                <div class="group-title">Tasks in Active Items</div>
+                <div class="group-title">Tasks in Active Items (Sprint)</div>
                 <div v-for="itemWithDeleted in itemsWithDeletedTasks" :key="itemWithDeleted.item.id" class="deleted-item-card">
                     <div class="deleted-item-header">
                         <div class="item-info">
@@ -71,13 +108,39 @@
                                 icon
                                 variant="text"
                                 color="error"
-                                @click="onPermanentDeleteTask(task, itemWithDeleted.item)"
+                                @click="onPermanentDeleteSprintTask(task, itemWithDeleted.item)"
                                 title="Permanently delete task"
                                 class="ml-2"
                             >
                                 <v-icon size="14">mdi-delete-forever</v-icon>
                             </v-btn>
-                            <v-btn size="x-small" icon variant="text" color="success" @click="onRestoreTask(task, itemWithDeleted.item)" title="Restore task">
+                            <v-btn size="x-small" icon variant="text" color="success" @click="onRestoreSprintTask(task, itemWithDeleted.item)" title="Restore task">
+                                <v-icon size="14">mdi-restore</v-icon>
+                            </v-btn>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tareas eliminadas de items activos del Draft -->
+            <div v-if="draftItemsWithDeletedTasks.length > 0" class="deleted-group">
+                <div class="group-title">Tasks in Active Items (Draft)</div>
+                <div v-for="itemWithDeleted in draftItemsWithDeletedTasks" :key="`draft-task-${itemWithDeleted.item.id}`" class="deleted-item-card">
+                    <div class="deleted-item-header">
+                        <div class="item-info">
+                            <v-chip size="x-small" color="primary" variant="tonal" class="mr-2">Draft</v-chip>
+                            <span class="item-order">#{{ itemWithDeleted.item.order }}</span>
+                            <span class="item-title">{{ itemWithDeleted.item.title }}</span>
+                        </div>
+                    </div>
+                    <div class="deleted-tasks">
+                        <div class="task-info" v-for="task in itemWithDeleted.deletedTasks" :key="task.id">
+                            <v-icon size="14" class="mr-1">mdi-checkbox-blank-outline</v-icon>
+                            <span class="task-title">{{ task.title }}</span>
+                            <v-btn size="x-small" icon variant="text" color="error" @click="onPermanentDeleteDraftTask(task, itemWithDeleted.item)" title="Permanently delete task" class="ml-2">
+                                <v-icon size="14">mdi-delete-forever</v-icon>
+                            </v-btn>
+                            <v-btn size="x-small" icon variant="text" color="success" @click="onRestoreDraftTask(task, itemWithDeleted.item)" title="Restore task">
                                 <v-icon size="14">mdi-restore</v-icon>
                             </v-btn>
                         </div>
@@ -86,7 +149,7 @@
             </div>
 
             <!-- Mensaje cuando no hay nada eliminado -->
-            <div v-if="deletedItems.length === 0 && itemsWithDeletedTasks.length === 0" class="empty-message">
+            <div v-if="hasNoDeletedContent" class="empty-message">
                 <v-icon size="40" color="grey">mdi-delete-off</v-icon>
                 <p>No deleted items or tasks</p>
             </div>
@@ -97,40 +160,67 @@
 <script setup lang="ts">
 import MyAlerts from "@/plugins/my-alerts";
 import { notifyOk } from "@/plugins/my-notification-helper/my-notification-helper";
+import { useDraftBoardStore } from "@/stores/draftBoard";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { computed, ref } from "vue";
 
 const sprintStore = useSprintStore();
+const draftBoardStore = useDraftBoardStore();
 const isExpanded = ref(false);
 
-// Items eliminados (soft-delete)
-const deletedItems = computed((): Item[] => {
+const deletedSprintItems = computed((): Item[] => {
     const items = sprintStore.currentSprint?.items ?? [];
     return (items as Item[]).filter((item) => item.deletedAt !== null);
 });
 
-// Items activos que tienen tareas eliminadas
+const deletedDraftItems = computed((): Item[] => {
+    const items = draftBoardStore.draftBoard?.items ?? [];
+    return items.filter((item) => item.deletedAt !== null);
+});
+
 const itemsWithDeletedTasks = computed((): Array<{ item: Item; deletedTasks: Task[] }> => {
     const items = sprintStore.currentSprint?.items ?? [];
     const result: Array<{ item: Item; deletedTasks: Task[] }> = [];
 
     for (const item of items as Item[]) {
-        if (item.deletedAt === null) {
-            const deletedTasks = item.tasks.filter((task) => task.deletedAt !== null);
-            if (deletedTasks.length > 0) {
-                result.push({ item, deletedTasks });
-            }
-        }
+        if (item.deletedAt !== null) continue;
+
+        const deletedTasks = item.tasks.filter((task) => task.deletedAt !== null);
+        if (deletedTasks.length > 0) result.push({ item, deletedTasks });
     }
 
     return result;
 });
 
-// Total de elementos eliminados
+const draftItemsWithDeletedTasks = computed((): Array<{ item: Item; deletedTasks: Task[] }> => {
+    const items = draftBoardStore.draftBoard?.items ?? [];
+    const result: Array<{ item: Item; deletedTasks: Task[] }> = [];
+
+    for (const item of items) {
+        if (item.deletedAt !== null) continue;
+
+        const deletedTasks = item.tasks.filter((task) => task.deletedAt !== null);
+        if (deletedTasks.length > 0) result.push({ item, deletedTasks });
+    }
+
+    return result;
+});
+
+const hasNoDeletedContent = computed(
+    () =>
+        deletedSprintItems.value.length === 0
+        && deletedDraftItems.value.length === 0
+        && itemsWithDeletedTasks.value.length === 0
+        && draftItemsWithDeletedTasks.value.length === 0,
+);
+
 const totalDeletedCount = computed((): number => {
-    let count = deletedItems.value.length;
+    let count = deletedSprintItems.value.length + deletedDraftItems.value.length;
     for (const itemWithDeleted of itemsWithDeletedTasks.value) {
+        count += itemWithDeleted.deletedTasks.length;
+    }
+    for (const itemWithDeleted of draftItemsWithDeletedTasks.value) {
         count += itemWithDeleted.deletedTasks.length;
     }
     return count;
@@ -158,60 +248,108 @@ const formatDate = (date: Date | null): string => {
     });
 };
 
-// Restaurar item
-const onRestoreItem = async (item: Item) => {
+const onRestoreSprintItem = async (item: Item) => {
     const confirmed = await MyAlerts.confirmAsync(
         "Restore Item",
         `Are you sure you want to restore the item "<strong>${item.title}</strong>"?<br><br>This will make the item visible again in the sprint.`,
         "info",
     );
 
-    if (confirmed) {
-        await sprintStore.restoreItem(item.id);
-        notifyOk("Item restored", `The item "${item.title}" has been restored.`);
-    }
+    if (!confirmed) return;
+
+    await sprintStore.restoreItem(item.id);
+    notifyOk("Item restored", `The item "${item.title}" has been restored.`);
 };
 
-// Eliminar permanentemente un item
-const onPermanentDeleteItem = async (item: Item) => {
+const onRestoreDraftItem = async (item: Item) => {
+    const confirmed = await MyAlerts.confirmAsync(
+        "Restore Item",
+        `Are you sure you want to restore the item "<strong>${item.title}</strong>"?<br><br>This will make the item visible again in <strong>Draft</strong>.`,
+        "info",
+    );
+
+    if (!confirmed) return;
+
+    await draftBoardStore.restoreItemInDraftAsync(item.id);
+    notifyOk("Item restored", `The item "${item.title}" has been restored to Draft.`);
+};
+
+const onPermanentDeleteSprintItem = async (item: Item) => {
     const confirmed = await MyAlerts.confirmAsync(
         "Permanently Delete Item",
         `Are you sure you want to permanently delete the item "<strong>${item.title}</strong>"?<br><br><strong>This action cannot be undone.</strong> All tasks associated with this item will also be permanently deleted.`,
         "error",
     );
 
-    if (confirmed) {
-        await sprintStore.deleteItem(item.id);
-        notifyOk("Item deleted", `The item "${item.title}" has been permanently deleted.`);
-    }
+    if (!confirmed) return;
+
+    await sprintStore.deleteItem(item.id);
+    notifyOk("Item deleted", `The item "${item.title}" has been permanently deleted.`);
 };
 
-// Restaurar tarea
-const onRestoreTask = async (task: Task, item: Item) => {
+const onPermanentDeleteDraftItem = async (item: Item) => {
+    const confirmed = await MyAlerts.confirmAsync(
+        "Permanently Delete Item",
+        `Are you sure you want to permanently delete the item "<strong>${item.title}</strong>" from Draft?<br><br><strong>This action cannot be undone.</strong>`,
+        "error",
+    );
+
+    if (!confirmed) return;
+
+    await draftBoardStore.deleteItemInDraftAsync(item.id);
+    notifyOk("Item deleted", `The item "${item.title}" has been permanently deleted.`);
+};
+
+const onRestoreSprintTask = async (task: Task, item: Item) => {
     const confirmed = await MyAlerts.confirmAsync(
         "Restore Task",
         `Are you sure you want to restore the task "<strong>${task.title}</strong>"?<br><br>This will make the task visible again in the item "${item.title}".`,
         "info",
     );
 
-    if (confirmed) {
-        await sprintStore.restoreTask(task.id, item.id);
-        notifyOk("Task restored", `The task "${task.title}" has been restored.`);
-    }
+    if (!confirmed) return;
+
+    await sprintStore.restoreTask(task.id, item.id);
+    notifyOk("Task restored", `The task "${task.title}" has been restored.`);
 };
 
-// Eliminar permanentemente una tarea
-const onPermanentDeleteTask = async (task: Task, item: Item) => {
+const onRestoreDraftTask = async (task: Task, item: Item) => {
+    const confirmed = await MyAlerts.confirmAsync(
+        "Restore Task",
+        `Are you sure you want to restore the task "<strong>${task.title}</strong>"?<br><br>This will make the task visible again in Draft item "${item.title}".`,
+        "info",
+    );
+
+    if (!confirmed) return;
+
+    await draftBoardStore.restoreTaskInDraftAsync(task.id, item.id);
+    notifyOk("Task restored", `The task "${task.title}" has been restored.`);
+};
+
+const onPermanentDeleteSprintTask = async (task: Task, item: Item) => {
     const confirmed = await MyAlerts.confirmAsync(
         "Permanently Delete Task",
         `Are you sure you want to permanently delete the task "<strong>${task.title}</strong>"?<br><br><strong>This action cannot be undone.</strong>`,
         "error",
     );
 
-    if (confirmed) {
-        await sprintStore.deleteTask(task.id, item.id);
-        notifyOk("Task deleted", `The task "${task.title}" has been permanently deleted.`);
-    }
+    if (!confirmed) return;
+
+    await sprintStore.deleteTask(task.id, item.id);
+    notifyOk("Task deleted", `The task "${task.title}" has been permanently deleted.`);
+};
+
+const onPermanentDeleteDraftTask = async (task: Task, item: Item) => {
+    const confirmed = await MyAlerts.confirmAsync(
+        "Permanently Delete Task",
+        `Are you sure you want to permanently delete the task "<strong>${task.title}</strong>" from Draft?<br><br><strong>This action cannot be undone.</strong>`,
+        "error",
+    );
+
+    if (!confirmed) return;
+
+    await draftBoardStore.deleteTaskInDraftAsync(task.id, item.id);
+    notifyOk("Task deleted", `The task "${task.title}" has been permanently deleted.`);
 };
 </script>
 

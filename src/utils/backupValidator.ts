@@ -1,4 +1,4 @@
-import type { Attachment, Comment, Sprint } from "@/types";
+import type { Attachment, Comment, DraftBoard, Item, Sprint } from "@/types";
 import JSZip from "jszip";
 
 export interface BackupValidationResult {
@@ -6,6 +6,7 @@ export interface BackupValidationResult {
     error?: string;
     stats?: {
         sprintsCount: number;
+        draftItemsCount: number;
         attachmentsCount: number;
         commentsCount: number;
         imagesCount: number;
@@ -87,8 +88,8 @@ export const validateBackupZip = async (file: File): Promise<BackupValidationRes
         let imagesCount = 0;
         const imageRegex = /<img[^>]+src=["']([^"']+)["']/gi;
 
-        for (const sprint of sprints) {
-            for (const item of sprint.items || []) {
+        const countImagesInItems = (items: Item[]) => {
+            for (const item of items) {
                 const itemImages = (item.detail || "").match(imageRegex) || [];
                 imagesCount += itemImages.length;
 
@@ -96,6 +97,25 @@ export const validateBackupZip = async (file: File): Promise<BackupValidationRes
                     const taskImages = (task.detail || "").match(imageRegex) || [];
                     imagesCount += taskImages.length;
                 }
+            }
+        };
+
+        for (const sprint of sprints) {
+            countImagesInItems(sprint.items || []);
+        }
+
+        const draftBoardFile = baseDataFolder.file("draft_board.json");
+        let draftItemsCount = 0;
+        if (draftBoardFile) {
+            try {
+                const draftContent = await draftBoardFile.async("text");
+                const draftBoard = JSON.parse(draftContent) as DraftBoard;
+                if (Array.isArray(draftBoard.items)) {
+                    draftItemsCount = draftBoard.items.length;
+                    countImagesInItems(draftBoard.items);
+                }
+            } catch {
+                // draft_board.json opcional en backups antiguos
             }
         }
 
@@ -117,6 +137,7 @@ export const validateBackupZip = async (file: File): Promise<BackupValidationRes
 
         const stats = {
             sprintsCount: sprints.length,
+            draftItemsCount,
             attachmentsCount: attachments.length,
             commentsCount: comments.length,
             imagesCount,
@@ -141,6 +162,7 @@ export const validateBackupZip = async (file: File): Promise<BackupValidationRes
  */
 export const extractBackupData = async (file: File): Promise<{
     sprints: Sprint[];
+    draftBoard: DraftBoard | null;
     comments: Comment[];
     attachments: Attachment[];
 }> => {
@@ -152,14 +174,25 @@ export const extractBackupData = async (file: File): Promise<{
         throw new Error("No se encuentra la carpeta base_de_datos");
     }
 
-    const [sprintsContent, commentsContent, attachmentsContent] = await Promise.all([
+    const [sprintsContent, draftBoardContent, commentsContent, attachmentsContent] = await Promise.all([
         baseDataFolder.file("sprints.json")?.async("text") || Promise.resolve("[]"),
+        baseDataFolder.file("draft_board.json")?.async("text") || Promise.resolve(""),
         baseDataFolder.file("comments.json")?.async("text") || Promise.resolve("[]"),
         baseDataFolder.file("attachments.json")?.async("text") || Promise.resolve("[]")
     ]);
 
+    let draftBoard: DraftBoard | null = null;
+    if (draftBoardContent) {
+        try {
+            draftBoard = JSON.parse(draftBoardContent) as DraftBoard;
+        } catch {
+            draftBoard = null;
+        }
+    }
+
     return {
         sprints: JSON.parse(sprintsContent),
+        draftBoard,
         comments: JSON.parse(commentsContent),
         attachments: JSON.parse(attachmentsContent)
     };

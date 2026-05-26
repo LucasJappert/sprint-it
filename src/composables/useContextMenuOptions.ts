@@ -4,6 +4,7 @@ import { SPRINT_TEAM_MEMBERS } from "@/constants/users";
 import MyAlerts from "@/plugins/my-alerts";
 import { addChange, getUserByUsername } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
+import { useDraftBoardStore, type BoardSource } from "@/stores/draftBoard";
 import { useSprintStore } from "@/stores/sprint";
 import type { ChangeHistory, Item, Task } from "@/types";
 
@@ -19,7 +20,46 @@ export interface ContextMenuOption {
 
 export const useContextMenuOptions = () => {
     const sprintStore = useSprintStore();
+    const draftBoardStore = useDraftBoardStore();
     const authStore = useAuthStore();
+
+    const buildSprintSubmenuOptions = (
+        sprintsList: typeof sprintStore.sprints,
+        highlightSprintId: string | null,
+        onSelect: (sprintId: string) => Promise<void>,
+    ) => {
+        const currentSprintIndex = highlightSprintId
+            ? sprintStore.sprints.findIndex((s) => s.id === highlightSprintId)
+            : -1;
+
+        return [...sprintsList]
+            .sort((a, b) => new Date(b.fechaDesde).getTime() - new Date(a.fechaDesde).getTime())
+            .map((sprint) => {
+                const sprintIndex = sprintStore.sprints.findIndex((s) => s.id === sprint.id);
+                let labelStyle = "";
+                let iconColor = "";
+
+                if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex + 1) {
+                    labelStyle = "color: #19821d;";
+                    iconColor = "#19821d";
+                } else if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex - 1) {
+                    labelStyle = "color: rgba(255, 235, 59, 0.41);";
+                    iconColor = "rgba(255, 235, 59, 0.41)";
+                }
+
+                const finalLabel = labelStyle ? `<span style="${labelStyle}">${sprint.titulo}</span>` : sprint.titulo;
+
+                return {
+                    key: `move-to-${sprint.id}`,
+                    label: finalLabel,
+                    icon: "mdi-swap-horizontal",
+                    iconStyle: iconColor ? { color: iconColor } : undefined,
+                    action: async () => {
+                        await onSelect(sprint.id);
+                    },
+                };
+            });
+    };
 
     const saveChange = async (associatedId: string, associatedType: "task" | "item", field: string, oldValue: string, newValue: string) => {
         const userId = authStore.user?.id;
@@ -80,30 +120,40 @@ export const useContextMenuOptions = () => {
         }));
     };
 
-    const createTaskContextMenuOptions = async (task: Task, item: Item, duplicateTaskFn: (taskId: string, itemId: string) => void, softDeleteTaskFn: (taskId: string, item: Item) => void) => {
+    const createTaskContextMenuOptions = async (
+        task: Task,
+        item: Item,
+        duplicateTaskFn: (taskId: string, itemId: string) => void,
+        softDeleteTaskFn: (taskId: string, item: Item) => void,
+        boardSource: BoardSource = "sprint",
+    ) => {
+        const isDraft = boardSource === "draft";
+
+        const updateTaskInBoard = async (updates: Partial<Task>) => {
+            if (isDraft) {
+                await draftBoardStore.updateTaskInDraftAsync(task.id, item.id, updates);
+                return;
+            }
+            await sprintStore.updateTask(task.id, item.id, updates);
+        };
+
         const updateTaskAssignedUser = async (userId: string) => {
             const oldValue = task.assignedUser || "";
-            await sprintStore.updateTask(task.id, item.id, { assignedUser: userId });
+            await updateTaskInBoard({ assignedUser: userId });
             await saveChange(task.id, "task", "assignedUser", oldValue, userId);
         };
 
         const updateTaskState = async (state: string) => {
             const oldValue = task.state;
-            const newState = state as any;
+            const newState = state as Task["state"];
 
-            // Si el estado anterior era "To Do" y el nuevo es diferente, asignar el usuario logueado
             const shouldAssignUser = oldValue === "To Do" && newState !== "To Do";
-            const updates: any = { state: newState };
-            if (shouldAssignUser) {
-                updates.assignedUser = authStore.user?.id || null;
-            }
+            const updates: Partial<Task> = { state: newState };
+            if (shouldAssignUser) updates.assignedUser = authStore.user?.id || null;
 
-            await sprintStore.updateTask(task.id, item.id, updates);
-
-            // Guardar cambios para el estado
+            await updateTaskInBoard(updates);
             await saveChange(task.id, "task", "state", oldValue, state);
 
-            // Si se asignó usuario, guardar ese cambio también
             if (shouldAssignUser) {
                 await saveChange(task.id, "task", "assignedUser", task.assignedUser || "", authStore.user?.id || "");
             }
@@ -111,7 +161,7 @@ export const useContextMenuOptions = () => {
 
         const updateTaskPriority = async (priority: string) => {
             const oldValue = task.priority;
-            await sprintStore.updateTask(task.id, item.id, { priority: priority as any });
+            await updateTaskInBoard({ priority: priority as Task["priority"] });
             await saveChange(task.id, "task", "priority", oldValue, priority);
         };
 
@@ -167,30 +217,42 @@ export const useContextMenuOptions = () => {
         ];
     };
 
-    const createItemContextMenuOptions = async (item: Item, openAddTaskDialogFn: (item: Item) => void, duplicateItemFn: (itemId: string, includeTasks: boolean) => void, softDeleteItemFn: (itemId: string) => void, sortTasksFn: (itemId: string) => void, copyItemWithTaskSplitFn: (itemId: string) => void) => {
+    const createItemContextMenuOptions = async (
+        item: Item,
+        openAddTaskDialogFn: (item: Item) => void,
+        duplicateItemFn: (itemId: string, includeTasks: boolean) => void,
+        softDeleteItemFn: (itemId: string) => void,
+        sortTasksFn: (itemId: string) => void,
+        copyItemWithTaskSplitFn: (itemId: string) => void,
+        boardSource: BoardSource = "sprint",
+    ) => {
+        const isDraft = boardSource === "draft";
+
+        const updateItemInBoard = async (updates: Partial<Item>) => {
+            if (isDraft) {
+                await draftBoardStore.updateItemInDraftAsync(item.id, updates);
+                return;
+            }
+            await sprintStore.updateItem(item.id, updates);
+        };
+
         const updateItemAssignedUser = async (userId: string) => {
             const oldValue = item.assignedUser || "";
-            await sprintStore.updateItem(item.id, { assignedUser: userId });
+            await updateItemInBoard({ assignedUser: userId });
             await saveChange(item.id, "item", "assignedUser", oldValue, userId);
         };
 
         const updateItemState = async (state: string) => {
             const oldValue = item.state;
-            const newState = state as any;
+            const newState = state as Item["state"];
 
-            // Si el estado anterior era "To Do" y el nuevo es diferente, asignar el usuario logueado
             const shouldAssignUser = oldValue === "To Do" && newState !== "To Do";
-            const updates: any = { state: newState };
-            if (shouldAssignUser) {
-                updates.assignedUser = authStore.user?.id || null;
-            }
+            const updates: Partial<Item> = { state: newState };
+            if (shouldAssignUser) updates.assignedUser = authStore.user?.id || null;
 
-            await sprintStore.updateItem(item.id, updates);
-
-            // Guardar cambios para el estado
+            await updateItemInBoard(updates);
             await saveChange(item.id, "item", "state", oldValue, state);
 
-            // Si se asignó usuario, guardar ese cambio también
             if (shouldAssignUser) {
                 await saveChange(item.id, "item", "assignedUser", item.assignedUser || "", authStore.user?.id || "");
             }
@@ -198,54 +260,20 @@ export const useContextMenuOptions = () => {
 
         const updateItemPriority = async (priority: string) => {
             const oldValue = item.priority;
-            await sprintStore.updateItem(item.id, { priority: priority as any });
+            await updateItemInBoard({ priority: priority as Item["priority"] });
             await saveChange(item.id, "item", "priority", oldValue, priority);
         };
 
-        const moveItemToSprint = async (targetSprintId: string) => {
-            await sprintStore.moveItemToSprint(item.id, targetSprintId);
-        };
-
         const createSprintOptions = () => {
-            // Obtener lista completa de sprints ordenada por fecha (igual que en el menú del header)
-            const allSprints = [...sprintStore.sprints]
-                .filter(sprint => sprint.id !== sprintStore.currentSprintId)
-                .sort((a, b) => new Date(b.fechaDesde).getTime() - new Date(a.fechaDesde).getTime());
+            const allSprints = isDraft
+                ? [...sprintStore.sprints]
+                : sprintStore.sprints.filter((sprint) => sprint.id !== sprintStore.currentSprintId);
 
-            // Encontrar el índice del sprint actual en la lista completa de sprints
-            const currentSprintIndex = sprintStore.sprints.findIndex(s => s.id === sprintStore.currentSprintId);
+            const onSelect = isDraft
+                ? (sprintId: string) => draftBoardStore.moveItemFromDraftToSprintAsync(item.id, sprintId)
+                : (sprintId: string) => sprintStore.moveItemToSprint(item.id, sprintId);
 
-            return allSprints.map(sprint => {
-                // Encontrar el índice de este sprint en la lista completa
-                const sprintIndex = sprintStore.sprints.findIndex(s => s.id === sprint.id);
-                let label = sprint.titulo;
-                let labelStyle = "";
-                let iconColor = "";
-
-                // Agregar color verde si es el sprint inmediatamente siguiente al actual
-                if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex + 1) {
-                    labelStyle = "color: #19821d;";
-                    iconColor = "#19821d";
-                }
-                // Agregar color amarillo transparentado si es el sprint inmediatamente anterior al actual
-                else if (currentSprintIndex !== -1 && sprintIndex === currentSprintIndex - 1) {
-                    labelStyle = "color: rgba(255, 235, 59, 0.41);";
-                    iconColor = "rgba(255, 235, 59, 0.41)";
-                }
-
-                // Envolver el label con estilo si corresponde
-                const finalLabel = labelStyle ? `<span style="${labelStyle}">${label}</span>` : label;
-
-                return {
-                    key: `move-to-${sprint.id}`,
-                    label: finalLabel,
-                    icon: "mdi-swap-horizontal",
-                    iconStyle: iconColor ? { color: iconColor } : undefined,
-                    action: async () => {
-                        await moveItemToSprint(sprint.id);
-                    },
-                };
-            });
+            return buildSprintSubmenuOptions(allSprints, sprintStore.currentSprintId, onSelect);
         };
 
         // Verificar condición: al menos 1 task Done y al menos 1 task en otro estado, y al menos 2 tasks totales
@@ -359,6 +387,20 @@ export const useContextMenuOptions = () => {
                 icon: "mdi-arrow-right-bold",
                 submenu: createSprintOptions(),
             } as any,
+        );
+
+        if (!isDraft) {
+            menuOptions.push({
+                key: "move-to-draft",
+                label: "Move to draft",
+                icon: "mdi-inbox-arrow-down",
+                action: async () => {
+                    await draftBoardStore.moveItemToDraftAsync(item.id);
+                },
+            } as ContextMenuOption);
+        }
+
+        menuOptions.push(
             {
                 key: "delete",
                 label: "Delete",
@@ -374,7 +416,7 @@ export const useContextMenuOptions = () => {
                         softDeleteItemFn(item.id);
                     }
                 },
-            } as any
+            } as any,
         );
 
         return menuOptions;
