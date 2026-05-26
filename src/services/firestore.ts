@@ -1,5 +1,5 @@
 import { STATE_VALUES } from "@/constants/states";
-import type { Attachment, ChangeHistory, Comment, Draft, Note, Sprint, User } from "@/types";
+import type { Attachment, ChangeHistory, Comment, Draft, DraftBoard, Note, Sprint, User } from "@/types";
 import {
     addDoc,
     arrayUnion,
@@ -28,6 +28,9 @@ const backupsCollection = collection(db, "backups");
 const attachmentsCollection = collection(db, "attachments");
 const notesCollection = collection(db, "notes");
 const draftsCollection = collection(db, "drafts");
+const draftBoardCollection = collection(db, "draftBoard");
+
+export const DRAFT_BOARD_DOC_ID = "main";
 
 /**
  * Get user display name from cache or Firestore (async, private)
@@ -295,13 +298,79 @@ export const getChangesByAssociatedId = async (associatedId: string): Promise<Ch
     return changes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 };
 
+const processDraftBoardItems = (board: DraftBoard): DraftBoard => {
+    const processed = { ...board };
+    if (!Array.isArray(processed.items)) {
+        processed.items = [];
+        return processed;
+    }
+    processed.items = processed.items.map((item) => ({
+        ...item,
+        createdAt: convertFirestoreTimestamp(item.createdAt),
+        deletedAt: item.deletedAt ? convertFirestoreTimestamp(item.deletedAt) : null,
+        createdBy: item.createdBy || "",
+        tasks: Array.isArray(item.tasks)
+            ? item.tasks.map((task) => ({
+                ...task,
+                createdAt: convertFirestoreTimestamp(task.createdAt),
+                deletedAt: task.deletedAt ? convertFirestoreTimestamp(task.deletedAt) : null,
+                createdBy: task.createdBy || "",
+            }))
+            : [],
+    }));
+    if (board.updatedAt) {
+        processed.updatedAt = convertFirestoreTimestamp(board.updatedAt);
+    }
+    return processed;
+};
+
+export const getDraftBoard = async (): Promise<DraftBoard> => {
+    const docRef = doc(draftBoardCollection, DRAFT_BOARD_DOC_ID);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+        return { id: DRAFT_BOARD_DOC_ID, items: [] };
+    }
+    const data = docSnap.data();
+    return processDraftBoardItems({
+        id: DRAFT_BOARD_DOC_ID,
+        items: Array.isArray(data.items) ? data.items : [],
+        updatedAt: data.updatedAt,
+    } as DraftBoard);
+};
+
+export const saveDraftBoard = async (board: DraftBoard) => {
+    const docRef = doc(draftBoardCollection, DRAFT_BOARD_DOC_ID);
+    await setDoc(docRef, {
+        ...board,
+        id: DRAFT_BOARD_DOC_ID,
+        updatedAt: new Date(),
+    } as DocumentData);
+};
+
+export const subscribeToDraftBoard = (callback: (board: DraftBoard) => void) => {
+    const docRef = doc(draftBoardCollection, DRAFT_BOARD_DOC_ID);
+    return onSnapshot(docRef, (snapshot) => {
+        if (!snapshot.exists()) {
+            callback({ id: DRAFT_BOARD_DOC_ID, items: [] });
+            return;
+        }
+        const data = snapshot.data();
+        callback(processDraftBoardItems({
+            id: DRAFT_BOARD_DOC_ID,
+            items: Array.isArray(data.items) ? data.items : [],
+            updatedAt: data.updatedAt,
+        } as DraftBoard));
+    });
+};
+
 export const exportAllData = async () => {
-    const [sprintsSnapshot, usersSnapshot, commentsSnapshot, changesSnapshot, attachmentsSnapshot] = await Promise.all([
+    const [sprintsSnapshot, usersSnapshot, commentsSnapshot, changesSnapshot, attachmentsSnapshot, draftBoard] = await Promise.all([
         getDocs(sprintsCollection),
         getDocs(usersCollection),
         getDocs(commentsCollection),
         getDocs(changesCollection),
         getDocs(attachmentsCollection),
+        getDraftBoard(),
     ]);
 
     const sprints = sprintsSnapshot.docs.map((doc) => ({
@@ -341,6 +410,7 @@ export const exportAllData = async () => {
         comments,
         changes,
         attachments,
+        draftBoard,
         exportedAt: new Date().toISOString(),
     };
 };

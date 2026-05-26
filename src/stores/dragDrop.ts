@@ -1,3 +1,4 @@
+import type { BoardSource } from "@/stores/draftBoard";
 import type { Item, Task } from "@/types";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
@@ -5,6 +6,7 @@ import { computed, ref } from "vue";
 export const useDragDropStore = defineStore("dragDrop", () => {
     // Estado del drag
     const dragItem = ref<Item | null>(null);
+    const dragBoardSource = ref<BoardSource>("sprint");
     const dragTask = ref<Task | null>(null);
     const dragTaskParentItem = ref<Item | null>(null);
 
@@ -23,8 +25,9 @@ export const useDragDropStore = defineStore("dragDrop", () => {
     const isDragging = computed(() => dragItem.value !== null);
 
     // Función para iniciar drag
-    const startDragAsync = (item: Item, startX: number, startY: number) => {
+    const startDragAsync = (item: Item, startX: number, startY: number, boardSource: BoardSource = "sprint") => {
         dragItem.value = item;
+        dragBoardSource.value = boardSource;
         dragStartPosition.value = { x: startX, y: startY };
     };
 
@@ -38,6 +41,7 @@ export const useDragDropStore = defineStore("dragDrop", () => {
     // Función para limpiar estado del drag
     const clearDragStateAsync = () => {
         dragItem.value = null;
+        dragBoardSource.value = "sprint";
         dragTask.value = null;
         dragTaskParentItem.value = null;
         dragStartPosition.value = null;
@@ -191,6 +195,7 @@ export const useDragDropStore = defineStore("dragDrop", () => {
     return {
         // Estado
         dragItem,
+        dragBoardSource,
         dragTask,
         dragTaskParentItem,
         ghostElement,

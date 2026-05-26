@@ -1,11 +1,13 @@
 import { exportAllData, getAllAttachments } from "@/services/firestore";
-import type { Comment, Item, Sprint, Task } from "@/types";
+import type { Comment, DraftBoard, Item, Sprint, Task } from "@/types";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
 export interface ExportStats {
     sprintsCount: number;
     itemsCount: number;
+    draftItemsCount: number;
+    draftTasksCount: number;
     tasksCount: number;
     usersCount: number;
     commentsCount: number;
@@ -61,29 +63,37 @@ const isValidImageUrl = (url: string): boolean => {
 /**
  * Obtiene todas las URLs de imágenes de los sprints y comentarios
  */
-const extractAllImageUrls = (sprints: Sprint[], comments: Comment[]): { itemImages: Map<string, string[]>, taskImages: Map<string, string[]>, commentImages: Map<string, string[]>; } => {
+const collectItemImageUrls = (items: Item[], itemImages: Map<string, string[]>, taskImages: Map<string, string[]>) => {
+    for (const item of items) {
+        if (item.deletedAt) continue;
+
+        const itemImgUrls = extractImageUrls(item.detail || "");
+        if (itemImgUrls.length > 0) itemImages.set(item.id, itemImgUrls);
+
+        for (const task of item.tasks || []) {
+            if (task.deletedAt) continue;
+
+            const taskImgUrls = extractImageUrls(task.detail || "");
+            if (taskImgUrls.length > 0) taskImages.set(task.id, taskImgUrls);
+        }
+    }
+};
+
+const extractAllImageUrls = (
+    sprints: Sprint[],
+    comments: Comment[],
+    draftBoard: DraftBoard | null,
+): { itemImages: Map<string, string[]>, taskImages: Map<string, string[]>, commentImages: Map<string, string[]>; } => {
     const itemImages = new Map<string, string[]>();
     const taskImages = new Map<string, string[]>();
     const commentImages = new Map<string, string[]>();
 
     for (const sprint of sprints) {
-        for (const item of sprint.items || []) {
-            if (item.deletedAt) continue;
+        collectItemImageUrls(sprint.items || [], itemImages, taskImages);
+    }
 
-            const itemImgUrls = extractImageUrls(item.detail || "");
-            if (itemImgUrls.length > 0) {
-                itemImages.set(item.id, itemImgUrls);
-            }
-
-            for (const task of item.tasks || []) {
-                if (task.deletedAt) continue;
-
-                const taskImgUrls = extractImageUrls(task.detail || "");
-                if (taskImgUrls.length > 0) {
-                    taskImages.set(task.id, taskImgUrls);
-                }
-            }
-        }
+    if (draftBoard?.items?.length) {
+        collectItemImageUrls(draftBoard.items, itemImages, taskImages);
     }
 
     // Extraer imágenes de comentarios
@@ -105,21 +115,37 @@ export const getExportStats = async (): Promise<ExportStats> => {
     const attachments = await getAllAttachments();
 
     let itemsCount = 0;
+    let draftItemsCount = 0;
+    let draftTasksCount = 0;
     let tasksCount = 0;
     let imagesInDescriptionsCount = 0;
     let imagesInCommentsCount = 0;
 
-    for (const sprint of data.sprints as Sprint[]) {
-        itemsCount += sprint.items?.filter((i: Item) => !i.deletedAt).length || 0;
-        for (const item of sprint.items || []) {
+    const countBoardItems = (boardItems: Item[], countDraft: boolean) => {
+        for (const item of boardItems) {
             if (item.deletedAt) continue;
-            tasksCount += item.tasks?.filter((t: Task) => !t.deletedAt).length || 0;
+
+            if (countDraft) draftItemsCount += 1;
+            if (!countDraft) itemsCount += 1;
+
             imagesInDescriptionsCount += extractImageUrls(item.detail || "").length;
             for (const task of item.tasks || []) {
                 if (task.deletedAt) continue;
+
+                if (countDraft) draftTasksCount += 1;
+                if (!countDraft) tasksCount += 1;
+
                 imagesInDescriptionsCount += extractImageUrls(task.detail || "").length;
             }
         }
+    };
+
+    for (const sprint of data.sprints as Sprint[]) {
+        countBoardItems(sprint.items || [], false);
+    }
+
+    if (data.draftBoard?.items) {
+        countBoardItems(data.draftBoard.items, true);
     }
 
     // Contar imágenes en comentarios
@@ -140,6 +166,8 @@ export const getExportStats = async (): Promise<ExportStats> => {
     return {
         sprintsCount: data.sprints.length,
         itemsCount,
+        draftItemsCount,
+        draftTasksCount,
         tasksCount,
         usersCount: data.users.length,
         commentsCount: data.comments.length,
@@ -254,6 +282,7 @@ export const generateFullBackup = async (
 
         if (baseDataFolder) {
             baseDataFolder.file("sprints.json", JSON.stringify(data.sprints, null, 2));
+            baseDataFolder.file("draft_board.json", JSON.stringify(data.draftBoard ?? { id: "main", items: [] }, null, 2));
             baseDataFolder.file("users.json", JSON.stringify(data.users, null, 2));
             baseDataFolder.file("comments.json", JSON.stringify(data.comments, null, 2));
             baseDataFolder.file("changes.json", JSON.stringify(data.changes, null, 2));
@@ -298,7 +327,11 @@ export const generateFullBackup = async (
 
         updateProgress({ stage: "images", progress: 50, currentItem: "Extrayendo imágenes de descripciones y comentarios..." });
 
-        const { itemImages, taskImages, commentImages } = extractAllImageUrls(data.sprints as Sprint[], data.comments as Comment[]);
+        const { itemImages, taskImages, commentImages } = extractAllImageUrls(
+            data.sprints as Sprint[],
+            data.comments as Comment[],
+            data.draftBoard as DraftBoard | null,
+        );
         const allImageUrls: { url: string; parentId: string; type: "item" | "task" | "comment"; }[] = [];
 
         itemImages.forEach((urls, itemId) => {

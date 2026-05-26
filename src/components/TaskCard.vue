@@ -77,17 +77,24 @@ import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
 import { useDragDropStore } from "@/stores/dragDrop";
+import { useDraftBoardStore, type BoardSource } from "@/stores/draftBoard";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item, Task } from "@/types";
 import { computed, onMounted, ref, watch } from "vue";
 import ContextMenu from "./ContextMenu.vue";
 import TaskDialog from "./TaskDialog.vue";
 
-const props = defineProps<{
-    task: Task;
-    item: Item;
-    showDialog?: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        task: Task;
+        item: Item;
+        showDialog?: boolean;
+        boardSource?: BoardSource;
+    }>(),
+    {
+        boardSource: "sprint",
+    },
+);
 
 // Composable para tiempo en InProgress
 const { elapsedTime, isInProgress, isLoading } = useInProgressTime(props.task.id, "task", () => props.task.state);
@@ -98,6 +105,8 @@ const emit = defineEmits<{
 }>();
 
 const sprintStore = useSprintStore();
+const draftBoardStore = useDraftBoardStore();
+const boardSource = computed(() => props.boardSource);
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
 
@@ -173,7 +182,15 @@ const { createTaskContextMenuOptions } = useContextMenuOptions();
 const contextMenuOptions = ref<ContextMenuOption[]>([]);
 
 const loadContextMenuOptions = async () => {
-    contextMenuOptions.value = await createTaskContextMenuOptions(props.task, props.item, sprintStore.duplicateTask, sprintStore.softDeleteTask);
+    contextMenuOptions.value = await createTaskContextMenuOptions(
+        props.task,
+        props.item,
+        boardSource.value === "draft" ? draftBoardStore.duplicateTaskInDraftAsync : sprintStore.duplicateTask,
+        boardSource.value === "draft"
+            ? (taskId: string, item: Item) => draftBoardStore.softDeleteTaskInDraftAsync(taskId, item)
+            : sprintStore.softDeleteTask,
+        boardSource.value,
+    );
 };
 
 watch(
@@ -184,7 +201,7 @@ watch(
 );
 
 const onEditTask = (task: Task) => {
-    openEditTaskDialog(task, props.item);
+    openEditTaskDialog(task, props.item, false, boardSource.value);
 };
 
 const onCloseTaskDialog = () => {

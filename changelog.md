@@ -4,6 +4,23 @@ Todos los cambios del proyecto se registran aquí por versión y fecha.
 
 ---
 
+## v1.1.43 - 2026-05-26
+
+### Nuevas funciones
+
+- **Draft Board**: Sección global colapsable debajo de los items del sprint para agrupar items en vista antes de asignarlos a un sprint.
+    - Compartida por todo el equipo (Firestore `draftBoard/main`)
+    - Reordenamiento por drag and drop dentro del Draft
+    - Menú contextual: mover items entre sprint y Draft; mover desde Draft a cualquier sprint
+    - **Deleted Items** unificada: incluye eliminados del sprint actual y del Draft
+- **Backups**: El export ZIP/JSON incluye `draft_board.json` con los items del Draft
+
+### Seguridad
+
+- **Dependencias**: Corregidas 8 vulnerabilidades moderadas en `uuid` (versiones anteriores a 11.1.1) en la cadena de `firebase-admin` mediante `overrides` en `package.json`, forzando `uuid@^11.1.0`. `npm audit` queda en 0 hallazgos.
+
+---
+
 ## v1.1.42 - 2026-04-22
 
 ### Cambios

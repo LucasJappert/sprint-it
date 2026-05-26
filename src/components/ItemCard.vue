@@ -62,7 +62,7 @@
     </div>
 
     <div v-if="showTasks || props.isExpanded" class="tasks-container">
-        <TaskCard v-for="task in activeTasks" :key="task.id" :task="task" :item="item" :show-dialog="false" />
+        <TaskCard v-for="task in activeTasks" :key="task.id" :task="task" :item="item" :show-dialog="false" :board-source="boardSource" />
     </div>
 
     <ItemDialog
@@ -87,6 +87,7 @@ import { PRIORITY_ICONS, PRIORITY_VALUES } from "@/constants/priorities";
 import { STATE_OPTIONS, STATE_VALUES } from "@/constants/states";
 import { getUser, saveSprint } from "@/services/firestore";
 import { useAuthStore } from "@/stores/auth";
+import { useDraftBoardStore, type BoardSource } from "@/stores/draftBoard";
 import { useDragDropStore } from "@/stores/dragDrop";
 import { useSprintStore } from "@/stores/sprint";
 import type { Item } from "@/types";
@@ -96,13 +97,19 @@ import ContextMenu from "./ContextMenu.vue";
 import ItemDialog from "./ItemDialog.vue";
 import TaskCard from "./TaskCard.vue";
 
-const props = defineProps<{
-    item: Item;
-    showBorder: boolean;
-    borderPosition?: "above" | "below" | null;
-    isContextMenuOpen?: boolean;
-    isExpanded?: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        item: Item;
+        showBorder: boolean;
+        borderPosition?: "above" | "below" | null;
+        isContextMenuOpen?: boolean;
+        isExpanded?: boolean;
+        boardSource?: BoardSource;
+    }>(),
+    {
+        boardSource: "sprint",
+    },
+);
 
 // Composable para tiempo en InProgress
 const { elapsedTime, isInProgress, isLoading } = useInProgressTime(props.item.id, "item", () => props.item.state);
@@ -118,9 +125,20 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const sprintStore = useSprintStore();
+const draftBoardStore = useDraftBoardStore();
 const authStore = useAuthStore();
 const dragDropStore = useDragDropStore();
 const { openAddTaskDialog } = useTaskManagement();
+
+const boardSource = computed(() => props.boardSource);
+
+const persistItemBoardAsync = async () => {
+    if (boardSource.value === "draft") {
+        await draftBoardStore.persistBoardAsync();
+        return;
+    }
+    if (sprintStore.currentSprint) await saveSprint(sprintStore.currentSprint);
+};
 const { setItemUrl, clearQueryParams } = useUrlManagement(router);
 const showTasks = ref(false);
 
@@ -223,11 +241,12 @@ const contextMenuOptions = ref<ContextMenuOption[]>([]);
 const loadContextMenuOptions = async () => {
     contextMenuOptions.value = await createItemContextMenuOptions(
         props.item,
-        openAddTaskDialog,
-        sprintStore.duplicateItem,
-        sprintStore.softDeleteItem,
-        sprintStore.sortTasksByState,
-        sprintStore.copyItemWithTaskSplit,
+        (item) => openAddTaskDialog(item, boardSource.value),
+        boardSource.value === "draft" ? draftBoardStore.duplicateItemInDraftAsync : sprintStore.duplicateItem,
+        boardSource.value === "draft" ? draftBoardStore.softDeleteItemInDraftAsync : sprintStore.softDeleteItem,
+        boardSource.value === "draft" ? draftBoardStore.sortTasksByStateInDraftAsync : sprintStore.sortTasksByState,
+        boardSource.value === "draft" ? draftBoardStore.copyItemWithTaskSplitInDraftAsync : sprintStore.copyItemWithTaskSplit,
+        boardSource.value,
     );
 };
 
@@ -250,7 +269,7 @@ const getStateColor = (state: string) => {
 // Funciones de simulación removidas completamente
 
 const onSaveEditItem = async (item: Item) => {
-    await sprintStore.updateItem(props.item.id, {
+    const payload = {
         title: item.title,
         detail: item.detail,
         priority: item.priority,
@@ -259,8 +278,14 @@ const onSaveEditItem = async (item: Item) => {
         actualEffort: item.actualEffort,
         assignedUser: item.assignedUser,
         projectName: item.projectName,
-    });
-    // No cerrar el diálogo para que persista visible después de guardar
+    };
+
+    if (boardSource.value === "draft") {
+        await draftBoardStore.updateItemInDraftAsync(props.item.id, payload);
+        return;
+    }
+
+    await sprintStore.updateItem(props.item.id, payload);
 };
 
 const onCloseItemDialog = () => {
@@ -294,7 +319,7 @@ const onDragStart = (e: DragEvent) => {
     } catch (err) {}
 
     // Usar el store para manejar el drag con posición inicial
-    dragDropStore.startDragAsync(props.item, e.clientX, e.clientY);
+    dragDropStore.startDragAsync(props.item, e.clientX, e.clientY, boardSource.value);
 
     // Crear ghost usando el store
     requestAnimationFrame(() => {
@@ -355,7 +380,7 @@ const reorderTasksInSameItem = (draggedTask: any, insertIndex: number) => {
     });
 
     props.item.tasks = newList;
-    if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+    persistItemBoardAsync();
 };
 
 const moveTaskToDifferentItem = (draggedTask: any, sourceItem: any, insertIndex: number) => {
@@ -386,12 +411,25 @@ const moveTaskToDifferentItem = (draggedTask: any, sourceItem: any, insertIndex:
     }
 
     emit("taskReceived", props.item.id);
-    if (sprintStore.currentSprint) saveSprint(sprintStore.currentSprint);
+    persistItemBoardAsync();
+};
+
+const isItemInDraftBoard = (itemId: string): boolean => {
+    return draftBoardStore.draftBoard?.items.some((i) => i.id === itemId) ?? false;
 };
 
 const handleTaskDrop = (e: DragEvent) => {
     const draggedTask = dragDropStore.dragTask;
     const sourceItem = dragDropStore.dragTaskParentItem;
+
+    if (!sourceItem) return;
+
+    const sourceInDraft = isItemInDraftBoard(sourceItem.id);
+    const targetInDraft = boardSource.value === "draft";
+    if (sourceInDraft !== targetInDraft) {
+        dragDropStore.clearDragStateAsync();
+        return;
+    }
 
     const insertIndex = calculateTaskInsertIndex(e.clientY, props.item.tasks);
 
@@ -404,11 +442,26 @@ const handleTaskDrop = (e: DragEvent) => {
     dragDropStore.clearDragStateAsync();
 };
 
-const handleItemDrop = (e: DragEvent) => {
+const handleItemDrop = async (e: DragEvent) => {
     if (!dragDropStore.dragItem || dragDropStore.dragItem.id === props.item.id) return;
+    if (dragDropStore.dragBoardSource !== boardSource.value) return;
 
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const isInUpperHalf = e.clientY < rect.top + rect.height / 2;
+
+    if (boardSource.value === "draft") {
+        const draftItems = draftBoardStore.draftItems;
+        const currentIndex = draftItems.findIndex((item) => item.id === dragDropStore.dragItem!.id);
+        const targetIndex = draftItems.findIndex((item) => item.id === props.item.id);
+        if (currentIndex === -1 || targetIndex === -1) return;
+
+        let insertIndex = isInUpperHalf ? targetIndex : targetIndex + 1;
+        if (currentIndex < insertIndex) insertIndex--;
+
+        await draftBoardStore.reorderDraftItemAsync(dragDropStore.dragItem.id, insertIndex);
+        dragDropStore.clearDragStateAsync();
+        return;
+    }
 
     const currentSprint = sprintStore.currentSprint;
     if (!currentSprint) return;

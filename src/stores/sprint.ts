@@ -1052,6 +1052,21 @@ export const useSprintStore = defineStore("sprint", () => {
         }
     };
 
+    const saveCurrentSprintAsync = async () => {
+        if (!currentSprint.value) return;
+        if (await validateSprintItemsBeforeSave(currentSprint.value)) {
+            await saveSprint(currentSprint.value);
+        }
+    };
+
+    const saveSprintByIdAsync = async (sprintId: string) => {
+        const sprint = sprints.value.find((s) => s.id === sprintId);
+        if (!sprint) return;
+        if (await validateSprintItemsBeforeSave(sprint)) {
+            await saveSprint(sprint);
+        }
+    };
+
     return {
         sprints,
         currentSprintId,
@@ -1080,5 +1095,9 @@ export const useSprintStore = defineStore("sprint", () => {
         copyItemWithTaskSplit,
         checkForDuplicateItems,
         removeDuplicateItems,
+        validateSprintItemsBeforeSave,
+        saveCurrentSprintAsync,
+        saveSprintByIdAsync,
+        autoUpdateParentItem,
     };
 });

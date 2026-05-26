@@ -65,6 +65,12 @@ export interface Sprint {
     items: Item[];
 }
 
+export interface DraftBoard {
+    id: string;
+    items: Item[];
+    updatedAt?: Date;
+}
+
 export interface ChangeHistory {
     id: string;
     associatedId: string; // id of the task or item

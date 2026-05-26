@@ -47,6 +47,8 @@
                 />
             </div>
 
+            <DraftBoardSection />
+
             <!-- Working Days Toggles -->
             <div class="working-days-section mt-4" v-if="sprintStore.currentSprint">
                 <WorkingDaysToggles :workingDays="currentSprintWorkingDays" @update="onWorkingDaysUpdate" @toggle="onWorkingDayToggle" />
@@ -88,6 +90,7 @@
 </template>
 
 <script setup lang="ts">
+import DraftBoardSection from "@/components/DraftBoardSection.vue";
 import Header from "@/components/Header.vue";
 import ItemCard from "@/components/ItemCard.vue";
 import ItemDialog from "@/components/ItemDialog.vue";
@@ -308,14 +311,15 @@ const onSaveEditItem = async (item: Item) => {
 };
 
 const onItemDragOver = (e: DragEvent) => {
-    // Actualizar posición del ghost siguiendo al mouse
-    dragDropStore.updateGhostPositionWithMouseAsync(e.clientX, e.clientY);
+    if (dragDropStore.dragBoardSource !== "sprint") return;
 
-    // Actualizar bordes basado en posición del mouse (solo si superó el umbral)
+    dragDropStore.updateGhostPositionWithMouseAsync(e.clientX, e.clientY);
     dragDropStore.updateBorderHighlightsAsync(e.clientX, e.clientY, items.value);
 };
 
 const onBoardDrop = async (e: DragEvent) => {
+    if (dragDropStore.dragBoardSource !== "sprint") return;
+
     if (dragDropStore.dragItem) {
         // Calcular la posición de inserción basada en donde se soltó el mouse
         const insertIndex = calculateInsertIndex(e.clientY, items.value);
