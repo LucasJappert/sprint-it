@@ -46,7 +46,7 @@ Migrar Sprint-IT de **Firestore + SPA standalone** a:
 | **D6 — Ruta front** | **`/sprint-it`** (`pages/sprint-it/index.vue`) |
 | **D7 — Comentarios realtime** | Tras `POST` OK → WS **`sprint-it-invalidate`** (`scope: comments`) → peer hace **refetch** `GET /comments` (sin `apply`/`rollback` en MVP) |
 | **D8 — Conflicto RowVersion** | **`UPDATE … WHERE RowVersion = @rv`** atómico; `@@ROWCOUNT = 0` → **409** + `rollback` solo al originador (sin `apply` al peer) |
-| **D9 — Supabase adjuntos** | **Upload directo** desde browser en MVP + **RLS** estricta en bucket; metadata en SQL vía API; proxy in-api en backlog (P6) |
+| **D9 — Supabase adjuntos** | **Igual que hoy en sprint-it:** anon key en front, bucket `sprint-it`, `getPublicUrl`; solo agregar `POST /attachments` en in-api para metadata SQL (sin RLS nueva ni Supabase Auth en MVP) |
 | **D10 — `mutationId` idempotencia** | Cache servidor TTL **60s**; mismo `mutationId` dentro del TTL → misma respuesta sin doble `apply`; **fuera del TTL** → tratar como mutación nueva (el cliente debe generar nuevo `mutationId`) |
 
 ### 1.1 Alcance MVP vs Post-MVP
@@ -631,15 +631,13 @@ No agregar `VITE_CORE_API_KEY` al front.
 | Allowlist | Misma lista en **env servidor**; front solo oculta menú (la seguridad real es API + WS filter) |
 | No confiar en `patch` del cliente para broadcast | Entidad WS armada en servidor (§4.2) |
 
-### 7b Supabase Storage — RLS (D9)
+### 7b Supabase Storage (D9 — MVP)
 
-Bucket **`sprint-it`** privado. Path: `sprint-it/<supabase_auth_uid>/<uuid>.<ext>`.
+Reutilizar configuración **existente** del bucket `sprint-it` (sin cambios en dashboard Supabase).
 
-> **Nota:** `supabase_auth_uid` ≠ `In.Users.ID`. Validar que los usuarios del equipo tengan cuenta en Supabase Auth o planificar P6 (proxy).
+Flujo: `supabaseUploader` (port de `sprint-it/src/utils/supabaseUploader.ts`) → `POST /attachments` en in-api.
 
-Políticas orientativas (SQL Editor Supabase): INSERT/DELETE solo en carpeta propia (`auth.uid()`); SELECT para `authenticated` en el bucket.
-
-Flujo: browser sube → `POST /attachments` con metadata + JWT In.
+Post-MVP **P6:** RLS estricta o proxy con service key en servidor.
 
 ---
 
@@ -667,6 +665,7 @@ Flujo: browser sube → `POST /attachments` con metadata + JWT In.
 
 | Wave | Entregable | Paralelo | Tiempo realista |
 |------|------------|----------|-----------------|
+| **-1** | Upgrade Vuetify In (§15.1) | — | 4–8 h |
 | **0** | `migrations_for_SprintIt.sql` completo | — | 3 h |
 | **1** | Backend core + CRUD + ETL | A ‖ B ‖ C | 1 día |
 | **2** | WebSocket + IA | D ‖ E | 0,5–1 día |
@@ -698,10 +697,16 @@ Flujo: browser sube → `POST /attachments` con metadata + JWT In.
 
 > Marcar con `[x]` a medida que se complete. Orden recomendado = orden de la lista.
 
+### Wave -1 — Vuetify In (pre-requisito UI)
+
+- [ ] **W-1.1** Upgrade `vuetify` + `vite-plugin-vuetify` a versiones estables compatibles con Vue 3.2 / Vite 3
+- [ ] **W-1.2** Smoke test: login, 2–3 pantallas, `pnpm build`
+- [ ] **W-1.3** Merge a `main` antes de Wave 4 sprint-it
+
 ### Fase 0 — Diseño
 
 - [x] **S0.1** Revisión spec con equipo; decisiones D1–D6 cerradas (§1)
-- [ ] **S0.2** Confirmar allowlist inicial (`ljappert`, `srotschy`)
+- [x] **S0.2** Allowlist confirmada: `ljappert`, `srotschy`
 - [ ] **S0.3** Privar repo `sprint-it` en GitHub (ops)
 
 ### Fase 1 — Backend SQL + sprints
@@ -859,14 +864,52 @@ Merge: **A** primero → **B** y **C** desde branch actualizado.
 
 ## 15. Pendiente de definición (equipo)
 
-| # | Tema | Opciones | Impacto si no se define |
-|---|------|----------|-------------------------|
-| 1 | **Vuetify** | Port contra beta.11 vs upgrade In primero | Fase UI (Wave 4) |
-| 2 | **Supabase Auth** | ¿Usuarios In tienen UID en Supabase para RLS D9? | Adjuntos |
-| 3 | **Allowlist prod** | Confirmar `ljappert`, `srotschy` (S0.2) | Deploy |
-| 4 | **Aprobación spec** | Go implementación | — |
+| # | Estado | Tema |
+|---|--------|------|
+| 1 | **Cerrado** | **Wave -1 obligatorio:** upgrade Vuetify en In antes de Wave 4 sprint-it (§15.1) |
+| 2 | **Cerrado** | **Supabase MVP:** replicar flujo actual (anon + bucket público); sin config nueva en dashboard (§15.3) |
+| 3 | **Cerrado** | Allowlist: `ljappert`, `srotschy` |
+| 4 | **Pendiente** | Aprobación final del spec para arrancar agentes |
 
-**Ya cerrado en esta revisión:** Draft board (`DraftBoardItems`), RowVersion atómico, MVP sin notas/backups/export/import/storage cleanup, ETL usuarios sin match → null + warning, comentarios invalidate+refetch.
+**Ya cerrado:** Draft board, RowVersion atómico, alcance MVP §1.1, ETL usuarios sin match, comentarios invalidate+refetch, D10 mutationId.
+
+### 15.1 Pre-requisito sugerido: salir de Vuetify beta (Materio)
+
+Hoy In usa `vuetify@3.0.0-beta.11` + `vite-plugin-vuetify@1.0.0-alpha.17` (template Materio viejo).
+
+**Recomendación:** hacer un **Wave -1** (rama aparte) **antes** del port de sprint-it:
+
+- Subir a Vuetify **3.x estable** (y plugin Vite compatible).
+- Smoke test: login, 2–3 pantallas críticas de In, build prod.
+- Luego port sprint-it contra API estable (menos sorpresas que §14 beta).
+
+**Esfuerzo realista:** no es “5 minutos”; es **~1–2 días** (regresión visual en pantallas que usan componentes viejos). Con agentes puede ser **~4–8 h** si el scope del upgrade está acotado y hay QA manual corta.
+
+**Riesgo si no se hace:** el port sprint-it se pelea con APIs beta + el resto de In sigue con deuda.
+
+**Decisión equipo:** **Wave -1 obligatorio** antes del port UI sprint-it (Wave 4).
+
+### 15.3 Supabase adjuntos — opción MVP (menos lío)
+
+**Recomendación adoptada:** copiar el flujo de `sprint-it` tal cual:
+
+1. Front sube con `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (mismas vars en In).
+2. Bucket `sprint-it`, path `detalles/<uuid>_<filename>`, URL pública (`getPublicUrl`) — como `supabaseUploader.ts` hoy.
+3. Luego `POST /api/v1/sprint-it/attachments` con metadata + JWT In.
+
+**No requiere** que configures RLS ni Supabase Auth para el MVP. El bucket sigue como está en producción hoy.
+
+**Seguridad aceptada (mismo nivel que ahora):** solo usuarios de la empresa entran a In; URLs con UUID no adivinables. Endurecer (RLS o proxy in-api) queda en **P6** si más adelante lo piden.
+
+### 15.2 Glosario — ¿qué es RLS? (referencia; no bloqueante MVP)
+
+**RLS** = *Row Level Security* (en Supabase Storage, reglas sobre **archivos**).
+
+Son reglas del tipo: “solo podés subir a **tu** carpeta”, “solo usuarios logueados pueden leer”. Similar a las reglas de Firestore, pero para el bucket de imágenes/adjuntos.
+
+Sin RLS bien configurada, quien tenga la `anon key` del front (visible en el bundle) podría subir o listar archivos si el bucket está abierto.
+
+Por eso el spec pide bucket **privado** + políticas. Eso exige que quien sube esté **logueado en Supabase Auth** (UID distinto del usuario de Agroideas-In en SQL).
 
 ---
 
@@ -882,6 +925,7 @@ Merge: **A** primero → **B** y **C** desde branch actualizado.
 | 2026-05-28 | Cerradas D7–D9; D10 mutationId TTL |
 | 2026-05-28 | §1.1 MVP scope; integración review agentes §13–§15 |
 | 2026-05-28 | MVP fuera: notas, backups, export/import, storage cleanup |
+| 2026-05-28 | Wave -1 Vuetify obligatorio; D9 Supabase = flujo actual sin config nueva |
 | 2026-05-28 | Schemas SQL completos; §4.2c RowVersion; §4.3b autoUpdateParentItem |
 
 ---
