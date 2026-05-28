@@ -2,7 +2,7 @@
 
 > **Estado:** listo para ejecución por agentes (pendiente aprobación final)  
 > **Última revisión:** 2026-05-28  
-> **Agent-readiness:** ~8/10 tras esta revisión (Wave 0 bloqueante)  
+> **Agent-readiness:** ~9/10 (listo para ejecución por agentes tras fixes 2026-05-28)  
 > **Repos:** `sprint-it` (origen) · `agroideas-in-api` (backend) · `agroideas-in-front` (UI)  
 > **Relacionado:** [PLAN-MIGRACION-SQL-SERVER.md](./PLAN-MIGRACION-SQL-SERVER.md) (borrador previo; este spec lo reemplaza como fuente de verdad)
 
@@ -150,11 +150,15 @@ _Post-MVP:_ `Notes`, `Drafts`, `Backups` (ver §1.1).
 | `Id` | `nvarchar(128)` PK | ID Firestore original |
 | `Titulo` | `nvarchar(256)` | |
 | `FechaDesde`, `FechaHasta` | `datetime2` | |
-| `WorkingDaysJson` | `nvarchar(max)` | 10 bool (puede normalizarse después) |
+| `WorkingDaysJson` | `nvarchar(max)` | 10 bool (ver §3.2c) |
 | `UserWorkingDaysJson` | `nvarchar(max)` | por `In.Users.ID` |
-| `AiSummary` … | | igual que antes |
+| `AiSummary` | `nvarchar(max)` NULL | texto resumen WhatsApp |
+| `AiSummaryGeneratedAt` | `datetime2` NULL | |
+| `AiSummaryModel` | `nvarchar(128)` NULL | `model_used` de api-core |
+| `AiSummaryGeneratedBy` | `int` NULL | → `[In].[Users]` |
 | `RowVersion` | `rowversion` | solo metadatos del sprint |
-| `UpdatedAt`, `UpdatedBy` | | |
+| `UpdatedAt` | `datetime2` | |
+| `UpdatedBy` | `int` NULL | → `[In].[Users]` |
 
 **`[SprintIt].[Items]`** — espejo de `Item` en `sprint-it/src/types`
 
@@ -163,7 +167,11 @@ _Post-MVP:_ `Notes`, `Drafts`, `Backups` (ver §1.1).
 | `Id` | `nvarchar(128)` PK | |
 | `SprintId` | `nvarchar(128)` FK | |
 | `Title`, `Detail` | `nvarchar` | |
-| `Priority`, `State` | `tinyint` o `nvarchar` | alinear enums actuales |
+| `Priority` | `nvarchar(32)` | `'Normal'`, `'Medium'`, `'High'` |
+| `State` | `nvarchar(64)` | mismos valores que Tasks |
+| `CreatedAt` | `datetime2` | |
+| `UpdatedAt` | `datetime2` | |
+| `UpdatedBy` | `int` NULL | |
 | `EstimatedEffort`, `ActualEffort` | `decimal` | |
 | `AssignedUserId` | `int` NULL | → `[In].[Users]` |
 | `CreatedByUserId` | `int` | |
@@ -294,6 +302,7 @@ Todas las rutas: `checkAuth([])` + `checkSprintItAccess`.
 |--------|------|-------------|
 | GET | `/sprints` | Lista sprints (metadatos) |
 | GET | `/sprints/:id` | Sprint + items + tasks (join) |
+| POST | `/sprints` | Crear sprint nuevo (como `createSprint` hoy: título, fechas, working days) |
 | PATCH | `/sprints/:id` | Metadatos / working days (`RowVersion` sprint) |
 | GET | `/sprints/:id/export` | JSON export (filtro Done, como `exportSprintData`) |
 | POST | `/sprints/:id/ai-summary` | Generar resumen IA, persistir, devolver texto |
@@ -391,6 +400,7 @@ SELECT RowVersion FROM [SprintIt].[Items] WHERE Id = @id;
 - Serialización JSON: `RowVersion` ↔ **base64**.
 - **`POST` items/tasks:** respuesta incluye `rowVersion` inicial para el primer `PATCH`.
 - Tras OK: `sprint-it-confirmed` + HTTP 200 con `{ mutationId, rowVersion }`.
+- Si la mutación fue en una **task** y `autoUpdateParentItem` cambió el item padre: incluir en el payload `parentItem` actualizado (misma forma que en `GET /sprints/:id`).
 
 **Realtime en comentarios (D7):**
 
@@ -627,7 +637,7 @@ No agregar `VITE_CORE_API_KEY` al front.
 | Firestore → solo lectura o apagado | Post-cutover |
 | `SPRINT_IT_ALLOWED_USERNAMES` solo en env servidor | Deploy |
 | Restringir API key Firebase en GCP (referrers) | Si queda algún uso temporal |
-| Supabase bucket `sprint-it` (D9) | RLS estricta; upload directo browser; API solo persiste metadata tras subida OK |
+| Supabase bucket `sprint-it` (D9) | Mismo bucket/keys que hoy; upload directo browser; `POST /attachments` para metadata SQL (sin cambios en dashboard Supabase) |
 | Allowlist | Misma lista en **env servidor**; front solo oculta menú (la seguridad real es API + WS filter) |
 | No confiar en `patch` del cliente para broadcast | Entidad WS armada en servidor (§4.2) |
 
@@ -649,7 +659,7 @@ Post-MVP **P6:** RLS estricta o proxy con service key en servidor.
 | Edición simultánea misma fila | Pérdida de cambios | `RowVersion` + `rollback` al perdedor |
 | Echo malicioso o buggy en WS | Datos corruptos en peer | `entity` server-side, whitelist `patch` |
 | Allowlist front ≠ servidor | Menú oculto pero API expuesta | Middleware en **todas** las rutas; WS filtrado por `UserName` |
-| Supabase anon en bundle | Subida/lectura indebida | RLS Supabase; no paths predecibles |
+| Supabase anon en bundle | Mismo riesgo que sprint-it hoy | URLs con UUID; solo usuarios In; endurecer en P6 |
 | ETL usuarios sin match In | `assignedUser` null | Bloquear cutover hasta mapear; reporte en script |
 | Reorder parcial fallido | Orden inconsistente | Transacción SQL única |
 | IA timeout | UX colgada | Spinner + timeout claro; no bloquear tablero |
@@ -716,7 +726,7 @@ Post-MVP **P6:** RLS estricta o proxy con service key en servidor.
 - [ ] **B1.3** Carpeta `server/sprint-it/` + registro en `main.routes.ts`
 - [ ] **B1.4** `sprint-it.middleware.ts` (`checkSprintItAccess` + env)
 - [ ] **B1.5** `sprint-it.models.ts` — `Sprints`, `Items`, `Tasks` + `RowVersion`
-- [ ] **B1.6** `GET /sprints`, `GET /sprints/:id`, `PATCH /sprints/:id`
+- [ ] **B1.6** `GET /sprints`, `GET /sprints/:id`, `POST /sprints`, `PATCH /sprints/:id`
 - [ ] **B1.7** CRUD granular items/tasks + reorder (transacción)
 - [ ] **B1.8** Port `autoUpdateParentItem` en services
 - [ ] **B1.9** Test Jest mínimo: `GET /sprints` 401 sin JWT, 200 con JWT allowlist
@@ -901,19 +911,29 @@ Hoy In usa `vuetify@3.0.0-beta.11` + `vite-plugin-vuetify@1.0.0-alpha.17` (templ
 
 **Seguridad aceptada (mismo nivel que ahora):** solo usuarios de la empresa entran a In; URLs con UUID no adivinables. Endurecer (RLS o proxy in-api) queda en **P6** si más adelante lo piden.
 
-### 15.2 Glosario — ¿qué es RLS? (referencia; no bloqueante MVP)
+### 15.2 Glosario — ¿qué es RLS? (solo post-MVP P6)
 
-**RLS** = *Row Level Security* (en Supabase Storage, reglas sobre **archivos**).
+**RLS** = reglas en Supabase sobre quién puede leer/subir archivos en el bucket.
 
-Son reglas del tipo: “solo podés subir a **tu** carpeta”, “solo usuarios logueados pueden leer”. Similar a las reglas de Firestore, pero para el bucket de imágenes/adjuntos.
+**No aplica al MVP:** usamos el mismo esquema que sprint-it hoy (anon key + bucket `sprint-it` sin reconfigurar). Ver §15.3.
 
-Sin RLS bien configurada, quien tenga la `anon key` del front (visible en el bundle) podría subir o listar archivos si el bucket está abierto.
-
-Por eso el spec pide bucket **privado** + políticas. Eso exige que quien sube esté **logueado en Supabase Auth** (UID distinto del usuario de Agroideas-In en SQL).
+**P6 (futuro):** RLS estricta o proxy in-api para no depender de la anon key en el bundle.
 
 ---
 
-## 16. Changelog del spec
+## 16. Listo para arrancar (otro chat / agentes)
+
+Sí — **con este md podés abrir un chat nuevo** y arrancar por **Wave -1** (rama `agroideas-in-front`) o **Wave 0** (`migrations_for_SprintIt.sql` en `agroideas-in-api`) en paralelo.
+
+**Antes del primer commit, el agente debe leer:** §1, §1.1, §14 (playbook), §15, y el TODO §11 de la wave asignada.
+
+**Vos solo necesitás:** decir “implementá según `docs/SPEC-SPRINT-IT-E2E.md`, wave X”; tener `.env` con `AGROIDEAS_CORE_*`, `SPRINT_IT_ALLOWED_USERNAMES`, y copiar `VITE_SUPABASE_*` a In cuando llegue el front.
+
+**Orden recomendado:** Wave -1 merge → Wave 0 merge → Waves 1–2 backend ∥ ETL → Wave 3–4 front.
+
+---
+
+## 17. Changelog del spec
 
 | Fecha | Cambio |
 |-------|--------|
@@ -927,7 +947,8 @@ Por eso el spec pide bucket **privado** + políticas. Eso exige que quien sube e
 | 2026-05-28 | MVP fuera: notas, backups, export/import, storage cleanup |
 | 2026-05-28 | Wave -1 Vuetify obligatorio; D9 Supabase = flujo actual sin config nueva |
 | 2026-05-28 | Schemas SQL completos; §4.2c RowVersion; §4.3b autoUpdateParentItem |
+| 2026-05-28 | Fixes review: `AiSummary*`, `POST /sprints`, coherencia Supabase; §16 listo para agentes |
 
 ---
 
-*Aprobación:* pendiente — implementar código solo tras confirmación explícita del equipo.
+*Aprobación:* pendiente de tu GO explícito — spec listo para ejecución (§16).
