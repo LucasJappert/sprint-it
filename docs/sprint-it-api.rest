@@ -1,0 +1,225 @@
+# @note Compatible con HTTPYac (anweber.vscode-httpyac). Todas las variables deben tener valor no vacío.
+# @note Tras cada POST, reemplazar placeholders REPLACE_* con datos de la respuesta.
+
+@localPort = 2022
+@baseUrl = http://localhost:{{localPort}}
+@token = REPLACE_JWT_AFTER_LOGIN
+@sprintId = REPLACE_SPRINT_ID
+@itemId = REPLACE_ITEM_ID
+@taskId = REPLACE_TASK_ID
+@commentId = REPLACE_COMMENT_ID
+@sprintRowVersion = REPLACE_SPRINT_ROW_VERSION
+@itemRowVersion = REPLACE_ITEM_ROW_VERSION
+@taskRowVersion = REPLACE_TASK_ROW_VERSION
+@staleRowVersion = AAAA00000000
+
+# Sprint-IT API — pruebas manuales (Wave 0 + 1)
+# Requiere: agroideas-in-api en dev (http://localhost:2022)
+# Usuario en allowlist: ljappert | srotschy
+
+###
+# @name login
+POST {{baseUrl}}/api/v1/user/login
+Content-Type: application/json
+
+{
+    "userName": "ljappert",
+    "password": "TU_PASSWORD"
+}
+
+###
+# Sin token → 401
+GET {{baseUrl}}/api/v1/sprint-it/sprints
+
+###
+# @name listSprints
+GET {{baseUrl}}/api/v1/sprint-it/sprints
+Authorization: Bearer {{token}}
+
+###
+# @name createSprint
+POST {{baseUrl}}/api/v1/sprint-it/sprints
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "titulo": "Sprint prueba REST",
+    "fechaDesde": "2026-05-01T00:00:00.000Z",
+    "fechaHasta": "2026-05-14T23:59:59.000Z"
+}
+
+###
+GET {{baseUrl}}/api/v1/sprint-it/sprints/{{sprintId}}
+Authorization: Bearer {{token}}
+
+###
+PATCH {{baseUrl}}/api/v1/sprint-it/sprints/{{sprintId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "rowVersion": "{{sprintRowVersion}}",
+    "patch": {
+        "titulo": "Sprint prueba REST (editado)"
+    }
+}
+
+###
+GET {{baseUrl}}/api/v1/sprint-it/sprints/{{sprintId}}/export
+Authorization: Bearer {{token}}
+
+###
+# Wave 2 — esperado 501
+POST {{baseUrl}}/api/v1/sprint-it/sprints/{{sprintId}}/ai-summary
+Authorization: Bearer {{token}}
+
+###
+# @name createItem
+POST {{baseUrl}}/api/v1/sprint-it/sprints/{{sprintId}}/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Item prueba",
+    "state": "To Do",
+    "priority": "Normal"
+}
+
+###
+PATCH {{baseUrl}}/api/v1/sprint-it/items/{{itemId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "rowVersion": "{{itemRowVersion}}",
+    "patch": {
+        "title": "Item prueba (editado)"
+    }
+}
+
+###
+PUT {{baseUrl}}/api/v1/sprint-it/sprints/{{sprintId}}/items/reorder
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "orderedIds": ["{{itemId}}"]
+}
+
+###
+# @name createTask
+POST {{baseUrl}}/api/v1/sprint-it/items/{{itemId}}/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Task prueba",
+    "state": "To Do"
+}
+
+###
+# Revisar parentItem.State en respuesta (autoUpdateParent §4.3b)
+PATCH {{baseUrl}}/api/v1/sprint-it/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "rowVersion": "{{taskRowVersion}}",
+    "patch": {
+        "state": "In Progress"
+    }
+}
+
+###
+# Esperado HTTP 409
+PATCH {{baseUrl}}/api/v1/sprint-it/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "rowVersion": "{{staleRowVersion}}",
+    "patch": {
+        "state": "Done"
+    }
+}
+
+###
+DELETE {{baseUrl}}/api/v1/sprint-it/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+
+###
+DELETE {{baseUrl}}/api/v1/sprint-it/items/{{itemId}}
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/api/v1/sprint-it/comments?associatedId={{itemId}}&associatedType=item
+Authorization: Bearer {{token}}
+
+###
+# @name createComment
+POST {{baseUrl}}/api/v1/sprint-it/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "associatedId": "{{itemId}}",
+    "associatedType": "item",
+    "description": "Comentario de prueba"
+}
+
+###
+PUT {{baseUrl}}/api/v1/sprint-it/comments/{{commentId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "description": "Comentario editado"
+}
+
+###
+DELETE {{baseUrl}}/api/v1/sprint-it/comments/{{commentId}}
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/api/v1/sprint-it/changes?associatedId={{itemId}}
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/api/v1/sprint-it/changes/recent?days=7
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/api/v1/sprint-it/attachments?associatedId={{itemId}}
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/v1/sprint-it/attachments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "associatedId": "{{itemId}}",
+    "associatedType": "item",
+    "fileName": "test.pdf",
+    "fileType": "application/pdf",
+    "fileSize": 1024,
+    "storageUrl": "https://example.supabase.co/storage/v1/object/public/sprint-it/test.pdf"
+}
+
+###
+GET {{baseUrl}}/api/v1/sprint-it/draft-board
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/v1/sprint-it/draft-board/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Borrador prueba",
+    "state": "To Do"
+}
+
+###
+GET {{baseUrl}}/api/v1/sprint-it/users/display-names
+Authorization: Bearer {{token}}

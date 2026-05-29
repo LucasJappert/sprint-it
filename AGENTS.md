@@ -84,6 +84,14 @@ Para crear un nuevo usuario en el sistema:
 -   “Add a Pinia store named useUserStore with persistent state.”
 -   “Refactor functions to early-return style and double quotes.”
 
+## Archivos `.rest` (HTTPYac)
+
+Al crear o editar `*.rest` para pruebas manuales (extensión **HTTPYac**):
+
+-   **Nunca** variables vacías (`@sprintId =` rompe el parser).
+-   Siempre valor placeholder: `@sprintId = REPLACE_SPRINT_ID`, `@token = REPLACE_JWT_AFTER_LOGIN`.
+-   Variables al inicio; requests separados con `###`; comentarios con `#`.
+
 ## Do / Don't
 
 -   DO: prefer functional utilities; small components; usar `ContextMenu.vue` para menús contextuales reutilizables.

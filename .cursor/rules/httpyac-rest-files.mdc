@@ -1,0 +1,28 @@
+---
+description: Convenciones para archivos .rest compatibles con HTTPYac
+globs: "**/*.rest"
+alwaysApply: false
+---
+
+# Archivos `.rest` (HTTPYac)
+
+Extensión objetivo: **HTTPYac** (`anweber.vscode-httpyac`). También debe funcionar en REST Client si es posible.
+
+## Variables
+
+- **Nunca** declarar variables vacías (`@id =` sin valor rompe HTTPYac).
+- Siempre asignar un placeholder explícito: `@sprintId = REPLACE_SPRINT_ID` o un valor de ejemplo válido (`@localPort = 2022`).
+- Documentar en comentario `#` que hay que reemplazar `REPLACE_*` tras login/POST.
+- Preferir prefijo `REPLACE_` para IDs y tokens que el usuario debe pegar manualmente.
+
+## Formato
+
+- Separador de requests: `###` en línea sola.
+- Comentarios: líneas `#` (no `###` sueltos como título si confunde el parser).
+- Requests nombrados opcionales: `# @name createSprint` (útil para encadenar en HTTPYac).
+- Variables al inicio del archivo, antes del primer `###`.
+
+## Evitar
+
+- `@foo =` (valor vacío)
+- Depender de que el usuario complete variables antes de poder parsear el archivo
